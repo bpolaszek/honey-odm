@@ -19,7 +19,8 @@
     "php": ">=8.4",
     "psr/event-dispatcher": "^1.0",
     "symfony/property-access": "~7.0",
-    "bentools/reflection-plus": "^1.0"
+    "bentools/reflection-plus": "^1.0",
+    "symfony/object-mapper": "~7.3"
   },
   "require-dev": {
     "pestphp/pest": "^4.1",
@@ -37,7 +38,7 @@
     "style:check": "vendor/bin/phpcs",
     "style:fix": "vendor/bin/php-cs-fixer fix src --allow-risky=yes; vendor/bin/phpcbf",
     "types:check": "vendor/bin/phpstan",
-    "tests:run": "vendor/bin/pest --parallel --coverage --min=100",
+    "tests:run": "vendor/bin/pest --coverage --min=100",
     "ci:check": [
       "@style:check",
       "@types:check",

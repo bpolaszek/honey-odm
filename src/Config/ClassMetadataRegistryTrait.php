@@ -1,0 +1,138 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Honey\ODM\Core\Config;
+
+use ArrayObject;
+use BenTools\ReflectionPlus\Reflection;
+use InvalidArgumentException;
+use ReflectionAttribute;
+use ReflectionClass;
+
+use function Honey\ODM\Core\throws;
+
+/**
+ * @template C of ClassMetadataInterface
+ * @template P of PropertyMetadataInterface
+ * @implements ClassMetadataRegistryInterface<C, P>
+ */
+trait ClassMetadataRegistryTrait
+{
+    /**
+     * @var ArrayObject<class-string, C<P>>
+     */
+    private ArrayObject $storage;
+
+    /**
+     * @param array<class-string, C<P>>|list<class-string> $configurations
+     */
+    public function __construct(array $configurations = [])
+    {
+        $this->storage = new ArrayObject();
+        if (array_is_list($configurations)) {
+            foreach ($configurations as $className) {
+                $this->getClassMetadata($className);
+            }
+        } else {
+            foreach ($configurations as $className => $classMetadata) {
+                $this->storage->offsetSet(
+                    $className,
+                    $this->populateClassMetadata(Reflection::class($className), $classMetadata),
+                );
+            }
+        }
+    }
+
+    /**
+     * @return C<P>
+     */
+    public function getClassMetadata(string $className): ClassMetadataInterface
+    {
+        if (!$this->storage->offsetExists($className)) {
+            $this->storage->offsetSet($className, $this->readClassMetadata($className));
+        }
+
+        return $this->storage->offsetGet($className);
+    }
+
+    public function hasClassMetadata(string $className): bool
+    {
+        return isset($this->storage[$className])
+            || !throws(fn () => $this->readClassMetadata($className));
+    }
+
+    /**
+     * @return C<P>
+     */
+    private function readClassMetadata(string $className): ClassMetadataInterface
+    {
+        $classRefl = Reflection::class($className);
+
+        /** @var ClassMetadataInterface $classMetadata */
+        $classMetadata = $this->readClassMetadataAttribute($classRefl)->newInstance();
+
+        return $this->populateClassMetadata($classRefl, $classMetadata);
+    }
+
+    /**
+     * @param C<P> $classMetadata
+     */
+    private function populateClassMetadata(
+        ReflectionClass $classRefl,
+        ClassMetadataInterface $classMetadata,
+    ): ClassMetadataInterface {
+        $classMetadata->reflection = $classRefl;
+        $classMetadata->className = $classRefl->name;
+        $hasPrimary = false;
+        foreach ($classRefl->getProperties() as $propertyRefl) {
+            $reflAttributes = $propertyRefl->getAttributes(
+                PropertyMetadataInterface::class,
+                ReflectionAttribute::IS_INSTANCEOF,
+            );
+            if (!isset($reflAttributes[0])) {
+                break;
+            }
+            /** @var PropertyMetadataInterface $propertyMetadata */
+            $propertyMetadata = $reflAttributes[0]->newInstance();
+            $propertyMetadata->reflection = $propertyRefl;
+            $propertyMetadata->classMetadata = $classMetadata;
+            if ($propertyMetadata->primary) {
+                $hasPrimary = true;
+            }
+            $classMetadata->propertiesMetadata[$propertyRefl->name] = $propertyMetadata;
+        }
+
+        if (!$hasPrimary) {
+            throw self::noPrimaryKeyMapException($classRefl->getName());
+        }
+
+        return $classMetadata;
+    }
+
+    private function readClassMetadataAttribute(ReflectionClass $classRefl): ReflectionAttribute
+    {
+        return $classRefl->getAttributes(ClassMetadataInterface::class, ReflectionAttribute::IS_INSTANCEOF)[0]
+            ?? throw self::noMetadataException($classRefl->getName());
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    private static function noMetadataException(string $className): InvalidArgumentException
+    {
+        return new InvalidArgumentException(
+            sprintf("Class %s is not registered as a Document.", $className),
+        );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    private static function noPrimaryKeyMapException(string $className): \RuntimeException
+    {
+        return new \RuntimeException(
+            sprintf("Class %s has no property mapped as primary key.", $className),
+        );
+    }
+}
