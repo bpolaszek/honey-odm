@@ -22,4 +22,9 @@ interface ClassMetadataInterface
      * @var ReflectionClass<object>
      */
     public ReflectionClass $reflection {get; }
+
+    /**
+     * @return P
+     */
+    public function getIdPropertyMetadata(): PropertyMetadataInterface;
 }

@@ -6,7 +6,10 @@ namespace Honey\ODM\Core\Tests\Implementation\Config;
 
 use Attribute;
 use Honey\ODM\Core\Config\ClassMetadataInterface;
+use Honey\ODM\Core\Config\PropertyMetadataInterface;
 use ReflectionClass;
+
+use function array_find;
 
 /**
  * @template P of AsField
@@ -26,4 +29,9 @@ final class AsDocument implements ClassMetadataInterface
      * @var array<string, P>
      */
     public array $propertiesMetadata = [];
+
+    public function getIdPropertyMetadata(): PropertyMetadataInterface
+    {
+        return array_find($this->propertiesMetadata, fn (PropertyMetadataInterface $metadata) => $metadata->primary); // @phpstan-ignore return.type
+    }
 }
