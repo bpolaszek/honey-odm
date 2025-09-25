@@ -9,27 +9,27 @@ use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
 use Honey\ODM\Core\Config\PropertyMetadataInterface;
 use Honey\ODM\Core\Manager\ObjectManagerInterface;
 use Honey\ODM\Core\Manager\ObjectManagerTrait;
-use Honey\ODM\Core\Tests\Implementation\Config\AsDocument;
-use Honey\ODM\Core\Tests\Implementation\Config\AsField;
-use Honey\ODM\Core\Tests\Implementation\Config\ClassMetadataRegistry;
+use Honey\ODM\Core\Tests\Implementation\Config\TestAsDocument;
+use Honey\ODM\Core\Tests\Implementation\Config\TestAsField;
+use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 /**
- * @implements ObjectManagerInterface<AsDocument, AsField>
+ * @implements ObjectManagerInterface<TestAsDocument, TestAsField>
  */
-final class ObjectManager implements ObjectManagerInterface
+final class TestObjectManager implements ObjectManagerInterface
 {
     /**
-     * @use ObjectManagerTrait<AsDocument, AsField>
+     * @use ObjectManagerTrait<TestAsDocument, TestAsField>
      */
     use ObjectManagerTrait;
 
     /**
-     * @param ClassMetadataRegistryInterface<AsDocument<AsField>, AsField> $classMetadataRegistry
+     * @param ClassMetadataRegistryInterface<TestAsDocument<TestAsField>, TestAsField> $classMetadataRegistry
      */
     public static function make(
-        ClassMetadataRegistryInterface $classMetadataRegistry = new ClassMetadataRegistry(), // @phpstan-ignore parameter.defaultValue
+        ClassMetadataRegistryInterface $classMetadataRegistry = new TestClassMetadataRegistry(), // @phpstan-ignore parameter.defaultValue
         PropertyAccessorInterface $propertyAccessor = new PropertyAccessor(),
     ): self {
         return new self($classMetadataRegistry, $propertyAccessor);

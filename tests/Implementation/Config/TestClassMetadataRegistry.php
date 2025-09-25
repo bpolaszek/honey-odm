@@ -8,12 +8,12 @@ use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
 use Honey\ODM\Core\Config\ClassMetadataRegistryTrait;
 
 /**
- * @implements ClassMetadataRegistryInterface<AsDocument, AsField>
+ * @implements ClassMetadataRegistryInterface<TestAsDocument, TestAsField>
  */
-final class ClassMetadataRegistry implements ClassMetadataRegistryInterface
+final class TestClassMetadataRegistry implements ClassMetadataRegistryInterface
 {
     /**
-     * @use ClassMetadataRegistryTrait<AsDocument, AsField>
+     * @use ClassMetadataRegistryTrait<TestAsDocument, TestAsField>
      */
     use ClassMetadataRegistryTrait;
 }

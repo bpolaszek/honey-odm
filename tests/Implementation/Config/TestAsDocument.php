@@ -12,11 +12,11 @@ use ReflectionClass;
 use function array_find;
 
 /**
- * @template P of AsField
+ * @template P of TestAsField
  * @implements ClassMetadataInterface<P>
  */
 #[Attribute(Attribute::TARGET_CLASS)]
-final class AsDocument implements ClassMetadataInterface
+final class TestAsDocument implements ClassMetadataInterface
 {
     public string $className;
 

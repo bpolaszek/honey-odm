@@ -5,53 +5,53 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Tests\Unit\Config;
 
 use BenTools\ReflectionPlus\Reflection;
-use Honey\ODM\Core\Tests\Implementation\Config\AsDocument;
-use Honey\ODM\Core\Tests\Implementation\Config\AsField;
-use Honey\ODM\Core\Tests\Implementation\Config\ClassMetadataRegistry;
-use Honey\ODM\Core\Tests\Implementation\Examples\Document;
-use Honey\ODM\Core\Tests\Implementation\Examples\DocumentWithoutPrimaryKey;
+use Honey\ODM\Core\Tests\Implementation\Config\TestAsDocument;
+use Honey\ODM\Core\Tests\Implementation\Config\TestAsField;
+use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
+use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
+use Honey\ODM\Core\Tests\Implementation\Examples\TestDocumentWithoutPrimaryKey;
 
 use function expect;
 
 it('loads class metadata', function (array $configurations) {
-    $registry = new ClassMetadataRegistry($configurations);
-    expect($registry->hasClassMetadata(Document::class))->toBeTrue();
+    $registry = new TestClassMetadataRegistry($configurations);
+    expect($registry->hasClassMetadata(TestDocument::class))->toBeTrue();
 
-    $classMetadata = $registry->getClassMetadata(Document::class);
-    expect($classMetadata->className)->toBe(Document::class)
-        ->and($classMetadata->reflection)->toBe(Reflection::class(Document::class))
+    $classMetadata = $registry->getClassMetadata(TestDocument::class);
+    expect($classMetadata->className)->toBe(TestDocument::class)
+        ->and($classMetadata->reflection)->toBe(Reflection::class(TestDocument::class))
         ->and($classMetadata->propertiesMetadata)->toHaveCount(2)
-        ->and($classMetadata->propertiesMetadata['id'])->toBeInstanceOf(AsField::class)
+        ->and($classMetadata->propertiesMetadata['id'])->toBeInstanceOf(TestAsField::class)
         ->and($classMetadata->propertiesMetadata['id']->classMetadata)->toBe($classMetadata)
         ->and($classMetadata->propertiesMetadata['id']->primary)->toBeTrue()
-        ->and($classMetadata->propertiesMetadata['id']->reflection)->toEqual(Reflection::property(Document::class, 'id'))
-        ->and($classMetadata->propertiesMetadata['name'])->toBeInstanceOf(AsField::class)
+        ->and($classMetadata->propertiesMetadata['id']->reflection)->toEqual(Reflection::property(TestDocument::class, 'id'))
+        ->and($classMetadata->propertiesMetadata['name'])->toBeInstanceOf(TestAsField::class)
         ->and($classMetadata->propertiesMetadata['name']->classMetadata)->toBe($classMetadata)
         ->and($classMetadata->propertiesMetadata['name']->primary)->toBeFalse()
-        ->and($classMetadata->propertiesMetadata['name']->reflection)->toEqual(Reflection::property(Document::class, 'name'))
+        ->and($classMetadata->propertiesMetadata['name']->reflection)->toEqual(Reflection::property(TestDocument::class, 'name'))
     ;
 })->with(function () {
-    $refl = Reflection::method(ClassMetadataRegistry::class, 'populateClassMetadata');
-    $classMetadata = $refl->invoke(new ClassMetadataRegistry(), Reflection::class(Document::class), new AsDocument());
-    yield 'Eager load by constructor' => [[Document::class => $classMetadata]];
-    yield 'Lazy load by constructor' => [[Document::class]];
+    $refl = Reflection::method(TestClassMetadataRegistry::class, 'populateClassMetadata');
+    $classMetadata = $refl->invoke(new TestClassMetadataRegistry(), Reflection::class(TestDocument::class), new TestAsDocument());
+    yield 'Eager load by constructor' => [[TestDocument::class => $classMetadata]];
+    yield 'Lazy load by constructor' => [[TestDocument::class]];
     yield 'Lazy load on call' => [[]];
 });
 
 it('complains when class is not registered as a document', function () {
     $foo = new class {
-        #[AsField]
+        #[TestAsField]
         public int $id;
     };
 
-    $registry = new ClassMetadataRegistry();
+    $registry = new TestClassMetadataRegistry();
     expect($registry->hasClassMetadata($foo::class))->toBeFalse()
         ->and(fn () => $registry->getClassMetadata($foo::class))
         ->toThrow(\InvalidArgumentException::class);
 });
 
 it('complains when document has no primary key', function () {
-    $registry = new ClassMetadataRegistry();
-    expect(fn () => $registry->getClassMetadata(DocumentWithoutPrimaryKey::class))
+    $registry = new TestClassMetadataRegistry();
+    expect(fn () => $registry->getClassMetadata(TestDocumentWithoutPrimaryKey::class))
         ->toThrow(\RuntimeException::class);
 });
