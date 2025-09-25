@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Tests\Implementation\Manager;
 
-use Honey\ODM\Core\Config\ClassMetadataInterface;
 use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
-use Honey\ODM\Core\Config\PropertyMetadataInterface;
 use Honey\ODM\Core\Manager\ObjectManagerInterface;
 use Honey\ODM\Core\Manager\ObjectManagerTrait;
 use Honey\ODM\Core\Tests\Implementation\Config\TestAsDocument;
