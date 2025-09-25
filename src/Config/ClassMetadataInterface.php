@@ -11,11 +11,15 @@ use ReflectionClass;
  */
 interface ClassMetadataInterface
 {
-    public string $className {get;}
+    public string $className {get; }
 
     /**
      * @var array<string, P>
      */
-    public array $propertiesMetadata {get;}
-    public ReflectionClass $reflection {get;} // @phpstan-ignore missingType.generics
+    public array $propertiesMetadata {get; }
+
+    /**
+     * @var ReflectionClass<object>
+     */
+    public ReflectionClass $reflection {get; }
 }

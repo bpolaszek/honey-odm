@@ -10,7 +10,6 @@ namespace Honey\ODM\Core\Config;
  */
 interface ClassMetadataRegistryInterface
 {
-
     public function hasClassMetadata(string $className): bool;
 
     /**

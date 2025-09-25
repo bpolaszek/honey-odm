@@ -14,7 +14,7 @@ interface PropertyMetadataInterface
     /**
      * @var C
      */
-    public ClassMetadataInterface $classMetadata {get;}
-    public ReflectionProperty $reflection {get;}
-    public bool $primary {get;}
+    public ClassMetadataInterface $classMetadata {get; }
+    public ReflectionProperty $reflection {get; }
+    public bool $primary {get; }
 }

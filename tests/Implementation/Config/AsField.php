@@ -16,11 +16,14 @@ use ReflectionProperty;
 final class AsField implements PropertyMetadataInterface
 {
     public ReflectionProperty $reflection;
+
+    /**
+     * @var AsDocument<AsField>
+     */
     public ClassMetadataInterface $classMetadata;
 
     public function __construct(
-        public bool $primary = false,
+        public readonly bool $primary = false,
     ) {
     }
-
 }

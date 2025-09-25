@@ -6,15 +6,24 @@ namespace Honey\ODM\Core\Tests\Implementation\Config;
 
 use Attribute;
 use Honey\ODM\Core\Config\ClassMetadataInterface;
-use \ReflectionClass;
+use ReflectionClass;
 
 /**
- * @implements ClassMetadataInterface<AsField>
+ * @template P of AsField
+ * @implements ClassMetadataInterface<P>
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 final class AsDocument implements ClassMetadataInterface
 {
     public string $className;
-    public ReflectionClass $reflection; // @phpstan-ignore missingType.generics
+
+    /**
+     * @var ReflectionClass<object>
+     */
+    public ReflectionClass $reflection;
+
+    /**
+     * @var array<string, P>
+     */
     public array $propertiesMetadata = [];
 }

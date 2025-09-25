@@ -11,6 +11,7 @@ function throws(Closure $fn): bool
 {
     try {
         $fn();
+
         return false;
     } catch (Throwable) {
         return true;
