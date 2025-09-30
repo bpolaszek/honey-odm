@@ -10,6 +10,9 @@ use Honey\ODM\Core\Tests\Implementation\Config\TestAsField;
 #[TestAsDocument]
 final class TestAuthor
 {
+    #[TestAsField(name: 'created_at')]
+    public ?\DateTimeInterface $createdAt = null;
+
     public function __construct(
         #[TestAsField(name: 'author_id', primary: true)]
         public string $id,
