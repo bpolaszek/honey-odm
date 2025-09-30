@@ -13,5 +13,4 @@ use Honey\ODM\Core\Config\PropertyMetadataInterface;
  */
 interface ObjectManagerInterface
 {
-    public function getIdFromObject(object $object): mixed;
 }

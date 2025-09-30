@@ -16,4 +16,11 @@ interface ClassMetadataRegistryInterface
      * @return C<P>
      */
     public function getClassMetadata(string $className): ClassMetadataInterface;
+
+    /**
+     * @param array<string, mixed> $document
+     */
+    public function getIdFromDocument(array $document, string $className): mixed;
+
+    public function getIdFromObject(object $object): mixed;
 }

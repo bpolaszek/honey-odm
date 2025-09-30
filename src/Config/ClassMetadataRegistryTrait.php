@@ -10,6 +10,8 @@ use InvalidArgumentException;
 use ReflectionAttribute;
 use ReflectionClass;
 use RuntimeException;
+use Symfony\Component\PropertyAccess\PropertyAccessor;
+use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 use function Honey\ODM\Core\throws;
 
@@ -29,8 +31,10 @@ trait ClassMetadataRegistryTrait
     /**
      * @param array<class-string, C<P>>|list<class-string> $configurations
      */
-    public function __construct(array $configurations = [])
-    {
+    public function __construct(
+        private readonly PropertyAccessorInterface $propertyAccessor = new PropertyAccessor(),
+        array $configurations = [],
+    ) {
         $this->storage = new ArrayObject();
         if (array_is_list($configurations)) {
             /**
@@ -87,7 +91,7 @@ trait ClassMetadataRegistryTrait
 
     /**
      * @param ReflectionClass<object> $classRefl
-     * @param C<P>                    $classMetadata
+     * @param C<P> $classMetadata
      *
      * @return C<P>
      */

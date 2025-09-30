@@ -23,6 +23,7 @@ final class TestAsField implements PropertyMetadataInterface
     public ClassMetadataInterface $classMetadata;
 
     public function __construct(
+        public readonly ?string $name = null,
         public readonly bool $primary = false,
     ) {
     }

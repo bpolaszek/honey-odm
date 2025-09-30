@@ -14,7 +14,7 @@ use Honey\ODM\Core\Tests\Implementation\Examples\TestDocumentWithoutPrimaryKey;
 use function expect;
 
 it('loads class metadata', function (array $configurations) {
-    $registry = new TestClassMetadataRegistry($configurations);
+    $registry = new TestClassMetadataRegistry(configurations: $configurations);
     expect($registry->hasClassMetadata(TestDocument::class))->toBeTrue();
 
     $classMetadata = $registry->getClassMetadata(TestDocument::class);
@@ -54,4 +54,16 @@ it('complains when document has no primary key', function () {
     $registry = new TestClassMetadataRegistry();
     expect(fn () => $registry->getClassMetadata(TestDocumentWithoutPrimaryKey::class))
         ->toThrow(\RuntimeException::class);
+});
+
+it('returns the id of an object', function () {
+    $registry = new TestClassMetadataRegistry();
+    $object = new TestDocument(42, 'foo');
+    expect($registry->getIdFromObject($object))->toBe(42);
+});
+
+it('returns the id of a document', function () {
+    $registry = new TestClassMetadataRegistry();
+    $document = ['id' => 42, 'name' => 'foo'];
+    expect($registry->getIdFromDocument($document, TestDocument::class))->toBe(42);
 });
