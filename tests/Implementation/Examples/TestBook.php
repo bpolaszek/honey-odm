@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Honey\ODM\Core\Tests\Implementation\Examples;
+
+use Honey\ODM\Core\Tests\Implementation\Config\TestAsField;
+use PharIo\Manifest\Author;
+
+final class TestBook
+{
+    public function __construct(
+        #[TestAsField(primary: true)]
+        public string $id,
+        #[TestAsField(name: 'author_id')]
+        public Author $author,
+    ) {
+    }
+}

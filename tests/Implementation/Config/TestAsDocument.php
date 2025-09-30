@@ -31,8 +31,16 @@ final class TestAsDocument implements ClassMetadataInterface
      */
     public array $propertiesMetadata = [];
 
+    public function __construct(
+        public ?string $bucket = null,
+    ) {
+    }
+
     public function getIdPropertyMetadata(): PropertyMetadataInterface
     {
-        return array_find($this->propertiesMetadata, fn (PropertyMetadataInterface $metadata) => $metadata->primary); // @phpstan-ignore return.type
+        return array_find(
+            $this->propertiesMetadata,
+            fn (PropertyMetadataInterface $metadata) => $metadata->primary,
+        ) ?? throw new \RuntimeException('No primary property found in class metadata');
     }
 }

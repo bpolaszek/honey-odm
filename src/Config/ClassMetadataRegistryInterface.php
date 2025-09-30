@@ -19,6 +19,7 @@ interface ClassMetadataRegistryInterface
 
     /**
      * @param class-string<O> $className
+     *
      * @return C<O, P>
      */
     public function getClassMetadata(string $className): ClassMetadataInterface;

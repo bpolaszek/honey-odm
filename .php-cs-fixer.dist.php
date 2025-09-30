@@ -16,5 +16,6 @@ return (new PhpCsFixer\Config())
         'final_class' => true,
         'concat_space' => ['spacing' => 'one'],
         'no_unused_imports' => true,
+        'phpdoc_align' => ['align' => 'left'],
     ])
     ->setFinder($finder);
