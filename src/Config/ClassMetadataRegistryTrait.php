@@ -16,11 +16,12 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use function Honey\ODM\Core\throws;
 
 /**
+ * @template D of object|array<string, mixed>
  * @template O of object
  * @template C of ClassMetadataInterface
  * @template P of PropertyMetadataInterface
  *
- * @implements ClassMetadataRegistryInterface<O, C, P>
+ * @implements ClassMetadataRegistryInterface<D, O, C, P>
  */
 trait ClassMetadataRegistryTrait
 {

@@ -17,7 +17,7 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 final class TestObjectManager implements ObjectManagerInterface
 {
     /**
-     * @param ClassMetadataRegistryInterface<object, TestAsDocument<object, TestAsField>, TestAsField> $classMetadataRegistry
+     * @param ClassMetadataRegistryInterface<array<string, mixed>, object, TestAsDocument<object, TestAsField>, TestAsField> $classMetadataRegistry
      */
     public function __construct(
         public readonly ClassMetadataRegistryInterface $classMetadataRegistry,

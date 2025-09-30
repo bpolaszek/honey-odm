@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Config;
 
 /**
+ * @template D of object|array<string, mixed>
  * @template O of object
  * @template C of ClassMetadataInterface
  * @template P of PropertyMetadataInterface
@@ -23,10 +24,10 @@ interface ClassMetadataRegistryInterface
     public function getClassMetadata(string $className): ClassMetadataInterface;
 
     /**
-     * @param array<string, mixed> $document
+     * @param D $document
      * @param class-string<O> $className
      */
-    public function getIdFromDocument(array $document, string $className): mixed;
+    public function getIdFromDocument(mixed $document, string $className): mixed;
 
     public function getIdFromObject(object $object): mixed;
 }
