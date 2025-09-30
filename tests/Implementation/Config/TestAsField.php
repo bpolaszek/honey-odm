@@ -10,7 +10,7 @@ use Honey\ODM\Core\Config\PropertyMetadataInterface;
 use ReflectionProperty;
 
 /**
- * @implements PropertyMetadataInterface<TestAsDocument>
+ * @implements PropertyMetadataInterface<TestAsDocument<object, TestAsField>>
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 final class TestAsField implements PropertyMetadataInterface
@@ -18,7 +18,7 @@ final class TestAsField implements PropertyMetadataInterface
     public ReflectionProperty $reflection;
 
     /**
-     * @var TestAsDocument<TestAsField>
+     * @var TestAsDocument<object, TestAsField>
      */
     public ClassMetadataInterface $classMetadata;
 

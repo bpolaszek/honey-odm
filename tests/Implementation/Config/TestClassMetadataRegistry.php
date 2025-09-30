@@ -8,12 +8,12 @@ use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
 use Honey\ODM\Core\Config\ClassMetadataRegistryTrait;
 
 /**
- * @implements ClassMetadataRegistryInterface<TestAsDocument, TestAsField>
+ * @implements ClassMetadataRegistryInterface<object, TestAsDocument, TestAsField>
  */
 final class TestClassMetadataRegistry implements ClassMetadataRegistryInterface
 {
     /**
-     * @use ClassMetadataRegistryTrait<TestAsDocument, TestAsField>
+     * @use ClassMetadataRegistryTrait<object, TestAsDocument, TestAsField>
      */
     use ClassMetadataRegistryTrait;
 
@@ -29,7 +29,7 @@ final class TestClassMetadataRegistry implements ClassMetadataRegistryInterface
 
     /**
      * @param array<string, mixed> $document
-     * @param class-string $className
+     * @param class-string<object> $className
      * @return mixed
      */
     public function getIdFromDocument(array $document, string $className): mixed

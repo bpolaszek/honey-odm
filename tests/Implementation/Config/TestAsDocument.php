@@ -12,8 +12,9 @@ use ReflectionClass;
 use function array_find;
 
 /**
+ * @template O of object
  * @template P of TestAsField
- * @implements ClassMetadataInterface<P>
+ * @implements ClassMetadataInterface<O, P>
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 final class TestAsDocument implements ClassMetadataInterface
@@ -21,7 +22,7 @@ final class TestAsDocument implements ClassMetadataInterface
     public string $className;
 
     /**
-     * @var ReflectionClass<object>
+     * @var ReflectionClass<O>
      */
     public ReflectionClass $reflection;
 
