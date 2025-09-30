@@ -13,7 +13,7 @@ interface PropertyTransformerInterface
     /**
      * @param PropertyMetadataInterface<ClassMetadataInterface<object, PropertyMetadataInterface>> $propertyMetadata
      */
-    public function fromDocument(
+    public function fromDocument(// @phpstan-ignore missingType.generics
         mixed $value,
         PropertyMetadataInterface $propertyMetadata,
         MappingContextInterface $context,
@@ -22,7 +22,7 @@ interface PropertyTransformerInterface
     /**
      * @param PropertyMetadataInterface<ClassMetadataInterface<object, PropertyMetadataInterface>> $propertyMetadata
      */
-    public function toDocument(
+    public function toDocument(// @phpstan-ignore missingType.generics
         mixed $value,
         PropertyMetadataInterface $propertyMetadata,
         MappingContextInterface $context,

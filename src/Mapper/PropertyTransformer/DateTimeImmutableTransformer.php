@@ -20,10 +20,10 @@ use function sprintf;
 final class DateTimeImmutableTransformer implements PropertyTransformerInterface
 {
     /**
-     * @param null|string|int|float $value
+     * @param string|int|float|null $value
      * @param PropertyMetadataInterface<ClassMetadataInterface<object, PropertyMetadataInterface>> $propertyMetadata
      */
-    public function fromDocument(
+    public function fromDocument(// @phpstan-ignore missingType.generics
         mixed $value,
         PropertyMetadataInterface $propertyMetadata,
         MappingContextInterface $context,
@@ -49,7 +49,7 @@ final class DateTimeImmutableTransformer implements PropertyTransformerInterface
      *
      * @throws DateInvalidTimeZoneException
      */
-    public function toDocument(
+    public function toDocument(// @phpstan-ignore missingType.generics
         mixed $value,
         PropertyMetadataInterface $propertyMetadata,
         MappingContextInterface $context,
@@ -69,7 +69,7 @@ final class DateTimeImmutableTransformer implements PropertyTransformerInterface
 
         $output = match ($timeZone) {
             null => $value->format($format),
-            default => $value->setTimezone(new DateTimeZone($timeZone))->format($format)
+            default => $value->setTimezone(new DateTimeZone($timeZone))->format($format),
         };
 
         if ($cast) {

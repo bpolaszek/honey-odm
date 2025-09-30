@@ -17,9 +17,10 @@ final class TestAuthor
 
     public function __construct(
         #[TestAsField(name: 'author_id', primary: true)]
-        public string $id,
+        public int $id,
         #[TestAsField(name: 'author_name')]
         public string $name,
     ) {
+        $this->createdAt = new \DateTimeImmutable();
     }
 }
