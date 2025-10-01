@@ -8,7 +8,6 @@ use Honey\ODM\Core\Config\ClassMetadataInterface;
 use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
 use Honey\ODM\Core\Config\PropertyMetadataInterface;
 use Honey\ODM\Core\Mapper\DocumentMapperInterface;
-use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @template C of ClassMetadataInterface
@@ -18,7 +17,6 @@ interface ObjectManagerInterface
 {
     public ClassMetadataRegistryInterface $classMetadataRegistry {get; }
     public DocumentMapperInterface $documentMapper {get; }
-    public EventDispatcherInterface $eventDispatcher {get; }
     public Identities $identities {get; }
 
     public function persist(object $object, object ...$objects): void;

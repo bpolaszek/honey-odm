@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Manager;
 
+use BenTools\ReflectionPlus\Reflection;
 use Honey\ODM\Core\Config\ClassMetadataInterface;
 use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
 use Honey\ODM\Core\Config\PropertyMetadataInterface;
@@ -21,7 +22,6 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final class ObjectManager implements ObjectManagerInterface
 {
     public readonly Identities $identities;
-    private readonly ObjectFactory $factory;
     public private(set) UnitOfWork $unitOfWork;
     private bool $isFlushing = false;
 
@@ -32,7 +32,6 @@ final class ObjectManager implements ObjectManagerInterface
         public readonly TransportInterface $transport,
     ) {
         $this->identities = new Identities($classMetadataRegistry, $documentMapper);
-        $this->factory = new ObjectFactory($classMetadataRegistry, $documentMapper, $this->identities);
         $this->resetUnitOfWork();
     }
 
@@ -76,7 +75,31 @@ final class ObjectManager implements ObjectManagerInterface
             return null;
         }
 
-        return $this->factory->factory($document, $classMetadata);
+        return $this->factory($document, $classMetadata);
+    }
+
+    /**
+     * @param ClassMetadataInterface<O, P> $classMetadata
+     */
+    public function factory(mixed $document, ClassMetadataInterface $classMetadata): object
+    {
+        $identityMap = $this->identities;
+        $id = $this->classMetadataRegistry->getIdFromDocument($document, $classMetadata->className);
+        $className = $classMetadata->className;
+        if ($identityMap->containsId($className, $id)) {
+            return $identityMap->getObject($className, $id);
+        }
+        $object = Reflection::class($className)->newLazyProxy(function () use ($document, $className, $classMetadata) {
+            return $this->documentMapper->documentToObject(
+                $classMetadata,
+                $document,
+                Reflection::class($className)->newInstanceWithoutConstructor()
+            );
+        });
+        $identityMap->attach($object);
+        $identityMap->rememberState($object, $document);
+
+        return $object;
     }
 
     private function resetUnitOfWork(): void
