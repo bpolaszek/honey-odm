@@ -8,6 +8,7 @@ use Honey\ODM\Core\Config\ClassMetadataInterface;
 use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
 use Honey\ODM\Core\Config\PropertyMetadataInterface;
 use Honey\ODM\Core\Mapper\DocumentMapperInterface;
+use Honey\ODM\Core\UnitOfWork\UnitOfWork;
 
 /**
  * @template C of ClassMetadataInterface
@@ -18,6 +19,7 @@ interface ObjectManagerInterface
     public ClassMetadataRegistryInterface $classMetadataRegistry {get; }
     public DocumentMapperInterface $documentMapper {get; }
     public Identities $identities {get; }
+    public UnitOfWork $unitOfWork {get; }
 
     public function persist(object $object, object ...$objects): void;
 

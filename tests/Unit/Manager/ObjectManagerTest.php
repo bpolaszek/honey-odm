@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Tests\Unit\Manager;
 
+use BenTools\ReflectionPlus\Reflection;
+use Honey\ODM\Core\Event\PrePersistEvent;
+use Honey\ODM\Core\Event\PreRemoveEvent;
+use Honey\ODM\Core\Event\PreUpdateEvent;
 use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
@@ -132,5 +136,119 @@ describe('ObjectManager', function () {
                 ->and($object->name)->toBe('Test Name 10');
         })
             ->depends('it flushes pending operations');
+    });
+
+    it("won't fire a PrePersistEvent on an object not supposed to be persisted", function () {
+        $method = Reflection::method(ObjectManager::class, 'firePrePersistEvent');
+        $transport = new TestTransport();
+        $eventDispatcher = new TestEventDispatcher();
+        $objectManager = new ObjectManager(
+            new TestClassMetadataRegistry(),
+            new TestDocumentMapper(),
+            $eventDispatcher,
+            $transport,
+        );
+        $object = new TestDocument(1, 'Test Name 1');
+        $objectManager->persist($object);
+        $objectManager->flush();
+        $eventDispatcher->resetEvents();
+        $object->name = 'Modified Name';
+        $objectManager->unitOfWork->computeChangesets();
+
+        // When
+        $method->invoke($objectManager, $object);
+
+        // Then
+        expect($eventDispatcher->getFiredEvents(PrePersistEvent::class))->toHaveCount(0);
+    });
+
+    it("won't fire a PreUpdateEvent on an object not supposed to be persisted", function () {
+        $method = Reflection::method(ObjectManager::class, 'firePreUpdateEvent');
+        $transport = new TestTransport();
+        $eventDispatcher = new TestEventDispatcher();
+        $objectManager = new ObjectManager(
+            new TestClassMetadataRegistry(),
+            new TestDocumentMapper(),
+            $eventDispatcher,
+            $transport,
+        );
+        $object = new TestDocument(1, 'Test Name 1');
+        $objectManager->persist($object);
+
+        // When
+        $method->invoke($objectManager, $object);
+
+        // Then
+        expect($eventDispatcher->getFiredEvents(PreUpdateEvent::class))->toHaveCount(0);
+    });
+
+    it("won't fire a PreUpdateEvent twice on the same object during the same flush session", function () {
+        $method = Reflection::method(ObjectManager::class, 'firePreUpdateEvent');
+        $transport = new TestTransport();
+        $eventDispatcher = new TestEventDispatcher();
+        $objectManager = new ObjectManager(
+            new TestClassMetadataRegistry(),
+            new TestDocumentMapper(),
+            $eventDispatcher,
+            $transport,
+        );
+        $object = new TestDocument(1, 'Test Name 1');
+        $objectManager->persist($object);
+        $objectManager->flush();
+        $eventDispatcher->resetEvents();
+        $object->name = 'Modified Name';
+        $objectManager->unitOfWork->computeChangesets();
+
+        // When
+        $method->invoke($objectManager, $object);
+        $method->invoke($objectManager, $object);
+
+        // Then
+        expect($eventDispatcher->getFiredEvents(PreUpdateEvent::class))->toHaveCount(1);
+    });
+
+    it("won't fire a PreRemoveEvent on an object not supposed to be removed", function () {
+        $method = Reflection::method(ObjectManager::class, 'firePreRemoveEvent');
+        $transport = new TestTransport();
+        $eventDispatcher = new TestEventDispatcher();
+        $objectManager = new ObjectManager(
+            new TestClassMetadataRegistry(),
+            new TestDocumentMapper(),
+            $eventDispatcher,
+            $transport,
+        );
+        $object = new TestDocument(1, 'Test Name 1');
+        $objectManager->persist($object);
+        $objectManager->flush();
+        $eventDispatcher->resetEvents();
+        $object->name = 'Modified Name';
+        $objectManager->unitOfWork->computeChangesets();
+
+        // When
+        $method->invoke($objectManager, $object);
+
+        // Then
+        expect($eventDispatcher->getFiredEvents(PreRemoveEvent::class))->toHaveCount(0);
+    });
+
+    it("won't fire a PreRemoveEvent twice on the same object during the same flush session", function () {
+        $method = Reflection::method(ObjectManager::class, 'firePreRemoveEvent');
+        $transport = new TestTransport();
+        $eventDispatcher = new TestEventDispatcher();
+        $objectManager = new ObjectManager(
+            new TestClassMetadataRegistry(),
+            new TestDocumentMapper(),
+            $eventDispatcher,
+            $transport,
+        );
+        $object = new TestDocument(1, 'Test Name 1');
+        $objectManager->remove($object);
+
+        // When
+        $method->invoke($objectManager, $object);
+        $method->invoke($objectManager, $object);
+
+        // Then
+        expect($eventDispatcher->getFiredEvents(PreRemoveEvent::class))->toHaveCount(1);
     });
 });
