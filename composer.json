@@ -21,7 +21,8 @@
     "symfony/property-access": "~7.0",
     "bentools/reflection-plus": "^1.0",
     "symfony/object-mapper": "~7.3",
-    "psr/container": "^2.0"
+    "psr/container": "^2.0",
+    "bentools/iterable-functions": "^2.3"
   },
   "require-dev": {
     "pestphp/pest": "^4.1",

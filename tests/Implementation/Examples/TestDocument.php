@@ -7,7 +7,7 @@ namespace Honey\ODM\Core\Tests\Implementation\Examples;
 use Honey\ODM\Core\Tests\Implementation\Config\TestAsDocument;
 use Honey\ODM\Core\Tests\Implementation\Config\TestAsField;
 
-#[TestAsDocument]
+#[TestAsDocument(bucket: 'documents')]
 final class TestDocument
 {
     public function __construct(
