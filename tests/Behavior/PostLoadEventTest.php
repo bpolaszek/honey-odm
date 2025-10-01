@@ -28,10 +28,10 @@ describe('PostLoadEvent', function () {
         $object = $objectManager->find(TestDocument::class, 1);
 
         // Then
-        expect($eventDispatcher->firedEvents)->toHaveCount(1)
-            ->and($eventDispatcher->firedEvents[0])->toBeInstanceOf(PostLoadEvent::class)
-            ->and($eventDispatcher->firedEvents[0]->object)->toBe($object)
-            ->and($eventDispatcher->firedEvents[0]->objectManager)->toBe($objectManager);
+        expect($eventDispatcher->getFiredEvents(PostLoadEvent::class))->toHaveCount(1)
+            ->and($eventDispatcher->getFiredEvents(PostLoadEvent::class)[0])->toBeInstanceOf(PostLoadEvent::class)
+            ->and($eventDispatcher->getFiredEvents(PostLoadEvent::class)[0]->object)->toBe($object)
+            ->and($eventDispatcher->getFiredEvents(PostLoadEvent::class)[0]->objectManager)->toBe($objectManager);
     });
 
     it(
@@ -42,7 +42,7 @@ describe('PostLoadEvent', function () {
             $objectManager->find(TestDocument::class, 1);
 
             // Then
-            expect($eventDispatcher->firedEvents)->toHaveCount(0);
+            expect($eventDispatcher->getFiredEvents(PostLoadEvent::class))->toHaveCount(0);
         },
     )
         ->depends('it fires a PostLoadEvent after creating an object');

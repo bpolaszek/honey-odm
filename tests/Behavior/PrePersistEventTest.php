@@ -29,10 +29,10 @@ describe('PrePersistEvent', function () {
         $objectManager->flush();
 
         // Then
-        expect($eventDispatcher->firedEvents)->toHaveCount(1)
-            ->and($eventDispatcher->firedEvents[0])->toBeInstanceOf(PrePersistEvent::class)
-            ->and($eventDispatcher->firedEvents[0]->object)->toBe($object)
-            ->and($eventDispatcher->firedEvents[0]->objectManager)->toBe($objectManager);
+        expect($eventDispatcher->getFiredEvents(PrePersistEvent::class))->toHaveCount(1)
+            ->and($eventDispatcher->getFiredEvents(PrePersistEvent::class)[0])->toBeInstanceOf(PrePersistEvent::class)
+            ->and($eventDispatcher->getFiredEvents(PrePersistEvent::class)[0]->object)->toBe($object)
+            ->and($eventDispatcher->getFiredEvents(PrePersistEvent::class)[0]->objectManager)->toBe($objectManager);
     });
 
     it(
@@ -43,7 +43,7 @@ describe('PrePersistEvent', function () {
             $objectManager->flush();
 
             // Then
-            expect($eventDispatcher->firedEvents)->toHaveCount(0);
+            expect($eventDispatcher->getFiredEvents(PrePersistEvent::class))->toHaveCount(0);
         },
     )
         ->depends('it fires a PrePersistEvent during flush process');

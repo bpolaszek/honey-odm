@@ -21,11 +21,16 @@ final class TestEventDispatcher implements EventDispatcherInterface
         foreach ($this->listeners[$event::class] ?? [] as $callback) {
             $callback($event);
         }
-        $this->firedEvents[] = $event;
+        $this->firedEvents[$event::class][] = $event;
     }
 
     public function resetEvents(): void
     {
         $this->firedEvents = [];
+    }
+
+    public function getFiredEvents(string $eventClass): array
+    {
+        return $this->firedEvents[$eventClass] ?? [];
     }
 }

@@ -66,7 +66,7 @@ final class ObjectManager implements ObjectManagerInterface
                 $this->firePrePersistEvent($object);
             }
 
-            foreach ($this->unitOfWork->getPendingInserts() as $object) {
+            foreach ($this->unitOfWork->getPendingUpdates() as $object) {
                 $this->firePreUpdateEvent($object);
             }
 
