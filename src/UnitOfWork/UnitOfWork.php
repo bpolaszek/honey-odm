@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\UnitOfWork;
 
 use Honey\ODM\Core\Manager\ObjectManagerInterface;
+use Honey\ODM\Core\Misc\UniqueList;
+use InvalidArgumentException;
 use SplObjectStorage;
 use WeakMap;
 
@@ -14,32 +16,47 @@ use function in_array;
 
 final class UnitOfWork
 {
-    private const int DELETE = 0;
-    private const int CREATE = 1;
-    private const int UPDATE = 2;
+    public const int DELETE = 0;
+    public const int CREATE = 1;
+    public const int UPDATE = 2;
 
     private readonly SplObjectStorage $scheduled;
     private WeakMap $changesets;
+
+    /**
+     * @var WeakMap<object, int>
+     */
+    private WeakMap $pendingOperations;
+
+    /**
+     * @var WeakMap<object, UniqueList<string>>
+     */
+    private WeakMap $firedEvents;
     public private(set) string $hash;
 
     public function __construct(
         public readonly ObjectManagerInterface $objectManager,
     ) {
         $this->scheduled = new SplObjectStorage();
+        $this->changesets = new WeakMap();
+        $this->pendingOperations = new WeakMap();
+        $this->firedEvents = new WeakMap();
     }
 
     public function scheduleUpsert(object $object, object ...$objects): void
     {
         foreach ([$object, ...$objects] as $object) {
             $operation = $this->objectManager->identities->contains($object) ? self::UPDATE : self::CREATE;
-            $this->scheduled->attach($object, $operation);
+            $this->scheduled->attach($object);
+            $this->pendingOperations[$object] = $operation;
         }
     }
 
     public function scheduleDeletion(object $object, object ...$objects): void
     {
         foreach ([$object, ...$objects] as $object) {
-            $this->scheduled->attach($object, self::DELETE);
+            $this->scheduled->attach($object);
+            $this->pendingOperations[$object] = self::DELETE;
         }
     }
 
@@ -75,15 +92,35 @@ final class UnitOfWork
 
     public function getPendingUpserts(): iterable
     {
-        return iterable($this->scheduled)->filter(
-            fn (object $object) => in_array($this->scheduled->getInfo(), [self::CREATE, self::UPDATE], true),
+        return iterable(weakmap_objects($this->pendingOperations))->filter(
+            fn (object $object) => in_array($this->pendingOperations[$object], [self::CREATE, self::UPDATE], true),
         );
     }
 
     public function getPendingDeletions(): iterable
     {
-        return iterable($this->scheduled)->filter(
-            fn (object $object) => self::DELETE === $this->scheduled->getInfo(),
+        return iterable(weakmap_objects($this->pendingOperations))->filter(
+            fn (object $object) => self::DELETE === $this->pendingOperations[$object],
         );
+    }
+
+    public function getPendingOperation(object $object): int
+    {
+        return $this->pendingOperations[$object]
+            ?? throw new InvalidArgumentException('The given object is not scheduled for any operation.');
+    }
+
+    public function registerFiredEvent(object $object, string $eventClass): void
+    {
+        $this->firedEvents[$object] ??= new UniqueList();
+        $this->firedEvents[$object][] = $eventClass;
+    }
+
+    public function hasFiredEvent(object $object, string $eventClass): bool
+    {
+        $this->firedEvents[$object] ??= new UniqueList();
+        $firedEvents = [...$this->firedEvents[$object]];
+
+        return in_array($eventClass, $firedEvents, true);
     }
 }

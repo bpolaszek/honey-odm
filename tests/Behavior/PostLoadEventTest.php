@@ -38,7 +38,7 @@ describe('PostLoadEvent', function () {
         'doesn\'t fire a second PostLoadEvent when the object is already managed',
         function () use ($objectManager, $eventDispatcher) {
             // When
-            $eventDispatcher->reset();
+            $eventDispatcher->resetEvents();
             $objectManager->find(TestDocument::class, 1);
 
             // Then

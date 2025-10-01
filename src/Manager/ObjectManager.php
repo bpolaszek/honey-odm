@@ -9,6 +9,7 @@ use Honey\ODM\Core\Config\ClassMetadataInterface;
 use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
 use Honey\ODM\Core\Config\PropertyMetadataInterface;
 use Honey\ODM\Core\Event\PostLoadEvent;
+use Honey\ODM\Core\Event\PrePersistEvent;
 use Honey\ODM\Core\Mapper\DocumentMapperInterface;
 use Honey\ODM\Core\Transport\TransportInterface;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
@@ -102,6 +103,19 @@ final class ObjectManager implements ObjectManagerInterface
         $identityMap->rememberState($object, $document);
 
         return $object;
+    }
+
+    public function firePrePersistEvent(object $object): void
+    {
+        if (UnitOfWork::CREATE !== $this->unitOfWork->getPendingOperation($object)) {
+            return;
+        }
+        if ($this->unitOfWork->hasFiredEvent($object, PrePersistEvent::class)) {
+            return;
+        }
+        $event = new PrePersistEvent($object, $this);
+        $this->eventDispatcher->dispatch($event);
+        $this->unitOfWork->registerFiredEvent($object, PrePersistEvent::class);
     }
 
     private function resetUnitOfWork(): void

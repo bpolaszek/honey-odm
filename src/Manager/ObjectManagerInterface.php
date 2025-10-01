@@ -33,4 +33,6 @@ interface ObjectManagerInterface
      * @return O|null
      */
     public function find(string $className, mixed $id): ?object;
+
+    public function firePrePersistEvent(object $object): void;
 }
