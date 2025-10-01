@@ -9,6 +9,9 @@ use Honey\ODM\Core\Config\ClassMetadataInterface;
 use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
 use Honey\ODM\Core\Config\PropertyMetadataInterface;
 use Honey\ODM\Core\Event\PostLoadEvent;
+use Honey\ODM\Core\Event\PostPersistEvent;
+use Honey\ODM\Core\Event\PostRemoveEvent;
+use Honey\ODM\Core\Event\PostUpdateEvent;
 use Honey\ODM\Core\Event\PrePersistEvent;
 use Honey\ODM\Core\Event\PreRemoveEvent;
 use Honey\ODM\Core\Event\PreUpdateEvent;
@@ -83,6 +86,7 @@ final class ObjectManager implements ObjectManagerInterface
             $this->transport->flushPendingOperations($this->unitOfWork);
             $this->identities->attach(...$this->unitOfWork->getPendingUpserts());
             $this->identities->detach(...$this->unitOfWork->getPendingDeletes());
+            $this->firePostFlushEvents();
             $this->resetUnitOfWork();
         } finally {
             $this->isFlushing = false;
@@ -167,6 +171,22 @@ final class ObjectManager implements ObjectManagerInterface
         $event = new PreRemoveEvent($object, $this);
         $this->eventDispatcher->dispatch($event);
         $this->unitOfWork->registerFiredEvent($object, PreRemoveEvent::class);
+    }
+
+    private function firePostFlushEvents(): void
+    {
+        $map = [
+            PrePersistEvent::class => PostPersistEvent::class,
+            PreUpdateEvent::class => PostUpdateEvent::class,
+            PreRemoveEvent::class => PostRemoveEvent::class,
+        ];
+        foreach ($this->unitOfWork->firedEvents as $object => $events) {
+            foreach ($events as $eventClass) {
+                $targetEventClass = $map[$eventClass];
+                $event = new $targetEventClass($object, $this);
+                $this->eventDispatcher->dispatch($event);
+            }
+        }
     }
 
     private function resetUnitOfWork(): void

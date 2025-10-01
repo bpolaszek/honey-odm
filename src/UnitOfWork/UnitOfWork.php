@@ -31,7 +31,7 @@ final class UnitOfWork
     /**
      * @var WeakMap<object, UniqueList<string>>
      */
-    private WeakMap $firedEvents;
+    public private(set) WeakMap $firedEvents;
     public private(set) string $hash;
 
     public function __construct(
