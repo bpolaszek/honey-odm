@@ -84,7 +84,7 @@ describe('ObjectManager', function () {
             $objectManager->remove($objects[4]);
 
             // Then
-            $pendingDeletions = [...$objectManager->unitOfWork->getPendingDeletions()];
+            $pendingDeletions = [...$objectManager->unitOfWork->getPendingDeletes()];
             expect($pendingDeletions)->toContain(...array_slice($objects, 2, 3));
         })
             ->depends('it persists objects');
@@ -107,7 +107,7 @@ describe('ObjectManager', function () {
                 ],
             ])
                 ->and($objectManager->unitOfWork)->not()->toBe($unitOfWork)
-                ->and([...$objectManager->unitOfWork->getPendingDeletions()])->toBeEmpty()
+                ->and([...$objectManager->unitOfWork->getPendingDeletes()])->toBeEmpty()
                 ->and([...$objectManager->unitOfWork->getPendingUpserts()])->toBeEmpty()
             ;
         })

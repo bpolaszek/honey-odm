@@ -68,7 +68,7 @@ describe('UnitOfWork', function () {
         $unitOfWork->scheduleUpsert($document3);
 
         // Then
-        $pendingDeletions = iterator_to_array($unitOfWork->getPendingDeletions());
+        $pendingDeletions = iterator_to_array($unitOfWork->getPendingDeletes());
         expect($pendingDeletions)->toHaveCount(2)
             ->and($pendingDeletions)->toContain($document1)
             ->and($pendingDeletions)->toContain($document2);
@@ -122,7 +122,7 @@ describe('UnitOfWork', function () {
         $unitOfWork->scheduleDeletion($deleteDocument);
 
         // Then
-        $pendingDeletions = iterator_to_array($unitOfWork->getPendingDeletions());
+        $pendingDeletions = iterator_to_array($unitOfWork->getPendingDeletes());
         expect($pendingDeletions)->toHaveCount(1)
             ->and($pendingDeletions)->toContain($deleteDocument)
             ->and($pendingDeletions)->not->toContain($upsertDocument);

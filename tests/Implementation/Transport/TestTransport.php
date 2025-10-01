@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Tests\Implementation\Transport;
 
 use Honey\ODM\Core\Config\ClassMetadataInterface;
-use Honey\ODM\Core\Event\PrePersistEvent;
 use Honey\ODM\Core\Tests\Implementation\Config\TestAsDocument;
 use Honey\ODM\Core\Transport\TransportInterface;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
@@ -21,20 +20,6 @@ final class TestTransport implements TransportInterface
         $objectManager = $unitOfWork->objectManager;
         $classMetadataRegistry = $objectManager->classMetadataRegistry;
         $mapper = $objectManager->documentMapper;
-        $unitOfWork->computeChangesets();
-
-        CheckChangesetsAndFireEvents:
-        $hash = $unitOfWork->hash;
-
-        foreach ($unitOfWork->getPendingUpserts() as $object) {
-            $objectManager->firePrePersistEvent($object);
-        }
-
-        // Check if changesets have changed during events
-        $unitOfWork->computeChangesets();
-        if ($unitOfWork->hash !== $hash) {
-            goto CheckChangesetsAndFireEvents;
-        }
 
         foreach ($unitOfWork->getPendingUpserts() as $object) {
             /** @var TestAsDocument $classMetadata */
@@ -44,7 +29,7 @@ final class TestTransport implements TransportInterface
             $document = $mapper->objectToDocument($classMetadata, $object);
             $this->storage[$bucket][$id] = array_merge($this->storage[$bucket][$id] ?? [], $document);
         }
-        foreach ($unitOfWork->getPendingDeletions() as $object) {
+        foreach ($unitOfWork->getPendingDeletes() as $object) {
             /** @var TestAsDocument $classMetadata */
             $classMetadata = $classMetadataRegistry->getClassMetadata($object::class);
             $bucket = $classMetadata->bucket;

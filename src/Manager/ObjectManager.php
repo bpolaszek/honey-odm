@@ -10,6 +10,8 @@ use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
 use Honey\ODM\Core\Config\PropertyMetadataInterface;
 use Honey\ODM\Core\Event\PostLoadEvent;
 use Honey\ODM\Core\Event\PrePersistEvent;
+use Honey\ODM\Core\Event\PreRemoveEvent;
+use Honey\ODM\Core\Event\PreUpdateEvent;
 use Honey\ODM\Core\Mapper\DocumentMapperInterface;
 use Honey\ODM\Core\Transport\TransportInterface;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
@@ -55,9 +57,32 @@ final class ObjectManager implements ObjectManagerInterface
 
         try {
             $this->isFlushing = true;
+            $this->unitOfWork->computeChangesets();
+
+            CheckChangesetsAndFireEvents:
+            $hash = $this->unitOfWork->hash;
+
+            foreach ($this->unitOfWork->getPendingInserts() as $object) {
+                $this->firePrePersistEvent($object);
+            }
+
+            foreach ($this->unitOfWork->getPendingInserts() as $object) {
+                $this->firePreUpdateEvent($object);
+            }
+
+            foreach ($this->unitOfWork->getPendingDeletes() as $object) {
+                $this->firePreRemoveEvent($object);
+            }
+
+            // Check if changesets have changed during events
+            $this->unitOfWork->computeChangesets();
+            if ($this->unitOfWork->hash !== $hash) {
+                goto CheckChangesetsAndFireEvents;
+            }
+
             $this->transport->flushPendingOperations($this->unitOfWork);
             $this->identities->attach(...$this->unitOfWork->getPendingUpserts());
-            $this->identities->detach(...$this->unitOfWork->getPendingDeletions());
+            $this->identities->detach(...$this->unitOfWork->getPendingDeletes());
             $this->resetUnitOfWork();
         } finally {
             $this->isFlushing = false;
@@ -105,7 +130,7 @@ final class ObjectManager implements ObjectManagerInterface
         return $object;
     }
 
-    public function firePrePersistEvent(object $object): void
+    private function firePrePersistEvent(object $object): void
     {
         if (UnitOfWork::CREATE !== $this->unitOfWork->getPendingOperation($object)) {
             return;
@@ -116,6 +141,32 @@ final class ObjectManager implements ObjectManagerInterface
         $event = new PrePersistEvent($object, $this);
         $this->eventDispatcher->dispatch($event);
         $this->unitOfWork->registerFiredEvent($object, PrePersistEvent::class);
+    }
+
+    private function firePreUpdateEvent(object $object): void
+    {
+        if (UnitOfWork::UPDATE !== $this->unitOfWork->getPendingOperation($object)) {
+            return;
+        }
+        if ($this->unitOfWork->hasFiredEvent($object, PreUpdateEvent::class)) {
+            return;
+        }
+        $event = new PreUpdateEvent($object, $this);
+        $this->eventDispatcher->dispatch($event);
+        $this->unitOfWork->registerFiredEvent($object, PreUpdateEvent::class);
+    }
+
+    private function firePreRemoveEvent(object $object): void
+    {
+        if (UnitOfWork::DELETE !== $this->unitOfWork->getPendingOperation($object)) {
+            return;
+        }
+        if ($this->unitOfWork->hasFiredEvent($object, PreRemoveEvent::class)) {
+            return;
+        }
+        $event = new PreRemoveEvent($object, $this);
+        $this->eventDispatcher->dispatch($event);
+        $this->unitOfWork->registerFiredEvent($object, PreRemoveEvent::class);
     }
 
     private function resetUnitOfWork(): void

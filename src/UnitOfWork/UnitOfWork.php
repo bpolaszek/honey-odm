@@ -80,7 +80,7 @@ final class UnitOfWork
             }
         }
 
-        foreach ($this->getPendingDeletions() as $object) {
+        foreach ($this->getPendingDeletes() as $object) {
             $this->hash = hash('xxh32', $this->hash . spl_object_hash($object));
         }
     }
@@ -97,7 +97,21 @@ final class UnitOfWork
         );
     }
 
-    public function getPendingDeletions(): iterable
+    public function getPendingInserts(): iterable
+    {
+        return iterable(weakmap_objects($this->pendingOperations))->filter(
+            fn (object $object) => self::CREATE === $this->pendingOperations[$object],
+        );
+    }
+
+    public function getPendingUpdates(): iterable
+    {
+        return iterable(weakmap_objects($this->pendingOperations))->filter(
+            fn (object $object) => self::UPDATE === $this->pendingOperations[$object],
+        );
+    }
+
+    public function getPendingDeletes(): iterable
     {
         return iterable(weakmap_objects($this->pendingOperations))->filter(
             fn (object $object) => self::DELETE === $this->pendingOperations[$object],
@@ -118,9 +132,10 @@ final class UnitOfWork
 
     public function hasFiredEvent(object $object, string $eventClass): bool
     {
-        $this->firedEvents[$object] ??= new UniqueList();
-        $firedEvents = [...$this->firedEvents[$object]];
+        if (!isset($this->firedEvents[$object])) {
+            return false;
+        }
 
-        return in_array($eventClass, $firedEvents, true);
+        return in_array($eventClass, $this->firedEvents[$object]->toArray(), true);
     }
 }
