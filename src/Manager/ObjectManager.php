@@ -22,7 +22,7 @@ final class ObjectManager implements ObjectManagerInterface
 {
     public readonly Identities $identities;
     private readonly ObjectFactory $factory;
-    private UnitOfWork $unitOfWork;
+    public private(set) UnitOfWork $unitOfWork;
     private bool $isFlushing = false;
 
     public function __construct(
@@ -55,6 +55,8 @@ final class ObjectManager implements ObjectManagerInterface
         try {
             $this->isFlushing = true;
             $this->transport->flushPendingOperations($this->unitOfWork);
+            $this->identities->attach(...$this->unitOfWork->getPendingUpserts());
+            $this->identities->detach(...$this->unitOfWork->getPendingDeletions());
             $this->resetUnitOfWork();
         } finally {
             $this->isFlushing = false;
@@ -69,7 +71,12 @@ final class ObjectManager implements ObjectManagerInterface
 
         $classMetadata = $this->classMetadataRegistry->getClassMetadata($className);
 
-        return $this->transport->retrieveDocumentById($classMetadata, $id);
+        $document = $this->transport->retrieveDocumentById($classMetadata, $id);
+        if (!$document) {
+            return null;
+        }
+
+        return $this->factory->factory($document, $classMetadata);
     }
 
     private function resetUnitOfWork(): void

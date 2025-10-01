@@ -32,10 +32,12 @@ final class Identities implements IteratorAggregate
         $this->rememberedStates = new WeakMap();
     }
 
-    public function attach(object $object): void
+    public function attach(object ...$objects): void
     {
-        $id = $this->classMetadataRegistry->getIdFromObject($object);
-        $this->storage->attach($object, $id);
+        foreach ($objects as $object) {
+            $id = $this->classMetadataRegistry->getIdFromObject($object);
+            $this->storage->attach($object, $id);
+        }
     }
 
     public function rememberState(object $object, array $document): void
@@ -48,10 +50,12 @@ final class Identities implements IteratorAggregate
         unset($this->rememberedStates[$object]);
     }
 
-    public function detach(object $object): void
+    public function detach(object ...$objects): void
     {
-        if ($this->storage->contains($object)) {
-            $this->storage->detach($object);
+        foreach ($objects as $object) {
+            if ($this->storage->contains($object)) {
+                $this->storage->detach($object);
+            }
         }
     }
 
