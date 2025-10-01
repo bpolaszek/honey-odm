@@ -43,7 +43,7 @@ final class ObjectManager implements ObjectManagerInterface
 
     public function remove(object $object, object ...$objects): void
     {
-        $this->unitOfWork->scheduleRemoval($object, ...$objects);
+        $this->unitOfWork->scheduleDeletion($object, ...$objects);
     }
 
     public function flush(): void

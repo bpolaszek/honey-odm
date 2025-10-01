@@ -36,7 +36,7 @@ final class UnitOfWork
         }
     }
 
-    public function scheduleRemoval(object $object, object ...$objects): void
+    public function scheduleDeletion(object $object, object ...$objects): void
     {
         foreach ([$object, ...$objects] as $object) {
             $this->scheduled->attach($object, self::DELETE);
