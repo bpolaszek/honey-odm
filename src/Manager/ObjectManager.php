@@ -8,6 +8,7 @@ use BenTools\ReflectionPlus\Reflection;
 use Honey\ODM\Core\Config\ClassMetadataInterface;
 use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
 use Honey\ODM\Core\Config\PropertyMetadataInterface;
+use Honey\ODM\Core\Event\PostLoadEvent;
 use Honey\ODM\Core\Mapper\DocumentMapperInterface;
 use Honey\ODM\Core\Transport\TransportInterface;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
@@ -89,12 +90,13 @@ final class ObjectManager implements ObjectManagerInterface
         if ($identityMap->containsId($className, $id)) {
             return $identityMap->getObject($className, $id);
         }
-        $object = Reflection::class($className)->newLazyProxy(function () use ($document, $className, $classMetadata) {
-            return $this->documentMapper->documentToObject(
+        $object = Reflection::class($className)->newLazyGhost(function (object $ghost) use ($document, $classMetadata) {
+            $object = $this->documentMapper->documentToObject(
                 $classMetadata,
                 $document,
-                Reflection::class($className)->newInstanceWithoutConstructor()
+                $ghost,
             );
+            $this->eventDispatcher->dispatch(new PostLoadEvent($object, $this));
         });
         $identityMap->attach($object);
         $identityMap->rememberState($object, $document);
