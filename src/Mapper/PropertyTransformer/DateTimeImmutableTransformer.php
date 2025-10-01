@@ -49,11 +49,11 @@ final class DateTimeImmutableTransformer implements PropertyTransformerInterface
      *
      * @throws DateInvalidTimeZoneException
      */
-    public function toDocument(// @phpstan-ignore missingType.generics
+    public function toDocument(// @phpstan-ignore missingType.generics, return.unusedType
         mixed $value,
         PropertyMetadataInterface $propertyMetadata,
         MappingContextInterface $context,
-    ): ?string {
+    ): string|int|float|null {
         if (null === $value) {
             return null;
         }

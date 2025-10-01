@@ -10,6 +10,7 @@ use Psr\Container\NotFoundExceptionInterface;
 
 /**
  * @internal
+ *
  * @codeCoverageIgnore
  */
 final readonly class DummyContainer implements ContainerInterface
