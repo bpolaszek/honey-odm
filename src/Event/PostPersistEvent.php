@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Event;
 
-use Honey\ODM\Core\Manager\ObjectManagerInterface;
+use Honey\ODM\Core\Manager\ObjectManager;
 
 /**
  * @template T
@@ -16,7 +16,7 @@ final readonly class PostPersistEvent
      */
     public function __construct(
         public object $object,
-        public ObjectManagerInterface $objectManager,
+        public ObjectManager $objectManager,
     ) {
     }
 }

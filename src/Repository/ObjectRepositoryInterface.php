@@ -12,12 +12,19 @@ interface ObjectRepositoryInterface
 {
     /**
      * @param C $criteria
+     *
      * @return ResultInterface<O>
      */
     public function findBy(mixed $criteria): ResultInterface;
 
     /**
+     * @return ResultInterface<O>
+     */
+    public function findAll(): ResultInterface;
+
+    /**
      * @param C $criteria
+     *
      * @return O|null
      */
     public function findOneBy(mixed $criteria): ?object;

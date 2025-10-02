@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Tests\Implementation\Transport;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Honey\ODM\Core\Config\ClassMetadataInterface;
 use Honey\ODM\Core\Tests\Implementation\Config\TestAsDocument;
 use Honey\ODM\Core\Transport\TransportInterface;
@@ -13,6 +14,9 @@ use function array_merge;
 
 final class TestTransport implements TransportInterface
 {
+    /**
+     * @var array<string, ArrayCollection>
+     */
     public array $storage = [];
 
     public function flushPendingOperations(UnitOfWork $unitOfWork): void
@@ -27,6 +31,7 @@ final class TestTransport implements TransportInterface
             $id = $classMetadataRegistry->getIdFromObject($object);
             $bucket = $classMetadata->bucket;
             $document = $mapper->objectToDocument($classMetadata, $object);
+            $this->storage[$bucket] ??= new ArrayCollection();
             $this->storage[$bucket][$id] = array_merge($this->storage[$bucket][$id] ?? [], $document);
         }
         foreach ($unitOfWork->getPendingDeletes() as $object) {
@@ -38,7 +43,7 @@ final class TestTransport implements TransportInterface
         }
     }
 
-    public function retrieveDocuments(mixed $criteria): iterable
+    public function retrieveDocuments(mixed $criteria): array
     {
         // TODO: Implement retrieveDocuments() method.
     }

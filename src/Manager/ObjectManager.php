@@ -7,6 +7,7 @@ namespace Honey\ODM\Core\Manager;
 use BenTools\ReflectionPlus\Reflection;
 use Honey\ODM\Core\Config\ClassMetadataInterface;
 use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
+use Honey\ODM\Core\Config\PropertyMetadataInterface;
 use Honey\ODM\Core\Event\PostLoadEvent;
 use Honey\ODM\Core\Event\PostPersistEvent;
 use Honey\ODM\Core\Event\PostRemoveEvent;
@@ -21,7 +22,11 @@ use Honey\ODM\Core\UnitOfWork\UnitOfWork;
 use InvalidArgumentException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
-abstract class ObjectManager implements ObjectManagerInterface
+/**
+ * @template C of ClassMetadataInterface
+ * @template P of PropertyMetadataInterface
+ */
+abstract class ObjectManager
 {
     public readonly Identities $identities;
     public private(set) UnitOfWork $unitOfWork;
@@ -42,11 +47,15 @@ abstract class ObjectManager implements ObjectManagerInterface
         $this->resetUnitOfWork();
     }
 
-    protected function registerRepository(string $className, ObjectRepositoryInterface $repository): void
-    {
+    public function registerRepository(
+        string $className,
+        ObjectRepositoryInterface $repository,
+    ): ObjectRepositoryInterface {
         // Ensures the class is properly configured, this will throw an exception otherwise
         $this->classMetadataRegistry->getClassMetadata($className);
         $this->repositories[$className] = $repository;
+
+        return $repository;
     }
 
     /**
@@ -56,7 +65,7 @@ abstract class ObjectManager implements ObjectManagerInterface
      *
      * @return ObjectRepositoryInterface<O>
      */
-    protected function getRepository(string $className): ObjectRepositoryInterface
+    public function getRepository(string $className): ObjectRepositoryInterface
     {
         return $this->repositories[$className]
             ?? throw new InvalidArgumentException("No repository registered for class $className");

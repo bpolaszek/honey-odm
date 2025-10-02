@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\UnitOfWork;
 
-use Honey\ODM\Core\Manager\ObjectManagerInterface;
+use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Misc\UniqueList;
 use SplObjectStorage;
 use WeakMap;
@@ -35,7 +35,7 @@ final class UnitOfWork
     public private(set) string $hash;
 
     public function __construct(
-        public readonly ObjectManagerInterface $objectManager,
+        public readonly ObjectManager $objectManager,
     ) {
         $this->scheduled = new SplObjectStorage();
         $this->changesets = new WeakMap();
