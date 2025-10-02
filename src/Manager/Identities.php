@@ -14,6 +14,7 @@ use WeakMap;
 
 /**
  * @internal
+ *
  * @implements IteratorAggregate<int, object>
  */
 final class Identities implements IteratorAggregate

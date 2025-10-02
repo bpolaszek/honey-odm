@@ -49,8 +49,10 @@ abstract class ObjectManager
 
     /**
      * @template O of object
+     *
      * @param class-string<O> $className
      * @param ObjectRepositoryInterface<C, O> $repository
+     *
      * @return ObjectRepositoryInterface<C, O>
      */
     public function registerRepository(

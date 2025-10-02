@@ -16,6 +16,7 @@ interface TransportInterface
 
     /**
      * @param C $criteria
+     *
      * @return iterable<array<string, mixed>>
      */
     public function retrieveDocuments(mixed $criteria): iterable;
