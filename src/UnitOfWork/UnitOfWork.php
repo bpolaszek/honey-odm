@@ -6,7 +6,6 @@ namespace Honey\ODM\Core\UnitOfWork;
 
 use Honey\ODM\Core\Manager\ObjectManagerInterface;
 use Honey\ODM\Core\Misc\UniqueList;
-use InvalidArgumentException;
 use SplObjectStorage;
 use WeakMap;
 
@@ -16,9 +15,10 @@ use function in_array;
 
 final class UnitOfWork
 {
-    public const int DELETE = 0;
-    public const int CREATE = 1;
-    public const int UPDATE = 2;
+    public const int NONE = 0;
+    public const int DELETE = 1;
+    public const int CREATE = 2;
+    public const int UPDATE = 3;
 
     private readonly SplObjectStorage $scheduled;
     private WeakMap $changesets;
@@ -65,6 +65,9 @@ final class UnitOfWork
         $this->changesets = new WeakMap();
         $this->hash = '';
         foreach ($this->objectManager->identities as $object) {
+            if (self::DELETE === $this->getPendingOperation($object)) {
+                continue;
+            }
             $changeset = $this->objectManager->identities->computeChangeset($object);
             if ([] !== $changeset->changedProperties) {
                 $this->changesets[$object] = $changeset;
@@ -120,8 +123,7 @@ final class UnitOfWork
 
     public function getPendingOperation(object $object): int
     {
-        return $this->pendingOperations[$object]
-            ?? throw new InvalidArgumentException('The given object is not scheduled for any operation.');
+        return $this->pendingOperations[$object] ?? self::NONE;
     }
 
     public function registerFiredEvent(object $object, string $eventClass): void
