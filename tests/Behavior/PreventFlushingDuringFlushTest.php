@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Tests\Behavior;
 
 use Honey\ODM\Core\Event\PrePersistEvent;
-use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
+use Honey\ODM\Core\Tests\Implementation\Manager\TestObjectManager;
 use Honey\ODM\Core\Tests\Implementation\Mapper\TestDocumentMapper;
 use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
 
@@ -18,7 +18,7 @@ describe('Prevent flushing during flush', function () {
     it('prevents infinite flushing loop during flush operation', function () {
         $transport = new TestTransport();
         $eventDispatcher = new TestEventDispatcher();
-        $objectManager = new ObjectManager(
+        $objectManager = new TestObjectManager(
             new TestClassMetadataRegistry(),
             new TestDocumentMapper(),
             $eventDispatcher,

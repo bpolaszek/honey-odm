@@ -4,16 +4,13 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Tests\Unit\UnitOfWork;
 
-use Honey\ODM\Core\Manager\Identities;
-use Honey\ODM\Core\Manager\ObjectManager;
-use Honey\ODM\Core\Manager\ObjectManagerInterface;
 use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
+use Honey\ODM\Core\Tests\Implementation\Manager\TestObjectManager;
 use Honey\ODM\Core\Tests\Implementation\Mapper\TestDocumentMapper;
 use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
-use Psr\EventDispatcher\EventDispatcherInterface;
 
 use function iterator_to_array;
 
@@ -24,7 +21,7 @@ describe('UnitOfWork', function () {
         $mapper = new TestDocumentMapper();
         $transport = new TestTransport();
         $eventDispatcher = new TestEventDispatcher();
-        $objectManager = new ObjectManager(
+        $objectManager = new TestObjectManager(
             classMetadataRegistry: $registry,
             documentMapper: $mapper,
             eventDispatcher: $eventDispatcher,
@@ -52,7 +49,7 @@ describe('UnitOfWork', function () {
         $mapper = new TestDocumentMapper();
         $transport = new TestTransport();
         $eventDispatcher = new TestEventDispatcher();
-        $objectManager = new ObjectManager(
+        $objectManager = new TestObjectManager(
             classMetadataRegistry: $registry,
             documentMapper: $mapper,
             eventDispatcher: $eventDispatcher,
@@ -80,7 +77,7 @@ describe('UnitOfWork', function () {
         $mapper = new TestDocumentMapper();
         $transport = new TestTransport();
         $eventDispatcher = new TestEventDispatcher();
-        $objectManager = new ObjectManager(
+        $objectManager = new TestObjectManager(
             classMetadataRegistry: $registry,
             documentMapper: $mapper,
             eventDispatcher: $eventDispatcher,
@@ -107,7 +104,7 @@ describe('UnitOfWork', function () {
         $mapper = new TestDocumentMapper();
         $transport = new TestTransport();
         $eventDispatcher = new TestEventDispatcher();
-        $objectManager = new ObjectManager(
+        $objectManager = new TestObjectManager(
             classMetadataRegistry: $registry,
             documentMapper: $mapper,
             eventDispatcher: $eventDispatcher,
@@ -134,7 +131,7 @@ describe('UnitOfWork', function () {
         $mapper = new TestDocumentMapper();
         $transport = new TestTransport();
         $eventDispatcher = new TestEventDispatcher();
-        $objectManager = new ObjectManager(
+        $objectManager = new TestObjectManager(
             classMetadataRegistry: $registry,
             documentMapper: $mapper,
             eventDispatcher: $eventDispatcher,
@@ -164,7 +161,7 @@ describe('UnitOfWork', function () {
         $mapper = new TestDocumentMapper();
         $transport = new TestTransport();
         $eventDispatcher = new TestEventDispatcher();
-        $objectManager = new ObjectManager(
+        $objectManager = new TestObjectManager(
             classMetadataRegistry: $registry,
             documentMapper: $mapper,
             eventDispatcher: $eventDispatcher,
@@ -198,7 +195,7 @@ describe('UnitOfWork', function () {
         $mapper = new TestDocumentMapper();
         $transport = new TestTransport();
         $eventDispatcher = new TestEventDispatcher();
-        $objectManager = new ObjectManager(
+        $objectManager = new TestObjectManager(
             classMetadataRegistry: $registry,
             documentMapper: $mapper,
             eventDispatcher: $eventDispatcher,

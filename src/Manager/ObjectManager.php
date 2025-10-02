@@ -7,7 +7,6 @@ namespace Honey\ODM\Core\Manager;
 use BenTools\ReflectionPlus\Reflection;
 use Honey\ODM\Core\Config\ClassMetadataInterface;
 use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
-use Honey\ODM\Core\Config\PropertyMetadataInterface;
 use Honey\ODM\Core\Event\PostLoadEvent;
 use Honey\ODM\Core\Event\PostPersistEvent;
 use Honey\ODM\Core\Event\PostRemoveEvent;
@@ -16,21 +15,22 @@ use Honey\ODM\Core\Event\PrePersistEvent;
 use Honey\ODM\Core\Event\PreRemoveEvent;
 use Honey\ODM\Core\Event\PreUpdateEvent;
 use Honey\ODM\Core\Mapper\DocumentMapperInterface;
+use Honey\ODM\Core\Repository\ObjectRepositoryInterface;
 use Honey\ODM\Core\Transport\TransportInterface;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
+use InvalidArgumentException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
-/**
- * @template C of ClassMetadataInterface
- * @template P of PropertyMetadataInterface
- *
- * @implements ObjectManagerInterface<C<P>, P>
- */
-final class ObjectManager implements ObjectManagerInterface
+abstract class ObjectManager implements ObjectManagerInterface
 {
     public readonly Identities $identities;
     public private(set) UnitOfWork $unitOfWork;
     private bool $isFlushing = false;
+
+    /**
+     * @var array<class-string, ObjectRepositoryInterface>
+     */
+    protected array $repositories = [];
 
     public function __construct(
         public readonly ClassMetadataRegistryInterface $classMetadataRegistry,
@@ -42,17 +42,37 @@ final class ObjectManager implements ObjectManagerInterface
         $this->resetUnitOfWork();
     }
 
-    public function persist(object $object, object ...$objects): void
+    protected function registerRepository(string $className, ObjectRepositoryInterface $repository): void
+    {
+        // Ensures the class is properly configured, this will throw an exception otherwise
+        $this->classMetadataRegistry->getClassMetadata($className);
+        $this->repositories[$className] = $repository;
+    }
+
+    /**
+     * @template O of object
+     *
+     * @param class-string<O> $className
+     *
+     * @return ObjectRepositoryInterface<O>
+     */
+    protected function getRepository(string $className): ObjectRepositoryInterface
+    {
+        return $this->repositories[$className]
+            ?? throw new InvalidArgumentException("No repository registered for class $className");
+    }
+
+    final public function persist(object $object, object ...$objects): void
     {
         $this->unitOfWork->scheduleUpsert($object, ...$objects);
     }
 
-    public function remove(object $object, object ...$objects): void
+    final public function remove(object $object, object ...$objects): void
     {
         $this->unitOfWork->scheduleDeletion($object, ...$objects);
     }
 
-    public function flush(): void
+    final public function flush(): void
     {
         if ($this->isFlushing) {
             return; // Avoid recursive flush calls during event propagation
@@ -93,7 +113,7 @@ final class ObjectManager implements ObjectManagerInterface
         }
     }
 
-    public function find(string $className, mixed $id): ?object
+    final public function find(string $className, mixed $id): ?object
     {
         if ($this->identities->containsId($className, $id)) {
             return $this->identities->getObject($className, $id);
@@ -112,7 +132,7 @@ final class ObjectManager implements ObjectManagerInterface
     /**
      * @param ClassMetadataInterface<O, P> $classMetadata
      */
-    public function factory(mixed $document, ClassMetadataInterface $classMetadata): object
+    final public function factory(mixed $document, ClassMetadataInterface $classMetadata): object
     {
         $identityMap = $this->identities;
         $id = $this->classMetadataRegistry->getIdFromDocument($document, $classMetadata->className);
