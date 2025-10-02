@@ -7,7 +7,7 @@ namespace Honey\ODM\Core\Event;
 use Honey\ODM\Core\Manager\ObjectManager;
 
 /**
- * @template T
+ * @template T of object
  */
 final readonly class PreUpdateEvent
 {

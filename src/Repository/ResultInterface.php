@@ -10,7 +10,7 @@ use Traversable;
 /**
  * @template O of object
  *
- * @implements Traversable<O>
+ * @extends Traversable<int, O>
  */
 interface ResultInterface extends Traversable, Countable
 {

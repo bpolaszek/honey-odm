@@ -21,6 +21,10 @@ final class UnitOfWork
     public const int UPDATE = 3;
 
     private readonly SplObjectStorage $scheduled;
+
+    /**
+     * @var WeakMap<object, Changeset>
+     */
     private WeakMap $changesets;
 
     /**
@@ -88,11 +92,17 @@ final class UnitOfWork
         }
     }
 
+    /**
+     * @return iterable<object>
+     */
     public function getChangedObjects(): iterable
     {
         return weakmap_objects($this->changesets);
     }
 
+    /**
+     * @return iterable<object>
+     */
     public function getPendingUpserts(): iterable
     {
         return iterable(weakmap_objects($this->pendingOperations))->filter(
@@ -100,6 +110,9 @@ final class UnitOfWork
         );
     }
 
+    /**
+     * @return iterable<object>
+     */
     public function getPendingInserts(): iterable
     {
         return iterable(weakmap_objects($this->pendingOperations))->filter(
@@ -107,6 +120,9 @@ final class UnitOfWork
         );
     }
 
+    /**
+     * @return iterable<object>
+     */
     public function getPendingUpdates(): iterable
     {
         return iterable(weakmap_objects($this->pendingOperations))->filter(
@@ -114,6 +130,9 @@ final class UnitOfWork
         );
     }
 
+    /**
+     * @return iterable<object>
+     */
     public function getPendingDeletes(): iterable
     {
         return iterable(weakmap_objects($this->pendingOperations))->filter(

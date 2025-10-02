@@ -21,6 +21,8 @@ function throws(Closure $fn): bool
 
 /**
  * @internal
+ * @param WeakMap<object, mixed> $weakmap
+ * @return iterable<object>
  */
 function weakmap_objects(WeakMap $weakmap): iterable
 {

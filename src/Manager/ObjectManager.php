@@ -33,7 +33,7 @@ abstract class ObjectManager
     private bool $isFlushing = false;
 
     /**
-     * @var array<class-string, ObjectRepositoryInterface>
+     * @var array<class-string, ObjectRepositoryInterface<C, object>>
      */
     protected array $repositories = [];
 
@@ -47,6 +47,12 @@ abstract class ObjectManager
         $this->resetUnitOfWork();
     }
 
+    /**
+     * @template O of object
+     * @param class-string<O> $className
+     * @param ObjectRepositoryInterface<C, O> $repository
+     * @return ObjectRepositoryInterface<C, O>
+     */
     public function registerRepository(
         string $className,
         ObjectRepositoryInterface $repository,

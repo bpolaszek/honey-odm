@@ -14,9 +14,13 @@ use WeakMap;
 
 /**
  * @internal
+ * @implements IteratorAggregate<int, object>
  */
 final class Identities implements IteratorAggregate
 {
+    /**
+     * @var SplObjectStorage<int, object>
+     */
     private SplObjectStorage $storage;
 
     /**
@@ -40,6 +44,9 @@ final class Identities implements IteratorAggregate
         }
     }
 
+    /**
+     * @param array<string, mixed> $document
+     */
     public function rememberState(object $object, array $document): void
     {
         $this->rememberedStates[$object] = $document;
@@ -81,6 +88,9 @@ final class Identities implements IteratorAggregate
         return null;
     }
 
+    /**
+     * @param array<string, mixed>|null $document
+     */
     public function computeChangeset(object $object, ?array $document = null): Changeset
     {
         $classMetadata = $this->classMetadataRegistry->getClassMetadata($object::class);
