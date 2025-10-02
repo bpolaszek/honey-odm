@@ -9,7 +9,7 @@ use Honey\ODM\Core\Config\PropertyMetadataInterface;
 use Honey\ODM\Core\Mapper\DocumentMapperInterface;
 use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\Mapper\PropertyTransformer\PropertyTransformerInterface;
-use Honey\ODM\Core\Misc\DummyContainer;
+use Honey\ODM\Core\Misc\EmptyContainer;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\PropertyAccess\Exception\NoSuchPropertyException;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
@@ -22,7 +22,7 @@ final readonly class TestDocumentMapper implements DocumentMapperInterface
 {
     public function __construct(
         private PropertyAccessorInterface $propertyAccessor = new PropertyAccessor(),
-        private ContainerInterface $transformers = new DummyContainer(),
+        private ContainerInterface $transformers = new EmptyContainer(),
     ) {
     }
 

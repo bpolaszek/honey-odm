@@ -13,7 +13,7 @@ use Psr\Container\NotFoundExceptionInterface;
  *
  * @codeCoverageIgnore
  */
-final readonly class DummyContainer implements ContainerInterface
+final readonly class EmptyContainer implements ContainerInterface
 {
     public function get(string $id): never
     {
