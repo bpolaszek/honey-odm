@@ -9,8 +9,8 @@ use Honey\ODM\Core\Manager\ObjectManager;
 
 interface MappingContextInterface
 {
-    public ClassMetadataInterface $classMetadata {get; }
-    public ObjectManager $objectManager {get; }
+    public ClassMetadataInterface $classMetadata {get; } // @phpstan-ignore missingType.generics
+    public ObjectManager $objectManager {get; } // @phpstan-ignore missingType.generics
 
     public object $object {get; }
 

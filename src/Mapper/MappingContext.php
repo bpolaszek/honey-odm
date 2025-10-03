@@ -12,6 +12,7 @@ final readonly class MappingContext implements MappingContextInterface
     /**
      * @param array<string, mixed> $document
      */
+    // @phpstan-ignore missingType.generics, missingType.generics
     public function __construct(
         public ClassMetadataInterface $classMetadata,
         public ObjectManager $objectManager,

@@ -31,7 +31,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 abstract class ObjectManager
 {
     /**
-     * @var Identities<TClassMetadata, TPropertyMetadata>
+     * @var Identities<TClassMetadata, TPropertyMetadata, TCriteria>
      */
     public readonly Identities $identities;
 

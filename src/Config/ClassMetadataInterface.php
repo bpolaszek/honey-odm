@@ -15,20 +15,26 @@ interface ClassMetadataInterface
     /**
      * @var class-string<TObject>
      */
-    public string $className {get;
-    set; }
+    public string $className {
+        get;
+        set;
+    }
 
     /**
      * @var array<string, TPropertyMetadata>
      */
-    public array $propertiesMetadata {get;
-    set; }
+    public array $propertiesMetadata {
+        get;
+        set;
+    }
 
     /**
      * @var ReflectionClass<TObject>
      */
-    public ReflectionClass $reflection {get;
-    set; }
+    public ReflectionClass $reflection {
+        get;
+        set;
+    }
 
     /**
      * @return TPropertyMetadata

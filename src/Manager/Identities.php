@@ -18,6 +18,7 @@ use WeakMap;
  *
  * @template TClassMetadata of ClassMetadataInterface
  * @template TPropertyMetadata of PropertyMetadataInterface
+ * @template TCriteria of mixed
  *
  * @implements IteratorAggregate<int, object>
  */
@@ -33,6 +34,9 @@ final class Identities implements IteratorAggregate
      */
     private WeakMap $rememberedStates;
 
+    /**
+     * @param ObjectManager<TClassMetadata, TPropertyMetadata, TCriteria> $objectManager
+     */
     public function __construct(
         private readonly ObjectManager $objectManager,
     ) {
