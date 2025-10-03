@@ -6,7 +6,7 @@ namespace Honey\ODM\Core\Tests\Implementation\Examples;
 
 use Honey\ODM\Core\Config\TransformerMetadata;
 use Honey\ODM\Core\Mapper\PropertyTransformer\DateTimeImmutableTransformer;
-use Honey\ODM\Core\Mapper\PropertyTransformer\RelationTransformer;
+use Honey\ODM\Core\Mapper\PropertyTransformer\RelationsTransformer;
 use Honey\ODM\Core\Tests\Implementation\Config\TestAsDocument;
 use Honey\ODM\Core\Tests\Implementation\Config\TestAsField;
 
@@ -21,6 +21,8 @@ final class TestAuthor
         public int $id,
         #[TestAsField(name: 'author_name')]
         public string $name,
+        #[TestAsField(name: 'books', transformer: new TransformerMetadata(RelationsTransformer::class, ['target_class' => TestBook::class]))]
+        public ?array $books = null,
     ) {
     }
 }

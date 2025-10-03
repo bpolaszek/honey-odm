@@ -9,6 +9,8 @@ use DateTimeImmutable;
 use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\Mapper\PropertyTransformer\DateTimeImmutableTransformer;
+use Honey\ODM\Core\Mapper\PropertyTransformer\RelationsTransformer;
+use Honey\ODM\Core\Mapper\PropertyTransformer\RelationTransformer;
 use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestAuthor;
@@ -26,6 +28,8 @@ $transformers = new class implements ContainerInterface {
     public function __construct()
     {
         $this->services[DateTimeImmutableTransformer::class] = new DateTimeImmutableTransformer();
+        $this->services[RelationTransformer::class] = new RelationTransformer();
+        $this->services[RelationsTransformer::class] = new RelationsTransformer();
     }
 
     public function get(string $id)

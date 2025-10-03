@@ -35,14 +35,15 @@ describe('Relation Transformer', function () {
             new TestEventDispatcher(),
             $transport,
         );
-        $authors = [
-            new TestAuthor(1, 'Stephen King'),
-            new TestAuthor(2, 'George Orwell'),
-        ];
         $books = [
-            new TestBook('A', 'The Tommyknockers', $authors[0]),
-            new TestBook('B', '1984', $authors[1]),
-            new TestBook('C', 'The Holy Bible'),
+            new TestBook('A', 'The Tommyknockers'),
+            new TestBook('B', '1984'),
+            new TestBook('C', 'Carrie'),
+        ];
+        $authors = [
+            new TestAuthor(1, 'Stephen King', [$books[0], $books[2]]),
+            new TestAuthor(2, 'George Orwell', [$books[1]]),
+            new TestAuthor(3, 'Lazy writer'),
         ];
 
         $objectManager->persist(...$authors, ...$books);
@@ -54,12 +55,18 @@ describe('Relation Transformer', function () {
                     'created_at' => null,
                     'author_id' => 1,
                     'author_name' => 'Stephen King',
-                    'books' => null,
+                    'books' => ['A', 'C'],
                 ],
                 2 => [
                     'created_at' => null,
                     'author_id' => 2,
                     'author_name' => 'George Orwell',
+                    'books' => ['B'],
+                ],
+                3 => [
+                    'created_at' => null,
+                    'author_id' => 3,
+                    'author_name' => 'Lazy writer',
                     'books' => null,
                 ],
             ]),
@@ -67,16 +74,16 @@ describe('Relation Transformer', function () {
                 'A' => [
                     'id' => 'A',
                     'title' => 'The Tommyknockers',
-                    'author_id' => 1,
+                    'author_id' => null,
                 ],
                 'B' => [
                     'id' => 'B',
                     'title' => '1984',
-                    'author_id' => 2,
+                    'author_id' => null,
                 ],
                 'C' => [
                     'id' => 'C',
-                    'title' => 'The Holy Bible',
+                    'title' => 'Carrie',
                     'author_id' => null,
                 ],
             ]),
@@ -90,18 +97,18 @@ describe('Relation Transformer', function () {
             new TestEventDispatcher(),
             $transport,
         );
-        $book = $objectManager->find(TestBook::class, 'B');
-        expect($book)->toBeInstanceOf(TestBook::class)
-            ->and(Reflection::class(TestBook::class)->isUninitializedLazyObject($book))->toBeTrue()
-            ->and($book->id)->toBe('B')
-            ->and($book->name)->toBe('1984')
-            ->and($book->author)->toBeInstanceOf(TestAuthor::class)
-            ->and(Reflection::class(TestAuthor::class)->isUninitializedLazyObject($book->author))->toBeTrue()
-            ->and($book->author->id)->toBe(2)
-            ->and($book->author->name)->toBe('George Orwell')
+        $author = $objectManager->find(TestAuthor::class, 1);
+        expect($author)->toBeInstanceOf(TestAuthor::class)
+            ->and(Reflection::class(TestAuthor::class)->isUninitializedLazyObject($author))->toBeTrue()
+            ->and($author->id)->toBe(1)
+            ->and($author->name)->toBe('Stephen King')
+            ->and($author->books)->toHaveCount(2)
+            ->and(Reflection::class(TestBook::class)->isUninitializedLazyObject($author->books[0]))->toBeTrue()
+            ->and($author->books[0]->id)->toBe('A')
+            ->and($author->books[0]->name)->toBe('The Tommyknockers')
         ;
 
-        $book = $objectManager->find(TestBook::class, 'C');
-        expect($book->author)->toBeNull();
+        $author = $objectManager->find(TestAuthor::class, 3);
+        expect($author->books)->toBeNull();
     });
 });
