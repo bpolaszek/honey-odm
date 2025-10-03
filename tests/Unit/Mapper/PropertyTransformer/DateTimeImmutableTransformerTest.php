@@ -82,3 +82,29 @@ it('uses options', function () {
     $convertedString = $transformer->toDocument($utcDateTimeImmutable, $metadata, $context);
     expect($convertedString)->toBe((float) new DateTimeImmutable('2024-06-01T16:00:00+00:00')->format('U.u'));
 });
+
+it('uses default options', function () {
+    $transformer = new DateTimeImmutableTransformer();
+    $metadata = new TestAsField(transformer: new TransformerMetadata(
+        service: DateTimeImmutableTransformer::class,
+    ));
+    $objectManager = new class (
+        new TestClassMetadataRegistry(),
+        new TestDocumentMapper(),
+        new TestEventDispatcher(),
+        new TestTransport(),
+    ) extends ObjectManager {
+    };
+    $classMetadata = $objectManager->classMetadataRegistry->getClassMetadata(TestDocument::class);
+    $context = new MappingContext($classMetadata, $objectManager, new \stdClass(), []);
+
+    $dateString = '2024-06-01T12:00:00-04:00';
+    $dateTimeImmutable = $transformer->fromDocument($dateString, $metadata, $context);
+    expect($dateTimeImmutable)->toBeInstanceOf(DateTimeImmutable::class)
+        ->and($dateTimeImmutable?->format(DateTimeInterface::ATOM))->toBe('2024-06-01T12:00:00-04:00');
+
+    $utcDateString = '2024-06-01T12:00:00-04:00';
+    $utcDateTimeImmutable = new DateTimeImmutable($utcDateString);
+    $convertedString = $transformer->toDocument($utcDateTimeImmutable, $metadata, $context);
+    expect($convertedString)->toBe($utcDateString);
+});

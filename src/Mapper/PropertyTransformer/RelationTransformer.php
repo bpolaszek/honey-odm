@@ -27,7 +27,7 @@ final class RelationTransformer implements PropertyTransformerInterface
         if (!$targetClass) {
             $reflType = $propertyMetadata->reflection->getSettableType();
             if (!$reflType instanceof ReflectionNamedType || $reflType->isBuiltin()) {
-                throw new LogicException('Invalid target class.');
+                throw new LogicException('Invalid target class.'); // @codeCoverageIgnore
             }
             $targetClass = ltrim($reflType->getName(), '?');
         }
@@ -46,7 +46,7 @@ final class RelationTransformer implements PropertyTransformerInterface
         }
 
         if (!is_object($value)) {
-            throw new LogicException(sprintf('Invalid type for %s::%s', $propertyMetadata->classMetadata->className, $propertyMetadata->reflection->name));
+            throw new LogicException(sprintf('Invalid type for %s::%s', $propertyMetadata->classMetadata->className, $propertyMetadata->reflection->name)); // @codeCoverageIgnore
         }
 
         $classMetadataRegistry = $context->objectManager->classMetadataRegistry;
