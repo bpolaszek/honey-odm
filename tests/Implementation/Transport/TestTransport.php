@@ -20,9 +20,11 @@ use function array_merge;
 final class TestTransport implements TransportInterface
 {
     /**
-     * @var array<string, ArrayCollection<int, array<string, mixed>>
+     * @param array<string, ArrayCollection<int, array<string, mixed>> $storage
      */
-    public array $storage = [];
+    public function __construct(public array $storage = [])
+    {
+    }
 
     public function flushPendingOperations(UnitOfWork $unitOfWork): void
     {

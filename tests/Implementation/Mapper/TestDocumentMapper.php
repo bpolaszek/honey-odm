@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Tests\Implementation\Mapper;
 
-use Honey\ODM\Core\Config\ClassMetadataInterface;
-use Honey\ODM\Core\Config\PropertyMetadataInterface;
-use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Mapper\DocumentMapperInterface;
-use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\Mapper\MappingContextInterface;
 use Honey\ODM\Core\Mapper\PropertyTransformer\PropertyTransformerInterface;
 use Honey\ODM\Core\Misc\EmptyContainer;
