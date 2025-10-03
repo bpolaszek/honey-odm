@@ -9,16 +9,16 @@ use Honey\ODM\Core\Config\PropertyMetadataInterface;
 use Honey\ODM\Core\Manager\ObjectManager;
 
 /**
- * @template C of ClassMetadataInterface
- * @template P of PropertyMetadataInterface
- * @template F of mixed
- * @template O of object
+ * @template TClassMetadata of ClassMetadataInterface
+ * @template TPropertyMetadata of PropertyMetadataInterface
+ * @template TCriteria of mixed
+ * @template TObject of object
  */
 final readonly class PostRemoveEvent
 {
     /**
-     * @param O $object
-     * @param ObjectManager<C, P, F> $objectManager
+     * @param TObject $object
+     * @param ObjectManager<TClassMetadata, TPropertyMetadata, TCriteria> $objectManager
      */
     public function __construct(
         public object $object,

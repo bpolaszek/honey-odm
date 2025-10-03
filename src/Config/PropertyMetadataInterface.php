@@ -8,9 +8,6 @@ use ReflectionProperty;
 
 interface PropertyMetadataInterface
 {
-    /**
-     * @var ClassMetadataInterface <object, PropertyMetadataInterface>
-     */
     public ClassMetadataInterface $classMetadata {get; set; }
     public ReflectionProperty $reflection {get; set; }
     public bool $primary {get; }

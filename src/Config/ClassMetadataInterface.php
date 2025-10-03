@@ -7,28 +7,28 @@ namespace Honey\ODM\Core\Config;
 use ReflectionClass;
 
 /**
- * @template O of object
- * @template P of PropertyMetadataInterface
+ * @template TObject of object
+ * @template TPropertyMetadata of PropertyMetadataInterface
  */
 interface ClassMetadataInterface
 {
     /**
-     * @var class-string<O>
+     * @var class-string<TObject>
      */
     public string $className {get; set; }
 
     /**
-     * @var array<string, P>
+     * @var array<string, TPropertyMetadata>
      */
     public array $propertiesMetadata {get; set; }
 
     /**
-     * @var ReflectionClass<O>
+     * @var ReflectionClass<TObject>
      */
     public ReflectionClass $reflection {get; set; }
 
     /**
-     * @return P
+     * @return TPropertyMetadata
      */
     public function getIdPropertyMetadata(): PropertyMetadataInterface;
 }

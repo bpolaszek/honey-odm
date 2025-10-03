@@ -17,8 +17,8 @@ use WeakMap;
 /**
  * @internal
  *
- * @template C of ClassMetadataInterface
- * @template P of PropertyMetadataInterface
+ * @template TClassMetadata of ClassMetadataInterface
+ * @template TPropertyMetadata of PropertyMetadataInterface
  * @implements IteratorAggregate<int, object>
  */
 final class Identities implements IteratorAggregate
@@ -34,7 +34,7 @@ final class Identities implements IteratorAggregate
     private WeakMap $rememberedStates;
 
     /**
-     * @param ClassMetadataRegistryInterface<C, P> $classMetadataRegistry
+     * @param ClassMetadataRegistryInterface<TClassMetadata, TPropertyMetadata> $classMetadataRegistry
      * @param DocumentMapperInterface $mapper
      */
     public function __construct(

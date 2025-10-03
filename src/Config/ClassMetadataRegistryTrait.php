@@ -16,10 +16,10 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use function Honey\ODM\Core\throws;
 
 /**
- * @template C of ClassMetadataInterface
- * @template P of PropertyMetadataInterface
+ * @template TClassMetadata of ClassMetadataInterface
+ * @template TPropertyMetadata of PropertyMetadataInterface
  *
- * @implements ClassMetadataRegistryInterface<C, P>
+ * @implements ClassMetadataRegistryInterface<TClassMetadata, TPropertyMetadata>
  */
 trait ClassMetadataRegistryTrait
 {
@@ -76,7 +76,7 @@ trait ClassMetadataRegistryTrait
      * @template O of object
      * @param class-string<O> $className
      *
-     * @return C<O, P>
+     * @return TClassMetadata<O, TPropertyMetadata>
      */
     private function readClassMetadata(string $className): ClassMetadataInterface // @phpstan-ignore missingType.generics, return.unresolvableType
     {

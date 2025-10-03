@@ -8,9 +8,9 @@ use Countable;
 use Traversable;
 
 /**
- * @template O of object
+ * @template TObject of object
  *
- * @extends Traversable<int, O>
+ * @extends Traversable<int, TObject>
  */
 interface ResultInterface extends Traversable, Countable
 {

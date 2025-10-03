@@ -23,28 +23,28 @@ use InvalidArgumentException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @template C of ClassMetadataInterface
- * @template P of PropertyMetadataInterface
- * @template F of mixed
+ * @template TClassMetadata of ClassMetadataInterface
+ * @template TPropertyMetadata of PropertyMetadataInterface
+ * @template TCriteria of mixed
  */
 abstract class ObjectManager
 {
     /**
-     * @var Identities<C, P>
+     * @var Identities<TClassMetadata, TPropertyMetadata>
      */
     public readonly Identities $identities;
     public private(set) UnitOfWork $unitOfWork;
     private bool $isFlushing = false;
 
     /**
-     * @var array<class-string, ObjectRepositoryInterface<C, object>>
+     * @var array<class-string, ObjectRepositoryInterface<TClassMetadata, object>>
      */
     protected array $repositories = [];
 
     /**
-     * @param ClassMetadataRegistryInterface<C, P> $classMetadataRegistry
+     * @param ClassMetadataRegistryInterface<TClassMetadata, TPropertyMetadata> $classMetadataRegistry
      * @param DocumentMapperInterface $documentMapper
-     * @param TransportInterface<F> $transport
+     * @param TransportInterface<TCriteria> $transport
      */
     public function __construct(
         public readonly ClassMetadataRegistryInterface $classMetadataRegistry,
@@ -60,9 +60,9 @@ abstract class ObjectManager
      * @template O of object
      *
      * @param class-string<O> $className
-     * @param ObjectRepositoryInterface<C, O> $repository
+     * @param ObjectRepositoryInterface<TClassMetadata, O> $repository
      *
-     * @return ObjectRepositoryInterface<C, O>
+     * @return ObjectRepositoryInterface<TClassMetadata, O>
      */
     public function registerRepository(
         string $className,
@@ -80,7 +80,7 @@ abstract class ObjectManager
      *
      * @param class-string<O> $className
      *
-     * @return ObjectRepositoryInterface<F, O>
+     * @return ObjectRepositoryInterface<TCriteria, O>
      */
     public function getRepository(string $className): ObjectRepositoryInterface
     {
@@ -157,7 +157,7 @@ abstract class ObjectManager
 
     /**
      * @param array<string, mixed> $document
-     * @param ClassMetadataInterface<O, P> $classMetadata
+     * @param ClassMetadataInterface<O, TPropertyMetadata> $classMetadata
      */
     final public function factory(array $document, ClassMetadataInterface $classMetadata): object
     {

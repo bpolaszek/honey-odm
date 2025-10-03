@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Config;
 
 /**
- * @template C of ClassMetadataInterface
- * @template P of PropertyMetadataInterface
+ * @template TClassMetadata of ClassMetadataInterface
+ * @template TPropertyMetadata of PropertyMetadataInterface
  */
 interface ClassMetadataRegistryInterface
 {
@@ -19,7 +19,7 @@ interface ClassMetadataRegistryInterface
      * @template O of object
      * @param class-string<O> $className
      *
-     * @return C<O, P>
+     * @return TClassMetadata<O, TPropertyMetadata>
      */
     public function getClassMetadata(string $className): ClassMetadataInterface;
 
