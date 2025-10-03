@@ -15,17 +15,17 @@ interface ClassMetadataInterface
     /**
      * @var class-string<O>
      */
-    public string $className {get; }
+    public string $className {get; set; }
 
     /**
      * @var array<string, P>
      */
-    public array $propertiesMetadata {get; }
+    public array $propertiesMetadata {get; set; }
 
     /**
      * @var ReflectionClass<O>
      */
-    public ReflectionClass $reflection {get; }
+    public ReflectionClass $reflection {get; set; }
 
     /**
      * @return P

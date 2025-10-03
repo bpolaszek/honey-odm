@@ -16,7 +16,7 @@ interface ClassMetadataRegistryInterface
     public function hasClassMetadata(string $className): bool;
 
     /**
-     * @template O
+     * @template O of object
      * @param class-string<O> $className
      *
      * @return C<O, P>

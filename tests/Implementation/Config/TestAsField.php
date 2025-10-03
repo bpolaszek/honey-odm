@@ -10,9 +10,6 @@ use Honey\ODM\Core\Config\PropertyMetadataInterface;
 use Honey\ODM\Core\Config\TransformerMetadataInterface;
 use ReflectionProperty;
 
-/**
- * @implements PropertyMetadataInterface<TestAsDocument<object, TestAsField>>
- */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 final class TestAsField implements PropertyMetadataInterface
 {

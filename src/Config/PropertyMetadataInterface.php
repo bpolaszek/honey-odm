@@ -6,16 +6,13 @@ namespace Honey\ODM\Core\Config;
 
 use ReflectionProperty;
 
-/**
- * @template C of ClassMetadataInterface
- */
 interface PropertyMetadataInterface
 {
     /**
-     * @var C
+     * @var ClassMetadataInterface <object, PropertyMetadataInterface>
      */
-    public ClassMetadataInterface $classMetadata {get; }
-    public ReflectionProperty $reflection {get; }
+    public ClassMetadataInterface $classMetadata {get; set; }
+    public ReflectionProperty $reflection {get; set; }
     public bool $primary {get; }
     public ?TransformerMetadataInterface $transformer {get; }
 }
