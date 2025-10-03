@@ -18,7 +18,7 @@ interface DocumentMapperInterface
      *
      * @return O
      */
-    public function documentToObject(ClassMetadataInterface $classMetadata, array $source, object $target): object; // @phpstan-ignore missingType.generics
+    public function documentToObject(ClassMetadataInterface $classMetadata, array $source, object $target): object;
 
     /**
      * @template O of object
@@ -29,5 +29,5 @@ interface DocumentMapperInterface
      *
      * @return array<string, mixed>
      */
-    public function objectToDocument(ClassMetadataInterface $classMetadata, object $source, array $target = []): array; // @phpstan-ignore missingType.generics
+    public function objectToDocument(ClassMetadataInterface $classMetadata, object $source, array $target = []): array;
 }

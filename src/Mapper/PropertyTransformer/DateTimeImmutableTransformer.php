@@ -21,9 +21,8 @@ final class DateTimeImmutableTransformer implements PropertyTransformerInterface
 {
     /**
      * @param string|int|float|null $value
-     * @param PropertyMetadataInterface<ClassMetadataInterface<object, PropertyMetadataInterface>> $propertyMetadata
      */
-    public function fromDocument(// @phpstan-ignore missingType.generics
+    public function fromDocument(
         mixed $value,
         PropertyMetadataInterface $propertyMetadata,
         MappingContextInterface $context,
@@ -45,11 +44,11 @@ final class DateTimeImmutableTransformer implements PropertyTransformerInterface
 
     /**
      * @param DateTime|DateTimeImmutable|null $value
-     * @param PropertyMetadataInterface<ClassMetadataInterface<object, PropertyMetadataInterface>> $propertyMetadata
      *
      * @throws DateInvalidTimeZoneException
      */
-    public function toDocument(// @phpstan-ignore missingType.generics, return.unusedType
+    // @phpstan-ignore return.unusedType, return.unusedType
+    public function toDocument(
         mixed $value,
         PropertyMetadataInterface $propertyMetadata,
         MappingContextInterface $context,

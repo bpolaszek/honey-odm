@@ -10,19 +10,13 @@ use Honey\ODM\Core\Mapper\MappingContextInterface;
 
 interface PropertyTransformerInterface
 {
-    /**
-     * @param PropertyMetadataInterface<ClassMetadataInterface<object, PropertyMetadataInterface>> $propertyMetadata
-     */
-    public function fromDocument(// @phpstan-ignore missingType.generics
+    public function fromDocument(
         mixed $value,
         PropertyMetadataInterface $propertyMetadata,
         MappingContextInterface $context,
     ): mixed;
 
-    /**
-     * @param PropertyMetadataInterface<ClassMetadataInterface<object, PropertyMetadataInterface>> $propertyMetadata
-     */
-    public function toDocument(// @phpstan-ignore missingType.generics
+    public function toDocument(
         mixed $value,
         PropertyMetadataInterface $propertyMetadata,
         MappingContextInterface $context,

@@ -33,6 +33,10 @@ abstract class ObjectManager
      * @var Identities<TClassMetadata, TPropertyMetadata>
      */
     public readonly Identities $identities;
+
+    /**
+     * @var UnitOfWork<TClassMetadata, TPropertyMetadata, TCriteria>
+     */
     public private(set) UnitOfWork $unitOfWork;
     private bool $isFlushing = false;
 
@@ -84,7 +88,7 @@ abstract class ObjectManager
      */
     public function getRepository(string $className): ObjectRepositoryInterface
     {
-        return $this->repositories[$className]
+        return $this->repositories[$className] //@phpstan-ignore return.type
             ?? throw new InvalidArgumentException("No repository registered for class $className");
     }
 
@@ -139,10 +143,15 @@ abstract class ObjectManager
         }
     }
 
+    /**
+     * @template TObject of object
+     * @param class-string<TObject> $className
+     * @return TObject|null
+     */
     final public function find(string $className, mixed $id): ?object
     {
         if ($this->identities->containsId($className, $id)) {
-            return $this->identities->getObject($className, $id);
+            return $this->identities->getObject($className, $id); // @phpstan-ignore return.type
         }
 
         $classMetadata = $this->classMetadataRegistry->getClassMetadata($className);
@@ -156,15 +165,17 @@ abstract class ObjectManager
     }
 
     /**
+     * @template TObject of object
      * @param array<string, mixed> $document
-     * @param ClassMetadataInterface<O, TPropertyMetadata> $classMetadata
+     * @param ClassMetadataInterface<TObject, TPropertyMetadata> $classMetadata
+     * @return TObject
      */
     final public function factory(array $document, ClassMetadataInterface $classMetadata): object
     {
         $id = $this->classMetadataRegistry->getIdFromDocument($document, $classMetadata->className);
         $className = $classMetadata->className;
         if ($this->identities->containsId($className, $id)) {
-            return $this->identities->getObject($className, $id);
+            return $this->identities->getObject($className, $id); // @phpstan-ignore return.type
         }
         $object = Reflection::class($className)->newLazyGhost(function (object $ghost) use ($document, $classMetadata) {
             $object = $this->documentMapper->documentToObject(
@@ -177,7 +188,7 @@ abstract class ObjectManager
         $this->identities->attach($object);
         $this->identities->rememberState($object, $document);
 
-        return $object;
+        return $object; // @phpstan-ignore return.type
     }
 
     private function firePrePersistEvent(object $object): void

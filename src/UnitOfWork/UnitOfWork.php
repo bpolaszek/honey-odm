@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\UnitOfWork;
 
+use Honey\ODM\Core\Config\ClassMetadataInterface;
+use Honey\ODM\Core\Config\PropertyMetadataInterface;
 use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Misc\UniqueList;
 use SplObjectStorage;
@@ -13,6 +15,11 @@ use function BenTools\IterableFunctions\iterable;
 use function Honey\ODM\Core\weakmap_objects;
 use function in_array;
 
+/**
+ * @template TClassMetadata of ClassMetadataInterface
+ * @template TPropertyMetadata of PropertyMetadataInterface
+ * @template TCriteria of mixed
+ */
 final class UnitOfWork
 {
     public const int NONE = 0;
@@ -20,6 +27,9 @@ final class UnitOfWork
     public const int CREATE = 2;
     public const int UPDATE = 3;
 
+    /**
+     * @var \SplObjectStorage <object, null>
+     */
     private readonly SplObjectStorage $scheduled;
 
     /**
@@ -38,6 +48,9 @@ final class UnitOfWork
     public private(set) WeakMap $firedEvents;
     public private(set) string $hash;
 
+    /**
+     * @param ObjectManager<TClassMetadata, TPropertyMetadata, TCriteria> $objectManager
+     */
     public function __construct(
         public readonly ObjectManager $objectManager,
     ) {
@@ -97,7 +110,7 @@ final class UnitOfWork
      */
     public function getChangedObjects(): iterable
     {
-        return weakmap_objects($this->changesets);
+        return weakmap_objects($this->changesets); // @phpstan-ignore argument.type
     }
 
     /**
@@ -105,6 +118,7 @@ final class UnitOfWork
      */
     public function getPendingUpserts(): iterable
     {
+        // @phpstan-ignore argument.type
         return iterable(weakmap_objects($this->pendingOperations))->filter(
             fn (object $object) => in_array($this->pendingOperations[$object], [self::CREATE, self::UPDATE], true),
         );
@@ -115,6 +129,7 @@ final class UnitOfWork
      */
     public function getPendingInserts(): iterable
     {
+        // @phpstan-ignore argument.type
         return iterable(weakmap_objects($this->pendingOperations))->filter(
             fn (object $object) => self::CREATE === $this->pendingOperations[$object],
         );
@@ -125,6 +140,7 @@ final class UnitOfWork
      */
     public function getPendingUpdates(): iterable
     {
+        // @phpstan-ignore argument.type
         return iterable(weakmap_objects($this->pendingOperations))->filter(
             fn (object $object) => self::UPDATE === $this->pendingOperations[$object],
         );
@@ -135,6 +151,7 @@ final class UnitOfWork
      */
     public function getPendingDeletes(): iterable
     {
+        // @phpstan-ignore argument.type
         return iterable(weakmap_objects($this->pendingOperations))->filter(
             fn (object $object) => self::DELETE === $this->pendingOperations[$object],
         );
