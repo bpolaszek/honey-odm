@@ -26,6 +26,7 @@ describe('PostLoadEvent', function () {
     it('fires a PostLoadEvent after creating an object', function () use ($objectManager, $eventDispatcher) {
         // When
         $object = $objectManager->find(TestDocument::class, 1);
+        $object->id; // Trigger proxy load
 
         // Then
         expect($eventDispatcher->getFiredEvents(PostLoadEvent::class))->toHaveCount(1)
