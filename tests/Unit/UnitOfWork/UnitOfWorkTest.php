@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Tests\Unit\UnitOfWork;
 
+use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
@@ -168,14 +169,17 @@ describe('UnitOfWork', function () {
             transport: $transport,
         );
         $unitOfWork = new UnitOfWork($objectManager);
+        $classMetadata = $registry->getClassMetadata(TestDocument::class);
         $document1 = new TestDocument(1, 'Original Name 1');
         $document2 = new TestDocument(2, 'Original Name 2');
 
         // Attach objects and remember their states (using current state)
         $objectManager->identities->attach($document1);
         $objectManager->identities->attach($document2);
-        $objectManager->identities->rememberState($document1, $mapper->objectToDocument($registry->getClassMetadata($document1::class), $document1));
-        $objectManager->identities->rememberState($document2, $mapper->objectToDocument($registry->getClassMetadata($document2::class), $document2));
+        $context1 = new MappingContext($classMetadata, $objectManager, $document1, []);
+        $context2 = new MappingContext($classMetadata, $objectManager, $document2, []);
+        $objectManager->identities->rememberState($document1, $mapper->objectToDocument($document1, [], $context1));
+        $objectManager->identities->rememberState($document2, $mapper->objectToDocument($document2, [], $context2));
 
         // Change only one object
         $document1->name = 'Updated Name 1';

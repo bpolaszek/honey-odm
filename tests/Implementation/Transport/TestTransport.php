@@ -7,6 +7,7 @@ namespace Honey\ODM\Core\Tests\Implementation\Transport;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Honey\ODM\Core\Config\ClassMetadataInterface;
+use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\Tests\Implementation\Config\TestAsDocument;
 use Honey\ODM\Core\Transport\TransportInterface;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
@@ -34,7 +35,8 @@ final class TestTransport implements TransportInterface
             $classMetadata = $classMetadataRegistry->getClassMetadata($object::class);
             $id = $classMetadataRegistry->getIdFromObject($object);
             $bucket = $classMetadata->bucket;
-            $document = $mapper->objectToDocument($classMetadata, $object);
+            $context = new MappingContext($classMetadata, $unitOfWork->objectManager, $object, []);
+            $document = $mapper->objectToDocument($object, [], $context);
             $this->storage[$bucket] ??= new ArrayCollection();
             $this->storage[$bucket][$id] = array_merge($this->storage[$bucket][$id] ?? [], $document);
         }

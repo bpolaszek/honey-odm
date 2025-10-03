@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Tests\Unit\Manager;
 
 use Honey\ODM\Core\Manager\Identities;
+use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
+use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
 use Honey\ODM\Core\Tests\Implementation\Mapper\TestDocumentMapper;
+use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
 use Honey\ODM\Core\UnitOfWork\Changeset;
 
 use function array_keys;
@@ -15,9 +18,14 @@ use function array_keys;
 describe('Identities', function () {
     it('attaches an object', function () {
         // Given
-        $registry = new TestClassMetadataRegistry();
-        $mapper = new TestDocumentMapper();
-        $identities = new Identities($registry, $mapper);
+        $objectManager = new class (
+            new TestClassMetadataRegistry(),
+            new TestDocumentMapper(),
+            new TestEventDispatcher(),
+            new TestTransport(),
+        ) extends ObjectManager {
+        };
+        $identities = $objectManager->identities;
         $document = new TestDocument(1, 'Test Name');
 
         // When
@@ -29,9 +37,14 @@ describe('Identities', function () {
 
     it('detaches an object', function () {
         // Given
-        $registry = new TestClassMetadataRegistry();
-        $mapper = new TestDocumentMapper();
-        $identities = new Identities($registry, $mapper);
+        $objectManager = new class (
+            new TestClassMetadataRegistry(),
+            new TestDocumentMapper(),
+            new TestEventDispatcher(),
+            new TestTransport(),
+        ) extends ObjectManager {
+        };
+        $identities = $objectManager->identities;
         $document = new TestDocument(1, 'Test Name');
         $identities->attach($document);
 
@@ -44,9 +57,14 @@ describe('Identities', function () {
 
     it('checks if it contains an object', function () {
         // Given
-        $registry = new TestClassMetadataRegistry();
-        $mapper = new TestDocumentMapper();
-        $identities = new Identities($registry, $mapper);
+        $objectManager = new class (
+            new TestClassMetadataRegistry(),
+            new TestDocumentMapper(),
+            new TestEventDispatcher(),
+            new TestTransport(),
+        ) extends ObjectManager {
+        };
+        $identities = $objectManager->identities;
         $document1 = new TestDocument(1, 'Test Name');
         $document2 = new TestDocument(2, 'Another Name');
 
@@ -60,9 +78,14 @@ describe('Identities', function () {
 
     it('remembers the state of an object', function () {
         // Given
-        $registry = new TestClassMetadataRegistry();
-        $mapper = new TestDocumentMapper();
-        $identities = new Identities($registry, $mapper);
+        $objectManager = new class (
+            new TestClassMetadataRegistry(),
+            new TestDocumentMapper(),
+            new TestEventDispatcher(),
+            new TestTransport(),
+        ) extends ObjectManager {
+        };
+        $identities = $objectManager->identities;
         $document = new TestDocument(1, 'Test Name');
         $state = ['id' => 1, 'name' => 'Test Name', 'foo' => 'bar'];
 
@@ -76,9 +99,14 @@ describe('Identities', function () {
 
     it('forgets the state of an object', function () {
         // Given
-        $registry = new TestClassMetadataRegistry();
-        $mapper = new TestDocumentMapper();
-        $identities = new Identities($registry, $mapper);
+        $objectManager = new class (
+            new TestClassMetadataRegistry(),
+            new TestDocumentMapper(),
+            new TestEventDispatcher(),
+            new TestTransport(),
+        ) extends ObjectManager {
+        };
+        $identities = $objectManager->identities;
         $document = new TestDocument(1, 'Test Name');
         $state = ['id' => 1, 'name' => 'Test Name', 'foo' => 'bar'];
         $identities->rememberState($document, $state);
@@ -93,9 +121,14 @@ describe('Identities', function () {
 
     it('iterates over attached objects', function () {
         // Given
-        $registry = new TestClassMetadataRegistry();
-        $mapper = new TestDocumentMapper();
-        $identities = new Identities($registry, $mapper);
+        $objectManager = new class (
+            new TestClassMetadataRegistry(),
+            new TestDocumentMapper(),
+            new TestEventDispatcher(),
+            new TestTransport(),
+        ) extends ObjectManager {
+        };
+        $identities = $objectManager->identities;
         $document1 = new TestDocument(1, 'Test Name 1');
         $document2 = new TestDocument(2, 'Test Name 2');
 
@@ -116,9 +149,14 @@ describe('Identities', function () {
 
     it('computes the changeset of an object', function () {
         // Given
-        $registry = new TestClassMetadataRegistry();
-        $mapper = new TestDocumentMapper();
-        $identities = new Identities($registry, $mapper);
+        $objectManager = new class (
+            new TestClassMetadataRegistry(),
+            new TestDocumentMapper(),
+            new TestEventDispatcher(),
+            new TestTransport(),
+        ) extends ObjectManager {
+        };
+        $identities = $objectManager->identities;
         $document = new TestDocument(1, 'Original Name');
         $originalState = ['id' => 1, 'name' => 'Original Name'];
 

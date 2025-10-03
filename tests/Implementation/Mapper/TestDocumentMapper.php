@@ -6,8 +6,10 @@ namespace Honey\ODM\Core\Tests\Implementation\Mapper;
 
 use Honey\ODM\Core\Config\ClassMetadataInterface;
 use Honey\ODM\Core\Config\PropertyMetadataInterface;
+use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Mapper\DocumentMapperInterface;
 use Honey\ODM\Core\Mapper\MappingContext;
+use Honey\ODM\Core\Mapper\MappingContextInterface;
 use Honey\ODM\Core\Mapper\PropertyTransformer\PropertyTransformerInterface;
 use Honey\ODM\Core\Misc\EmptyContainer;
 use Psr\Container\ContainerInterface;
@@ -26,14 +28,10 @@ final readonly class TestDocumentMapper implements DocumentMapperInterface
     ) {
     }
 
-    /**
-     * @param ClassMetadataInterface<object, PropertyMetadataInterface> $classMetadata
-     */
-    // @phpstan-ignore-next-line missingType.generics
-    public function documentToObject(ClassMetadataInterface $classMetadata, mixed $source, object $target): object
+    public function documentToObject(array $source, object $target, MappingContextInterface $context): object
     {
         $document = (object) $source;
-        foreach ($classMetadata->propertiesMetadata as $propertyName => $propertyMetadata) {
+        foreach ($context->classMetadata->propertiesMetadata as $propertyName => $propertyMetadata) {
             $sourcePropertyName = $propertyMetadata->name ?? $propertyName;
             /** @var PropertyTransformerInterface|null $transformer */
             $transformer = $propertyMetadata->transformer?->service ? $this->transformers->get($propertyMetadata->transformer->service) : null;
@@ -44,7 +42,7 @@ final readonly class TestDocumentMapper implements DocumentMapperInterface
                     default => $transformer->fromDocument(
                         $rawValue,
                         $propertyMetadata,
-                        new MappingContext($target, $source),
+                        $context,
                     )
                 };
                 $this->propertyAccessor->setValue($target, $propertyName, $value);
@@ -56,13 +54,12 @@ final readonly class TestDocumentMapper implements DocumentMapperInterface
     }
 
     /**
-     * @param ClassMetadataInterface<object, PropertyMetadataInterface> $classMetadata
      * @param array<string, mixed> $target
      * @return array<string, mixed>
      */
-    public function objectToDocument(ClassMetadataInterface $classMetadata, object $source, mixed $target = []): array // @phpstan-ignore missingType.generics
+    public function objectToDocument(object $source, array $target, MappingContextInterface $context): array // @phpstan-ignore missingType.generics
     {
-        foreach ($classMetadata->propertiesMetadata as $propertyName => $propertyMetadata) {
+        foreach ($context->classMetadata->propertiesMetadata as $propertyName => $propertyMetadata) {
             $targetPropertyName = $propertyMetadata->name ?? $propertyName;
             /** @var PropertyTransformerInterface|null $transformer */
             $transformer = $propertyMetadata->transformer?->service ? $this->transformers->get($propertyMetadata->transformer->service) : null;
@@ -73,7 +70,7 @@ final readonly class TestDocumentMapper implements DocumentMapperInterface
                 default => $transformer->toDocument(
                     $rawValue,
                     $propertyMetadata,
-                    new MappingContext($source, $target),
+                    $context,
                 )
             };
             $target[$targetPropertyName] = $value;

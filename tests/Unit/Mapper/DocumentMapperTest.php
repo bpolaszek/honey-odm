@@ -6,10 +6,15 @@ namespace Honey\ODM\Core\Tests\Unit\Mapper;
 
 use BenTools\ReflectionPlus\Reflection;
 use DateTimeImmutable;
+use Honey\ODM\Core\Manager\ObjectManager;
+use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\Mapper\PropertyTransformer\DateTimeImmutableTransformer;
 use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
+use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestAuthor;
+use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
 use Honey\ODM\Core\Tests\Implementation\Mapper\TestDocumentMapper;
+use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
 use Psr\Container\ContainerInterface;
 
 $transformers = new class implements ContainerInterface {
@@ -36,10 +41,15 @@ $transformers = new class implements ContainerInterface {
 };
 
 it('maps a document to an object', function () use ($transformers) {
-    $mapper = new TestDocumentMapper(transformers: $transformers);
-    $registry = new TestClassMetadataRegistry();
+    $objectManager = new class (
+        new TestClassMetadataRegistry(),
+        new TestDocumentMapper(transformers: $transformers),
+        new TestEventDispatcher(),
+        new TestTransport(),
+    ) extends ObjectManager {
+    };
     $author = Reflection::class(TestAuthor::class)->newInstanceWithoutConstructor();
-    $metadata = $registry->getClassMetadata(TestAuthor::class);
+    $classMetadata = $objectManager->classMetadataRegistry->getClassMetadata(TestAuthor::class);
 
     // Given
     $authorDoc = [
@@ -50,7 +60,8 @@ it('maps a document to an object', function () use ($transformers) {
     ];
 
     // When
-    $author = $mapper->documentToObject($metadata, $authorDoc, $author); // @phpstan-ignore-line
+    $context = new MappingContext($classMetadata, $objectManager, $author, $authorDoc);
+    $author = $objectManager->documentMapper->documentToObject($authorDoc, $author, $context); // @phpstan-ignore-line
 
      // Then
     expect($author)->toBeInstanceOf(TestAuthor::class) // @phpstan-ignore-line
@@ -61,15 +72,21 @@ it('maps a document to an object', function () use ($transformers) {
 });
 
 it('maps an object to a document', function () use ($transformers) {
-    $mapper = new TestDocumentMapper(transformers: $transformers);
-    $registry = new TestClassMetadataRegistry();
-    $metadata = $registry->getClassMetadata(TestAuthor::class);
+    $objectManager = new class (
+        new TestClassMetadataRegistry(),
+        new TestDocumentMapper(transformers: $transformers),
+        new TestEventDispatcher(),
+        new TestTransport(),
+    ) extends ObjectManager {
+    };
+    $classMetadata = $objectManager->classMetadataRegistry->getClassMetadata(TestAuthor::class);
 
     // Given
     $author = new TestAuthor(1, 'John Doe');
 
     // When
-    $authorDoc = $mapper->objectToDocument($metadata, $author); // @phpstan-ignore-line
+    $context = new MappingContext($classMetadata, $objectManager, $author, []);
+    $authorDoc = $objectManager->documentMapper->objectToDocument($author, [], $context); // @phpstan-ignore-line
 
     // Then
     expect($authorDoc)->toBeArray()

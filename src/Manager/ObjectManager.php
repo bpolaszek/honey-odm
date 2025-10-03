@@ -16,6 +16,7 @@ use Honey\ODM\Core\Event\PrePersistEvent;
 use Honey\ODM\Core\Event\PreRemoveEvent;
 use Honey\ODM\Core\Event\PreUpdateEvent;
 use Honey\ODM\Core\Mapper\DocumentMapperInterface;
+use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\Repository\ObjectRepositoryInterface;
 use Honey\ODM\Core\Transport\TransportInterface;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
@@ -55,7 +56,7 @@ abstract class ObjectManager
         public readonly EventDispatcherInterface $eventDispatcher,
         public readonly TransportInterface $transport,
     ) {
-        $this->identities = new Identities($classMetadataRegistry, $documentMapper);
+        $this->identities = new Identities($this);
         $this->resetUnitOfWork();
     }
 
@@ -181,10 +182,11 @@ abstract class ObjectManager
             return $this->identities->getObject($className, $id); // @phpstan-ignore return.type
         }
         $object = Reflection::class($className)->newLazyGhost(function (object $ghost) use ($document, $classMetadata) {
+            $context = new MappingContext($classMetadata, $this, $ghost, $document);
             $object = $this->documentMapper->documentToObject(
-                $classMetadata,
                 $document,
                 $ghost,
+                $context,
             );
             $this->eventDispatcher->dispatch(new PostLoadEvent($object, $this));
         });

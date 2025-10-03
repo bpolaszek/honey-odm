@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Manager;
 
 use Honey\ODM\Core\Config\ClassMetadataInterface;
-use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
 use Honey\ODM\Core\Config\PropertyMetadataInterface;
-use Honey\ODM\Core\Mapper\DocumentMapperInterface;
+use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\UnitOfWork\Changeset;
 use IteratorAggregate;
 use SplObjectStorage;
@@ -34,12 +33,8 @@ final class Identities implements IteratorAggregate
      */
     private WeakMap $rememberedStates;
 
-    /**
-     * @param ClassMetadataRegistryInterface<TClassMetadata, TPropertyMetadata> $classMetadataRegistry
-     */
     public function __construct(
-        private readonly ClassMetadataRegistryInterface $classMetadataRegistry,
-        private readonly DocumentMapperInterface $mapper,
+        private readonly ObjectManager $objectManager,
     ) {
         $this->storage = new SplObjectStorage();
         $this->rememberedStates = new WeakMap();
@@ -48,7 +43,7 @@ final class Identities implements IteratorAggregate
     public function attach(object ...$objects): void
     {
         foreach ($objects as $object) {
-            $id = $this->classMetadataRegistry->getIdFromObject($object);
+            $id = $this->objectManager->classMetadataRegistry->getIdFromObject($object);
             $this->storage->attach($object, $id);
         }
     }
@@ -102,8 +97,9 @@ final class Identities implements IteratorAggregate
      */
     public function computeChangeset(object $object, ?array $document = null): Changeset
     {
-        $classMetadata = $this->classMetadataRegistry->getClassMetadata($object::class);
-        $document ??= $this->mapper->objectToDocument($classMetadata, $object);
+        $classMetadata = $this->objectManager->classMetadataRegistry->getClassMetadata($object::class);
+        $context = new MappingContext($classMetadata, $this->objectManager, $object, $document ?? []);
+        $document ??= $this->objectManager->documentMapper->objectToDocument($object, [], $context);
         $rememberedState = $this->rememberedStates[$object] ?? [];
 
         return new Changeset($document, $rememberedState);
