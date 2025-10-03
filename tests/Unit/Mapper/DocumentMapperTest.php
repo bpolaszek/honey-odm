@@ -19,35 +19,10 @@ use Honey\ODM\Core\Tests\Implementation\Mapper\TestDocumentMapper;
 use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
 use Psr\Container\ContainerInterface;
 
-$transformers = new class implements ContainerInterface {
-    /**
-     * @var array<class-string, object>
-     */
-    private array $services;
-
-    public function __construct()
-    {
-        $this->services[DateTimeImmutableTransformer::class] = new DateTimeImmutableTransformer();
-        $this->services[RelationTransformer::class] = new RelationTransformer();
-        $this->services[RelationsTransformer::class] = new RelationsTransformer();
-    }
-
-    public function get(string $id)
-    {
-        return $this->services[$id] ?? throw new class ("Service $id not found") extends \Exception {
-        };
-    }
-
-    public function has(string $id): bool
-    {
-        return isset($this->services[$id]);
-    }
-};
-
-it('maps a document to an object', function () use ($transformers) {
+it('maps a document to an object', function () {
     $objectManager = new class (
         new TestClassMetadataRegistry(),
-        new TestDocumentMapper(transformers: $transformers),
+        new TestDocumentMapper(),
         new TestEventDispatcher(),
         new TestTransport(),
     ) extends ObjectManager {
@@ -75,10 +50,10 @@ it('maps a document to an object', function () use ($transformers) {
         ->and($author->createdAt->format('Y-m-d H:i:s'))->toBe('2025-09-30 14:05:19'); // @phpstan-ignore-line
 });
 
-it('maps an object to a document', function () use ($transformers) {
+it('maps an object to a document', function () {
     $objectManager = new class (
         new TestClassMetadataRegistry(),
-        new TestDocumentMapper(transformers: $transformers),
+        new TestDocumentMapper(),
         new TestEventDispatcher(),
         new TestTransport(),
     ) extends ObjectManager {

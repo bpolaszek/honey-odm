@@ -6,8 +6,8 @@ namespace Honey\ODM\Core\Tests\Implementation\Mapper;
 
 use Honey\ODM\Core\Mapper\DocumentMapperInterface;
 use Honey\ODM\Core\Mapper\MappingContextInterface;
+use Honey\ODM\Core\Mapper\PropertyTransformer\BuiltinTransformers;
 use Honey\ODM\Core\Mapper\PropertyTransformer\PropertyTransformerInterface;
-use Honey\ODM\Core\Misc\EmptyContainer;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\PropertyAccess\Exception\NoSuchPropertyException;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
@@ -20,7 +20,7 @@ final readonly class TestDocumentMapper implements DocumentMapperInterface
 {
     public function __construct(
         private PropertyAccessorInterface $propertyAccessor = new PropertyAccessor(),
-        private ContainerInterface $transformers = new EmptyContainer(),
+        private ContainerInterface $transformers = new BuiltinTransformers(),
     ) {
     }
 

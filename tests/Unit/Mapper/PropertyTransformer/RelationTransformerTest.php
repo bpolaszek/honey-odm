@@ -6,9 +6,6 @@ namespace Honey\ODM\Core\Tests\Unit\Mapper\PropertyTransformer;
 
 use BenTools\ReflectionPlus\Reflection;
 use Doctrine\Common\Collections\ArrayCollection;
-use Honey\ODM\Core\Mapper\PropertyTransformer\DateTimeImmutableTransformer;
-use Honey\ODM\Core\Mapper\PropertyTransformer\RelationsTransformer;
-use Honey\ODM\Core\Mapper\PropertyTransformer\RelationTransformer;
 use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestAuthor;
@@ -16,22 +13,17 @@ use Honey\ODM\Core\Tests\Implementation\Examples\TestBook;
 use Honey\ODM\Core\Tests\Implementation\Manager\TestObjectManager;
 use Honey\ODM\Core\Tests\Implementation\Mapper\TestDocumentMapper;
 use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
-use League\Container\Container;
 
 use function expect;
 use function it;
 
 describe('Relation Transformer', function () {
     $transport = new TestTransport();
-    $container = new Container();
-    $container->add(RelationTransformer::class);
-    $container->add(RelationsTransformer::class);
-    $container->add(DateTimeImmutableTransformer::class);
 
-    it('normalizes relations', function () use ($container, $transport) {
+    it('normalizes relations', function () use ($transport) {
         $objectManager = new TestObjectManager(
             new TestClassMetadataRegistry(),
-            new TestDocumentMapper(transformers: $container),
+            new TestDocumentMapper(),
             new TestEventDispatcher(),
             $transport,
         );
@@ -83,10 +75,10 @@ describe('Relation Transformer', function () {
         ]);
     });
 
-    it('retrieves relations', function () use ($container, $transport) {
+    it('retrieves relations', function () use ($transport) {
         $objectManager = new TestObjectManager(
             new TestClassMetadataRegistry(),
-            new TestDocumentMapper(transformers: $container),
+            new TestDocumentMapper(),
             new TestEventDispatcher(),
             $transport,
         );
