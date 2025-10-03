@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Config;
 
+use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
+
 /**
  * @template TClassMetadata of ClassMetadataInterface
  * @template TPropertyMetadata of PropertyMetadataInterface
  */
 interface ClassMetadataRegistryInterface
 {
+    public PropertyAccessorInterface $propertyAccessor {get; }
+
     /**
      * @param class-string $className
      */

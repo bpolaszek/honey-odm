@@ -35,7 +35,7 @@ trait ClassMetadataRegistryTrait
      * @param array<class-string, ClassMetadataInterface<O, PropertyMetadataInterface>>|list<class-string<O>> $configurations
      */
     public function __construct(
-        private readonly PropertyAccessorInterface $propertyAccessor = new PropertyAccessor(),
+        public readonly PropertyAccessorInterface $propertyAccessor = new PropertyAccessor(),
         array $configurations = [],
     ) {
         $this->storage = new ArrayObject();

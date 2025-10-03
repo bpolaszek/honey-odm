@@ -1,0 +1,59 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Honey\ODM\Core\Mapper\PropertyTransformer;
+
+use Honey\ODM\Core\Config\PropertyMetadataInterface;
+use Honey\ODM\Core\Mapper\MappingContextInterface;
+use LogicException;
+use ReflectionNamedType;
+
+use function is_object;
+use function ltrim;
+
+final class RelationTransformer implements PropertyTransformerInterface
+{
+    // @phpstan-ignore missingType.generics
+    public function fromDocument(
+        mixed $value,
+        PropertyMetadataInterface $propertyMetadata,
+        MappingContextInterface $context,
+    ): mixed {
+        if (null === $value) {
+            return null;
+        }
+        $targetClass = $propertyMetadata->transformer->options['target_class'] ?? null;
+        if (!$targetClass) {
+            $reflType = $propertyMetadata->reflection->getSettableType();
+            if (!$reflType instanceof ReflectionNamedType || $reflType->isBuiltin()) {
+                throw new LogicException('Invalid target class.');
+            }
+            $targetClass = ltrim($reflType->getName(), '?');
+        }
+
+        return $context->objectManager->find($targetClass, $value); // @phpstan-ignore argument.templateType
+    }
+
+    // @phpstan-ignore missingType.generics
+    public function toDocument(
+        mixed $value,
+        PropertyMetadataInterface $propertyMetadata,
+        MappingContextInterface $context,
+    ): mixed {
+        if (null === $value) {
+            return null;
+        }
+
+        if (!is_object($value)) {
+            throw new LogicException(sprintf('Invalid type for %s::%s', $propertyMetadata->classMetadata->className, $propertyMetadata->reflection->name));
+        }
+
+        $classMetadataRegistry = $context->objectManager->classMetadataRegistry;
+        $propertyAccessor = $classMetadataRegistry->propertyAccessor;
+        $classMetadata = $classMetadataRegistry->getClassMetadata($value::class);
+        $idPropMetadata = $classMetadata->getIdPropertyMetadata();
+
+        return $propertyAccessor->getValue($value, $idPropMetadata->reflection->name);
+    }
+}
