@@ -37,6 +37,10 @@ abstract class ObjectManager
      */
     protected array $repositories = [];
 
+    /**
+     * @param ClassMetadataRegistryInterface<C, P> $classMetadataRegistry
+     * @param DocumentMapperInterface<C, P> $documentMapper
+     */
     public function __construct(
         public readonly ClassMetadataRegistryInterface $classMetadataRegistry,
         public readonly DocumentMapperInterface $documentMapper,
@@ -147,15 +151,15 @@ abstract class ObjectManager
     }
 
     /**
+     * @param array<string, mixed> $document
      * @param ClassMetadataInterface<O, P> $classMetadata
      */
-    final public function factory(mixed $document, ClassMetadataInterface $classMetadata): object
+    final public function factory(array $document, ClassMetadataInterface $classMetadata): object
     {
-        $identityMap = $this->identities;
         $id = $this->classMetadataRegistry->getIdFromDocument($document, $classMetadata->className);
         $className = $classMetadata->className;
-        if ($identityMap->containsId($className, $id)) {
-            return $identityMap->getObject($className, $id);
+        if ($this->identities->containsId($className, $id)) {
+            return $this->identities->getObject($className, $id);
         }
         $object = Reflection::class($className)->newLazyGhost(function (object $ghost) use ($document, $classMetadata) {
             $object = $this->documentMapper->documentToObject(
@@ -165,8 +169,8 @@ abstract class ObjectManager
             );
             $this->eventDispatcher->dispatch(new PostLoadEvent($object, $this));
         });
-        $identityMap->attach($object);
-        $identityMap->rememberState($object, $document);
+        $this->identities->attach($object);
+        $this->identities->rememberState($object, $document);
 
         return $object;
     }

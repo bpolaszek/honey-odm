@@ -7,5 +7,9 @@ namespace Honey\ODM\Core\Mapper;
 interface MappingContextInterface
 {
     public object $object {get; }
-    public mixed $document {get; }
+
+    /**
+     * @var array<string, mixed>
+     */
+    public array $document {get; }
 }

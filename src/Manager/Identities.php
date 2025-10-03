@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Manager;
 
+use Honey\ODM\Core\Config\ClassMetadataInterface;
 use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
+use Honey\ODM\Core\Config\PropertyMetadataInterface;
 use Honey\ODM\Core\Mapper\DocumentMapperInterface;
 use Honey\ODM\Core\UnitOfWork\Changeset;
 use IteratorAggregate;
@@ -15,12 +17,14 @@ use WeakMap;
 /**
  * @internal
  *
+ * @template C of ClassMetadataInterface
+ * @template P of PropertyMetadataInterface
  * @implements IteratorAggregate<int, object>
  */
 final class Identities implements IteratorAggregate
 {
     /**
-     * @var SplObjectStorage<int, object>
+     * @var SplObjectStorage<object, mixed>
      */
     private SplObjectStorage $storage;
 
@@ -29,6 +33,10 @@ final class Identities implements IteratorAggregate
      */
     private WeakMap $rememberedStates;
 
+    /**
+     * @param ClassMetadataRegistryInterface<C, P> $classMetadataRegistry
+     * @param DocumentMapperInterface<C, P> $mapper
+     */
     public function __construct(
         private readonly ClassMetadataRegistryInterface $classMetadataRegistry,
         private readonly DocumentMapperInterface $mapper,

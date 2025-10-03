@@ -19,6 +19,9 @@ use function array_find;
 #[Attribute(Attribute::TARGET_CLASS)]
 final class TestAsDocument implements ClassMetadataInterface
 {
+    /**
+     * @var class-string<O>
+     */
     public string $className;
 
     /**

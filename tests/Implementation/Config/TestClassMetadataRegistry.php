@@ -32,7 +32,7 @@ final class TestClassMetadataRegistry implements ClassMetadataRegistryInterface
      * @param class-string<object> $className
      * @return mixed
      */
-    public function getIdFromDocument(mixed $document, string $className): mixed
+    public function getIdFromDocument(array $document, string $className): mixed
     {
         $classMetadata = $this->getClassMetadata($className);
 

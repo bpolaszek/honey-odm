@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Tests\Implementation\Transport;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 use Honey\ODM\Core\Config\ClassMetadataInterface;
 use Honey\ODM\Core\Tests\Implementation\Config\TestAsDocument;
 use Honey\ODM\Core\Transport\TransportInterface;
@@ -12,10 +13,13 @@ use Honey\ODM\Core\UnitOfWork\UnitOfWork;
 
 use function array_merge;
 
+/**
+ * @implements TransportInterface<Criteria>
+ */
 final class TestTransport implements TransportInterface
 {
     /**
-     * @var array<string, ArrayCollection>
+     * @var array<string, ArrayCollection<int, array<string, mixed>>
      */
     public array $storage = [];
 
@@ -45,7 +49,7 @@ final class TestTransport implements TransportInterface
 
     public function retrieveDocuments(mixed $criteria): array
     {
-        // TODO: Implement retrieveDocuments() method.
+        throw new \LogicException("Not implemented");
     }
 
     /**

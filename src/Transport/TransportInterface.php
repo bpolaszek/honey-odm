@@ -24,5 +24,5 @@ interface TransportInterface
     /**
      * @return array<string, mixed>|null
      */
-    public function retrieveDocumentById(ClassMetadataInterface $classMetadata, mixed $id): array|object|null;
+    public function retrieveDocumentById(ClassMetadataInterface $classMetadata, mixed $id): ?array;
 }

@@ -53,6 +53,9 @@ final readonly class TestObjectRepository implements ObjectRepositoryInterface
     {
         $classMetadata = $this->manager->classMetadataRegistry->getClassMetadata($this->className);
 
-        return $this->manager->transport->retrieveDocumentById($classMetadata, $id);
+        return $this->manager->factory(
+            $this->manager->transport->retrieveDocumentById($classMetadata, $id),
+            $classMetadata,
+        );
     }
 }

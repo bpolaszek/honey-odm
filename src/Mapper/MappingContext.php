@@ -8,7 +8,7 @@ final readonly class MappingContext implements MappingContextInterface
 {
     public function __construct(
         public object $object,
-        public mixed $document,
+        public array $document,
     ) {
     }
 }
