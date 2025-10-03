@@ -8,14 +8,14 @@ use Honey\ODM\Core\Config\ClassMetadataInterface;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
 
 /**
- * @template C
+ * @template F of mixed
  */
 interface TransportInterface
 {
     public function flushPendingOperations(UnitOfWork $unitOfWork): void;
 
     /**
-     * @param C $criteria
+     * @param F $criteria
      *
      * @return iterable<array<string, mixed>>
      */

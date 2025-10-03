@@ -25,9 +25,13 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 /**
  * @template C of ClassMetadataInterface
  * @template P of PropertyMetadataInterface
+ * @template F of mixed
  */
 abstract class ObjectManager
 {
+    /**
+     * @var Identities<C, P>
+     */
     public readonly Identities $identities;
     public private(set) UnitOfWork $unitOfWork;
     private bool $isFlushing = false;
@@ -39,7 +43,8 @@ abstract class ObjectManager
 
     /**
      * @param ClassMetadataRegistryInterface<C, P> $classMetadataRegistry
-     * @param DocumentMapperInterface<C, P> $documentMapper
+     * @param DocumentMapperInterface $documentMapper
+     * @param TransportInterface<F> $transport
      */
     public function __construct(
         public readonly ClassMetadataRegistryInterface $classMetadataRegistry,
@@ -75,7 +80,7 @@ abstract class ObjectManager
      *
      * @param class-string<O> $className
      *
-     * @return ObjectRepositoryInterface<O>
+     * @return ObjectRepositoryInterface<F, O>
      */
     public function getRepository(string $className): ObjectRepositoryInterface
     {

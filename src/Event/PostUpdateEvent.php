@@ -11,13 +11,14 @@ use Honey\ODM\Core\Manager\ObjectManager;
 /**
  * @template C of ClassMetadataInterface
  * @template P of PropertyMetadataInterface
+ * @template F of mixed
  * @template O of object
  */
 final readonly class PostUpdateEvent
 {
     /**
      * @param O $object
-     * @param ObjectManager<C, P> $objectManager
+     * @param ObjectManager<C, P, F> $objectManager
      */
     public function __construct(
         public object $object,

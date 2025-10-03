@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Repository;
 
 /**
- * @template C
+ * @template F of mixed
  * @template O of object
  */
 interface ObjectRepositoryInterface
 {
     /**
-     * @param C $criteria
+     * @param F $criteria
      *
      * @return ResultInterface<O>
      */
@@ -23,7 +23,7 @@ interface ObjectRepositoryInterface
     public function findAll(): ResultInterface;
 
     /**
-     * @param C $criteria
+     * @param F $criteria
      *
      * @return O|null
      */

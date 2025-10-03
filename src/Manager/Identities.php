@@ -35,7 +35,7 @@ final class Identities implements IteratorAggregate
 
     /**
      * @param ClassMetadataRegistryInterface<C, P> $classMetadataRegistry
-     * @param DocumentMapperInterface<C, P> $mapper
+     * @param DocumentMapperInterface $mapper
      */
     public function __construct(
         private readonly ClassMetadataRegistryInterface $classMetadataRegistry,
