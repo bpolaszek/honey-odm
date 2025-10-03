@@ -15,8 +15,10 @@ final class TestBook
     public function __construct(
         #[TestAsField(primary: true)]
         public string $id,
+        #[TestAsField(name: 'title')]
+        public string $name,
         #[TestAsField(name: 'author_id', transformer: new TransformerMetadata(RelationTransformer::class))]
-        public TestAuthor $author,
+        public ?TestAuthor $author = null,
     ) {
     }
 }

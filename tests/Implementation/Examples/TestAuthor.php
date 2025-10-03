@@ -22,6 +22,5 @@ final class TestAuthor
         #[TestAsField(name: 'author_name')]
         public string $name,
     ) {
-        $this->createdAt = new \DateTimeImmutable();
     }
 }
