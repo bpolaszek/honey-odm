@@ -17,6 +17,7 @@ interface ClassMetadataRegistryInterface
 
     /**
      * @template O of object
+     *
      * @param class-string<O> $className
      *
      * @return TClassMetadata<O, TPropertyMetadata>
@@ -25,6 +26,7 @@ interface ClassMetadataRegistryInterface
 
     /**
      * @template O
+     *
      * @param array<string, mixed> $document
      * @param class-string<O> $className
      */

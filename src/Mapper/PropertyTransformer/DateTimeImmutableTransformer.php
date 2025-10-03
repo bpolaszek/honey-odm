@@ -9,7 +9,6 @@ use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use Honey\ODM\Core\Config\ClassMetadataInterface;
 use Honey\ODM\Core\Config\PropertyMetadataInterface;
 use Honey\ODM\Core\Mapper\MappingContextInterface;
 use InvalidArgumentException;

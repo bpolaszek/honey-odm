@@ -21,6 +21,7 @@ use function Honey\ODM\Core\throws;
  *
  * @implements ClassMetadataRegistryInterface<TClassMetadata, TPropertyMetadata>
  */
+// @phpstan-ignore trait.unused
 trait ClassMetadataRegistryTrait
 {
     /**
@@ -30,6 +31,7 @@ trait ClassMetadataRegistryTrait
 
     /**
      * @template O of object
+     *
      * @param array<class-string, ClassMetadataInterface<O, PropertyMetadataInterface>>|list<class-string<O>> $configurations
      */
     public function __construct(
@@ -74,6 +76,7 @@ trait ClassMetadataRegistryTrait
 
     /**
      * @template O of object
+     *
      * @param class-string<O> $className
      *
      * @return TClassMetadata<O, TPropertyMetadata>
@@ -90,6 +93,7 @@ trait ClassMetadataRegistryTrait
 
     /**
      * @template O of object
+     *
      * @param ReflectionClass<O> $classRefl
      * @param ClassMetadataInterface<object, PropertyMetadataInterface> $classMetadata
      *

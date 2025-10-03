@@ -47,7 +47,6 @@ abstract class ObjectManager
 
     /**
      * @param ClassMetadataRegistryInterface<TClassMetadata, TPropertyMetadata> $classMetadataRegistry
-     * @param DocumentMapperInterface $documentMapper
      * @param TransportInterface<TCriteria> $transport
      */
     public function __construct(
@@ -88,7 +87,7 @@ abstract class ObjectManager
      */
     public function getRepository(string $className): ObjectRepositoryInterface
     {
-        return $this->repositories[$className] //@phpstan-ignore return.type
+        return $this->repositories[$className] // @phpstan-ignore return.type
             ?? throw new InvalidArgumentException("No repository registered for class $className");
     }
 
@@ -145,7 +144,9 @@ abstract class ObjectManager
 
     /**
      * @template TObject of object
+     *
      * @param class-string<TObject> $className
+     *
      * @return TObject|null
      */
     final public function find(string $className, mixed $id): ?object
@@ -166,8 +167,10 @@ abstract class ObjectManager
 
     /**
      * @template TObject of object
+     *
      * @param array<string, mixed> $document
      * @param ClassMetadataInterface<TObject, TPropertyMetadata> $classMetadata
+     *
      * @return TObject
      */
     final public function factory(array $document, ClassMetadataInterface $classMetadata): object

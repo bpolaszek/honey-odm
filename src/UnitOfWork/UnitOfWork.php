@@ -28,7 +28,7 @@ final class UnitOfWork
     public const int UPDATE = 3;
 
     /**
-     * @var \SplObjectStorage <object, null>
+     * @var SplObjectStorage <object, null>
      */
     private readonly SplObjectStorage $scheduled;
 
@@ -110,7 +110,7 @@ final class UnitOfWork
      */
     public function getChangedObjects(): iterable
     {
-        return weakmap_objects($this->changesets); // @phpstan-ignore argument.type
+        return weakmap_objects($this->changesets);
     }
 
     /**
@@ -118,7 +118,6 @@ final class UnitOfWork
      */
     public function getPendingUpserts(): iterable
     {
-        // @phpstan-ignore argument.type
         return iterable(weakmap_objects($this->pendingOperations))->filter(
             fn (object $object) => in_array($this->pendingOperations[$object], [self::CREATE, self::UPDATE], true),
         );
@@ -129,7 +128,6 @@ final class UnitOfWork
      */
     public function getPendingInserts(): iterable
     {
-        // @phpstan-ignore argument.type
         return iterable(weakmap_objects($this->pendingOperations))->filter(
             fn (object $object) => self::CREATE === $this->pendingOperations[$object],
         );
@@ -140,7 +138,6 @@ final class UnitOfWork
      */
     public function getPendingUpdates(): iterable
     {
-        // @phpstan-ignore argument.type
         return iterable(weakmap_objects($this->pendingOperations))->filter(
             fn (object $object) => self::UPDATE === $this->pendingOperations[$object],
         );
@@ -151,7 +148,6 @@ final class UnitOfWork
      */
     public function getPendingDeletes(): iterable
     {
-        // @phpstan-ignore argument.type
         return iterable(weakmap_objects($this->pendingOperations))->filter(
             fn (object $object) => self::DELETE === $this->pendingOperations[$object],
         );

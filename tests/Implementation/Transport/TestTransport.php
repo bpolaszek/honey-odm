@@ -57,7 +57,7 @@ final class TestTransport implements TransportInterface
      * @param mixed $id
      * @return array|object|null
      */
-    public function retrieveDocumentById(ClassMetadataInterface $classMetadata, mixed $id): array|object|null
+    public function retrieveDocumentById(ClassMetadataInterface $classMetadata, mixed $id): array|null
     {
         $bucket = $classMetadata->bucket;
 

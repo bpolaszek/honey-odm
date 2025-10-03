@@ -14,7 +14,7 @@ use Honey\ODM\Core\Tests\Implementation\Config\TestAsField;
 it('returns null when input is null', function () {
     $transformer = new DateTimeImmutableTransformer();
     $metadata = new TestAsField();
-    $context = new MappingContext(new \stdClass(), new \stdClass());
+    $context = new MappingContext(new \stdClass(), []);
     $result = $transformer->fromDocument(null, $metadata, $context);
     expect($result)->toBeNull();
     $result = $transformer->toDocument(null, $metadata, $context);
@@ -24,7 +24,7 @@ it('returns null when input is null', function () {
 it('complains if value is not a DateTimeInterface instance', function () {
     $transformer = new DateTimeImmutableTransformer();
     $metadata = new TestAsField();
-    $context = new MappingContext(new \stdClass(), new \stdClass());
+    $context = new MappingContext(new \stdClass(), []);
     $transformer->toDocument('not a date', $metadata, $context);
 })->throws(\InvalidArgumentException::class, "Expected instance of DateTimeInterface, got 'string'.");
 
@@ -40,7 +40,7 @@ it('uses options', function () {
             'to_type' => 'float',
         ],
     ));
-    $context = new MappingContext(new \stdClass(), new \stdClass());
+    $context = new MappingContext(new \stdClass(), []);
 
     $dateString = '2024-06-01 12:00:00'; // 12 PM in New York
     $dateTimeImmutable = $transformer->fromDocument($dateString, $metadata, $context);

@@ -16,6 +16,7 @@ interface TransportInterface
     /**
      * @template TClassMetadata of ClassMetadataInterface
      * @template TPropertyMetadata of PropertyMetadataInterface
+     *
      * @param UnitOfWork<TClassMetadata, TPropertyMetadata, TCriteria> $unitOfWork
      */
     public function flushPendingOperations(UnitOfWork $unitOfWork): void;
@@ -29,7 +30,9 @@ interface TransportInterface
 
     /**
      * @template TObject of object
+     *
      * @param ClassMetadataInterface<TObject, PropertyMetadataInterface> $classMetadata
+     *
      * @return array<string, mixed>|null
      */
     public function retrieveDocumentById(ClassMetadataInterface $classMetadata, mixed $id): ?array;
