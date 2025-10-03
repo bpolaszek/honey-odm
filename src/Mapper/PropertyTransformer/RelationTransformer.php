@@ -14,7 +14,6 @@ use function ltrim;
 
 final class RelationTransformer implements PropertyTransformerInterface
 {
-    // @phpstan-ignore missingType.generics
     public function fromDocument(
         mixed $value,
         PropertyMetadataInterface $propertyMetadata,
@@ -35,7 +34,6 @@ final class RelationTransformer implements PropertyTransformerInterface
         return $context->objectManager->find($targetClass, $value); // @phpstan-ignore argument.templateType
     }
 
-    // @phpstan-ignore missingType.generics
     public function toDocument(
         mixed $value,
         PropertyMetadataInterface $propertyMetadata,
