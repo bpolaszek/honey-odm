@@ -44,12 +44,9 @@ final class Identities implements IteratorAggregate
         $this->rememberedStates = new WeakMap();
     }
 
-    public function attach(object ...$objects): void
+    public function attach(object $object, mixed $id): void
     {
-        foreach ($objects as $object) {
-            $id = $this->objectManager->classMetadataRegistry->getIdFromObject($object);
-            $this->storage->attach($object, $id);
-        }
+        $this->storage->attach($object, $id);
     }
 
     /**

@@ -16,9 +16,6 @@ final class TestAuthor
     #[TestAsField(name: 'created_at', transformer: new TransformerMetadata(DateTimeImmutableTransformer::class))]
     public ?\DateTimeInterface $createdAt = null;
 
-    #[TestAsField(name: 'book_id', transformer: new TransformerMetadata(RelationTransformer::class))]
-    public TestBook $book;
-
     public function __construct(
         #[TestAsField(name: 'author_id', primary: true)]
         public int $id,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Tests\Unit\Mapper\PropertyTransformer;
 
+use BenTools\ReflectionPlus\Reflection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Honey\ODM\Core\Mapper\PropertyTransformer\DateTimeImmutableTransformer;
 use Honey\ODM\Core\Mapper\PropertyTransformer\RelationTransformer;
@@ -36,20 +37,6 @@ it('works', function () {
     $container = new Container();
     $container->add(RelationTransformer::class);
     $container->add(DateTimeImmutableTransformer::class);
-
-    /*$objectManager = new TestObjectManager(
-        new TestClassMetadataRegistry(),
-        new TestDocumentMapper(transformers: $container),
-        new TestEventDispatcher(),
-        $transport,
-    );
-    $author = new TestAuthor(42, 'John Doe');
-    $objectManager->persist($author);
-    $objectManager->flush();
-
-    $book = new TestBook('1337', $author);
-    $objectManager->persist($book);
-    $objectManager->flush();*/
     $objectManager = new TestObjectManager(
         new TestClassMetadataRegistry(),
         new TestDocumentMapper(transformers: $container),
@@ -57,6 +44,13 @@ it('works', function () {
         $transport,
     );
 
-    dump($transport);
-    dump($objectManager->find(TestBook::class, '1337'));
+    $book = $objectManager->find(TestBook::class, '1337');
+    expect($book)->toBeInstanceOf(TestBook::class)
+        ->and(Reflection::class(TestBook::class)->isUninitializedLazyObject($book))->toBeTrue()
+        ->and($book->id)->toBe('1337')
+        ->and($book->author)->toBeInstanceOf(TestAuthor::class)
+        ->and(Reflection::class(TestAuthor::class)->isUninitializedLazyObject($book->author))->toBeTrue()
+        ->and($book->author->id)->toBe(42)
+        ->and($book->author->name)->toBe('John Doe')
+    ;
 });

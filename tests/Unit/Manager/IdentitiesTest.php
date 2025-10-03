@@ -29,7 +29,7 @@ describe('Identities', function () {
         $document = new TestDocument(1, 'Test Name');
 
         // When
-        $identities->attach($document);
+        $identities->attach($document, $document->id);
 
         // Then
         expect($identities->contains($document))->toBeTrue();
@@ -46,7 +46,7 @@ describe('Identities', function () {
         };
         $identities = $objectManager->identities;
         $document = new TestDocument(1, 'Test Name');
-        $identities->attach($document);
+        $identities->attach($document, $document->id);
 
         // When
         $identities->detach($document);
@@ -69,7 +69,7 @@ describe('Identities', function () {
         $document2 = new TestDocument(2, 'Another Name');
 
         // When
-        $identities->attach($document1);
+        $identities->attach($document1, $document1->id);
 
         // Then
         expect($identities->contains($document1))->toBeTrue()
@@ -133,8 +133,8 @@ describe('Identities', function () {
         $document2 = new TestDocument(2, 'Test Name 2');
 
         // When
-        $identities->attach($document1);
-        $identities->attach($document2);
+        $identities->attach($document1, $document1->id);
+        $identities->attach($document2, $document2->id);
 
         // Then
         $attachedObjects = [];

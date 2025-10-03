@@ -142,7 +142,7 @@ describe('UnitOfWork', function () {
         $document = new TestDocument(1, 'Original Name');
 
         // Attach object and remember its state
-        $objectManager->identities->attach($document);
+        $objectManager->identities->attach($document, $document->id);
         $objectManager->identities->rememberState($document, ['id' => 1, 'name' => 'Original Name', 'foo' => 'bar']);
 
         // Change the object
@@ -174,8 +174,8 @@ describe('UnitOfWork', function () {
         $document2 = new TestDocument(2, 'Original Name 2');
 
         // Attach objects and remember their states (using current state)
-        $objectManager->identities->attach($document1);
-        $objectManager->identities->attach($document2);
+        $objectManager->identities->attach($document1, $document1->id);
+        $objectManager->identities->attach($document2, $document2->id);
         $context1 = new MappingContext($classMetadata, $objectManager, $document1, []);
         $context2 = new MappingContext($classMetadata, $objectManager, $document2, []);
         $objectManager->identities->rememberState($document1, $mapper->objectToDocument($document1, [], $context1));
@@ -213,7 +213,7 @@ describe('UnitOfWork', function () {
         $initialHash = $unitOfWork->hash;
 
         // Attach object, remember state, and change it
-        $objectManager->identities->attach($document);
+        $objectManager->identities->attach($document, $document->id);
         $objectManager->identities->rememberState($document, ['id' => 1, 'name' => 'Original Name', 'foo' => 'bar']);
         $document->name = 'Updated Name';
 

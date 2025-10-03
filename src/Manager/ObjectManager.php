@@ -134,7 +134,9 @@ abstract class ObjectManager
             }
 
             $this->transport->flushPendingOperations($this->unitOfWork);
-            $this->identities->attach(...$this->unitOfWork->getPendingUpserts());
+            foreach ($this->unitOfWork->getPendingUpserts() as $object) {
+                $this->identities->attach($object, $this->classMetadataRegistry->getIdFromObject($object));
+            }
             $this->identities->detach(...$this->unitOfWork->getPendingDeletes());
             $this->firePostFlushEvents();
             $this->resetUnitOfWork();
@@ -190,7 +192,7 @@ abstract class ObjectManager
             );
             $this->eventDispatcher->dispatch(new PostLoadEvent($object, $this));
         });
-        $this->identities->attach($object);
+        $this->identities->attach($object, $id);
         $this->identities->rememberState($object, $document);
 
         return $object; // @phpstan-ignore return.type
