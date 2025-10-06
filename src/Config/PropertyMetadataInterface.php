@@ -18,5 +18,6 @@ interface PropertyMetadataInterface
         set;
     }
     public bool $primary {get; }
-    public ?TransformerMetadataInterface $transformer {get; }
+
+    public function getTransformer(): ?TransformerMetadataInterface;
 }

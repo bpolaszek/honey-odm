@@ -26,7 +26,7 @@ trait DocumentMapperTrait
         foreach ($context->classMetadata->propertiesMetadata as $propertyName => $propertyMetadata) {
             $sourcePropertyName = $propertyMetadata->name ?? $propertyName;
             /** @var PropertyTransformerInterface|null $transformer */
-            $transformer = $propertyMetadata->transformer?->service ? $this->transformers->get($propertyMetadata->transformer->service) : null;
+            $transformer = $propertyMetadata->getTransformer()?->service ? $this->transformers->get($propertyMetadata->getTransformer()->service) : null;
             try {
                 $rawValue = $this->propertyAccessor->getValue($document, $sourcePropertyName);
                 $value = match ($transformer) {
@@ -54,7 +54,7 @@ trait DocumentMapperTrait
         foreach ($context->classMetadata->propertiesMetadata as $propertyName => $propertyMetadata) {
             $targetPropertyName = $propertyMetadata->name ?? $propertyName;
             /** @var PropertyTransformerInterface|null $transformer */
-            $transformer = $propertyMetadata->transformer?->service ? $this->transformers->get($propertyMetadata->transformer->service) : null;
+            $transformer = $propertyMetadata->getTransformer()?->service ? $this->transformers->get($propertyMetadata->getTransformer()->service) : null;
             /** @var array<string, mixed> $target */
             $rawValue = $this->propertyAccessor->getValue($source, $propertyName);
             $value = match ($transformer) {

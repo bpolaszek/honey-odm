@@ -31,7 +31,7 @@ final class DateTimeImmutableTransformer implements PropertyTransformerInterface
         }
 
         /** @var array{from_format?: string, from_tz?: string} $transformerOptions */
-        $transformerOptions = $propertyMetadata->transformer->options ?? [];
+        $transformerOptions = $propertyMetadata->getTransformer()->options ?? [];
         $format = $transformerOptions['from_format'] ?? DateTimeInterface::ATOM;
         $timeZone = $transformerOptions['from_tz'] ?? null;
 
@@ -60,7 +60,7 @@ final class DateTimeImmutableTransformer implements PropertyTransformerInterface
         }
 
         /** @var array{to_format?: string, to_tz?: string, to_type?: string} $transformerOptions */
-        $transformerOptions = $propertyMetadata->transformer->options ?? [];
+        $transformerOptions = $propertyMetadata->getTransformer()->options ?? [];
         $format = $transformerOptions['to_format'] ?? DateTimeInterface::ATOM;
         $timeZone = $transformerOptions['to_tz'] ?? null;
         $cast = $transformerOptions['to_type'] ?? null;

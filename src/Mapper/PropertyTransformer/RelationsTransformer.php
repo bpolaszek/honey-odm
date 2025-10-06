@@ -30,7 +30,7 @@ final class RelationsTransformer implements PropertyTransformerInterface
             throw new LogicException(sprintf('Expected array, got %s', get_debug_type($value))); // @codeCoverageIgnore
         }
 
-        $targetClass = $propertyMetadata->transformer->options['target_class']
+        $targetClass = $propertyMetadata->getTransformer()->options['target_class']
             ?? throw new LogicException('`target_class` option not provided.'); // @codeCoverageIgnore
 
         return array_map(static fn (mixed $v) => $context->objectManager->find($targetClass, $v), $value); // @phpstan-ignore return.type, argument.templateType

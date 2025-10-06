@@ -22,7 +22,7 @@ final class RelationTransformer implements PropertyTransformerInterface
         if (null === $value) {
             return null;
         }
-        $targetClass = $propertyMetadata->transformer->options['target_class'] ?? null;
+        $targetClass = $propertyMetadata->getTransformer()->options['target_class'] ?? null;
         if (!$targetClass) {
             $reflType = $propertyMetadata->reflection->getSettableType();
             if (!$reflType instanceof ReflectionNamedType || $reflType->isBuiltin()) {
