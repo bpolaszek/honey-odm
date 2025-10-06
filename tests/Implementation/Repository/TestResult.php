@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Tests\Implementation\Repository;
 
-use Honey\ODM\Core\Repository\ResultInterface;
+use Countable;
 use IteratorAggregate;
 use Traversable;
 
-final readonly class TestResult implements ResultInterface, IteratorAggregate
+final readonly class TestResult implements IteratorAggregate, Countable
 {
     public function __construct(public array $objects)
     {

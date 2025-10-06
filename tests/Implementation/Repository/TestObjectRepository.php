@@ -7,7 +7,6 @@ namespace Honey\ODM\Core\Tests\Implementation\Repository;
 use Doctrine\Common\Collections\Criteria;
 use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Repository\ObjectRepositoryInterface;
-use Honey\ODM\Core\Repository\ResultInterface;
 use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
 
 use function array_map;
@@ -23,12 +22,12 @@ final readonly class TestObjectRepository implements ObjectRepositoryInterface
     ) {
     }
 
-    public function findAll(): ResultInterface
+    public function findAll(): iterable
     {
         return $this->findBy(new Criteria());
     }
 
-    public function findBy(mixed $criteria): ResultInterface
+    public function findBy(mixed $criteria): iterable
     {
         /** @var TestTransport $transport */
         $transport = $this->manager->transport;

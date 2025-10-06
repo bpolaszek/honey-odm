@@ -13,14 +13,14 @@ interface ObjectRepositoryInterface
     /**
      * @param TCriteria $criteria
      *
-     * @return ResultInterface<TObject>
+     * @return iterable<TObject>
      */
-    public function findBy(mixed $criteria): ResultInterface;
+    public function findBy(mixed $criteria): iterable;
 
     /**
-     * @return ResultInterface<TObject>
+     * @return iterable<TObject>
      */
-    public function findAll(): ResultInterface;
+    public function findAll(): iterable;
 
     /**
      * @param TCriteria $criteria
