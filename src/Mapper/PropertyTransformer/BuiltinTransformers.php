@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Mapper\PropertyTransformer;
 
+use Exception;
 use IteratorAggregate;
 use Psr\Container\ContainerInterface;
 use Traversable;
 
 /**
- * @implements \IteratorAggregate<string, PropertyTransformerInterface>
+ * @implements IteratorAggregate<string, PropertyTransformerInterface>
  */
 final readonly class BuiltinTransformers implements ContainerInterface, IteratorAggregate
 {
@@ -27,7 +28,7 @@ final readonly class BuiltinTransformers implements ContainerInterface, Iterator
 
     public function get(string $id)
     {
-        return $this->transformers[$id] ?? throw new class ("Service $id not found") extends \Exception {
+        return $this->transformers[$id] ?? throw new class ("Service $id not found") extends Exception {
         };
     }
 

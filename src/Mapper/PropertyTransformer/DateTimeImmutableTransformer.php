@@ -55,7 +55,7 @@ final class DateTimeImmutableTransformer implements PropertyTransformerInterface
         if (null === $value) {
             return null;
         }
-        if (!$value instanceof DateTimeInterface) { // @phpstan-ignore instanceof.alwaysTrue
+        if (!$value instanceof DateTimeInterface) {
             throw new InvalidArgumentException(sprintf("Expected instance of DateTimeInterface, got '%s'.", get_debug_type($value)));
         }
 

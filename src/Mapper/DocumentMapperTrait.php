@@ -35,7 +35,7 @@ trait DocumentMapperTrait
                         $rawValue,
                         $propertyMetadata,
                         $context,
-                    )
+                    ),
                 };
                 $this->propertyAccessor->setValue($target, $propertyName, $value);
             } catch (NoSuchPropertyException) {
@@ -47,6 +47,7 @@ trait DocumentMapperTrait
 
     /**
      * @param array<string, mixed> $target
+     *
      * @return array<string, mixed>
      */
     public function objectToDocument(object $source, array $target, MappingContextInterface $context): array // @phpstan-ignore missingType.generics
@@ -63,12 +64,12 @@ trait DocumentMapperTrait
                     $rawValue,
                     $propertyMetadata,
                     $context,
-                )
+                ),
             };
             $target[$targetPropertyName] = $value;
         }
 
-        /** @var array<string, mixed> $target */
+        /* @var array<string, mixed> $target */
         return $target;
     }
 }

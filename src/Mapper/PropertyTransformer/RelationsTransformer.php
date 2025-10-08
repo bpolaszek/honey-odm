@@ -37,9 +37,9 @@ final class RelationsTransformer implements PropertyTransformerInterface
     }
 
     /**
-     * @var object[] $value
+     * @param object[]|null $value
      */
-    // @phpstan-ignore missingType.iterableValue, varTag.misplaced
+    // @phpstan-ignore missingType.iterableValue
     public function toDocument(
         mixed $value,
         PropertyMetadataInterface $propertyMetadata,
@@ -57,7 +57,7 @@ final class RelationsTransformer implements PropertyTransformerInterface
         foreach ($value as $object) {
             $classMetadataRegistry = $context->objectManager->classMetadataRegistry;
             $propertyAccessor = $classMetadataRegistry->propertyAccessor;
-            $classMetadata = $classMetadataRegistry->getClassMetadata($object::class); // @phpstan-ignore argument.templateType
+            $classMetadata = $classMetadataRegistry->getClassMetadata($object::class);
             $idPropMetadata = $classMetadata->getIdPropertyMetadata();
             $output[] = $propertyAccessor->getValue($object, $idPropMetadata->reflection->name);
         }

@@ -8,6 +8,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @internal
+ *
  * @codeCoverageIgnore
  */
 final class NullEventDispatcher implements EventDispatcherInterface
