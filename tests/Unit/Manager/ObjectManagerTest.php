@@ -136,6 +136,20 @@ describe('ObjectManager', function () {
                 ->and($object->name)->toBe('Test Name 10');
         })
             ->depends('it flushes pending operations');
+
+        it('clears itself', function () use ($objectManager) {
+            $object = $objectManager->find(TestDocument::class, 10);
+            assert($object instanceof TestDocument);
+            $uow = $objectManager->unitOfWork;
+            $identities = $objectManager->identities;
+
+            // When
+            $objectManager->clear();
+
+            // Then
+            expect($objectManager->identities)->not->toBe($identities)
+                ->and($objectManager->unitOfWork)->not->toBe($uow);
+        })->depends('it flushes pending operations');
     });
 
     describe('Events', function () {

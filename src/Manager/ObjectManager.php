@@ -33,7 +33,7 @@ abstract class ObjectManager
     /**
      * @var Identities<TClassMetadata, TPropertyMetadata, TCriteria>
      */
-    public readonly Identities $identities;
+    public private(set) Identities $identities;
 
     /**
      * @var UnitOfWork<TClassMetadata, TPropertyMetadata, TCriteria>
@@ -143,6 +143,12 @@ abstract class ObjectManager
         } finally {
             $this->isFlushing = false;
         }
+    }
+
+    final public function clear(): void
+    {
+        $this->identities = new Identities($this);
+        $this->resetUnitOfWork();
     }
 
     /**
