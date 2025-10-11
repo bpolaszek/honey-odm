@@ -20,6 +20,7 @@ final readonly class BuiltinTransformers implements ContainerInterface, Iterator
     public function __construct(
         private array $transformers = [
             DateTimeImmutableTransformer::class => new DateTimeImmutableTransformer(),
+            BackedEnumTransformer::class => new BackedEnumTransformer(),
             RelationTransformer::class => new RelationTransformer(),
             RelationsTransformer::class => new RelationsTransformer(),
         ],
