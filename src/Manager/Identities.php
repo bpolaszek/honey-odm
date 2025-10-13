@@ -26,7 +26,7 @@ use WeakReference;
 final class Identities implements IteratorAggregate
 {
     /**
-     * @var SplObjectStorage<object, mixed>
+     * @var SplObjectStorage<object, null>
      */
     private SplObjectStorage $storage;
 
@@ -38,7 +38,12 @@ final class Identities implements IteratorAggregate
     /**
      * @var array<string, array<mixed, WeakReference<object>>>
      */
-    private array $ids = [];
+    private array $idsToObjects = [];
+
+    /**
+     * @var WeakMap<object, mixed>
+     */
+    private WeakMap $objectsToIds;
 
     /**
      * @param ObjectManager<TClassMetadata, TPropertyMetadata, TCriteria> $objectManager
@@ -48,12 +53,14 @@ final class Identities implements IteratorAggregate
     ) {
         $this->storage = new SplObjectStorage();
         $this->rememberedStates = new WeakMap();
+        $this->objectsToIds = new WeakMap();
     }
 
     public function attach(object $object, mixed $id): void
     {
         $this->storage->attach($object);
-        $this->ids[$object::class][$id] = WeakReference::create($object);
+        $this->idsToObjects[$object::class][$id] = WeakReference::create($object);
+        $this->objectsToIds[$object] = $id;
     }
 
     /**
@@ -72,7 +79,13 @@ final class Identities implements IteratorAggregate
     public function detach(object ...$objects): void
     {
         foreach ($objects as $object) {
+            $id = $this->objectsToIds[$object] ?? null;
+            if (null === $id) {
+                continue;
+            }
             $this->storage->detach($object);
+            unset($this->objectsToIds[$object]);
+            unset($this->idsToObjects[$object::class][$id]);
             unset($this->rememberedStates[$object]);
         }
     }
@@ -84,12 +97,12 @@ final class Identities implements IteratorAggregate
 
     public function containsId(string $className, mixed $id): bool
     {
-        return isset($this->ids[$className][$id]);
+        return isset($this->idsToObjects[$className][$id]);
     }
 
     public function getObject(string $className, mixed $id): ?object
     {
-        return $this->ids[$className][$id]?->get(); // @phpstan-ignore nullsafe.neverNull
+        return $this->idsToObjects[$className][$id]?->get(); // @phpstan-ignore nullsafe.neverNull
     }
 
     /**
