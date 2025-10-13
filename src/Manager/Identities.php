@@ -65,9 +65,8 @@ final class Identities implements IteratorAggregate
     public function detach(object ...$objects): void
     {
         foreach ($objects as $object) {
-            if ($this->storage->contains($object)) {
-                $this->storage->detach($object);
-            }
+            $this->storage->detach($object);
+            unset($this->rememberedStates[$object]);
         }
     }
 
