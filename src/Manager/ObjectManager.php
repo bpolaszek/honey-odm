@@ -22,6 +22,11 @@ use Honey\ODM\Core\Transport\TransportInterface;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
 use InvalidArgumentException;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use ReflectionException;
+use ReflectionProperty;
+
+use function array_column;
+use function array_combine;
 
 /**
  * @template TClassMetadata of ClassMetadataInterface
@@ -196,12 +201,36 @@ abstract class ObjectManager
                 $ghost,
                 $context,
             );
+            foreach (Reflection::class($object::class)->getProperties() as $property) {
+                if (!$property->isStatic() && !$property->isInitialized($object)) {
+                    try {
+                        $defaultValue = self::getDefaultValue($property);
+                        $property->setValue($object, $defaultValue);
+                    } catch (ReflectionException) { // @codeCoverageIgnore
+                    }
+                }
+            }
             $this->eventDispatcher->dispatch(new PostLoadEvent($object, $this));
         });
         $this->identities->attach($object, $id);
         $this->identities->rememberState($object, $document);
 
         return $object; // @phpstan-ignore return.type
+    }
+
+    private static function getDefaultValue(ReflectionProperty $property): mixed
+    {
+        if (!$property->isPromoted()) {
+            return $property->getDefaultValue(); // @codeCoverageIgnore
+        }
+
+        $constructorParameters = $property->getDeclaringClass()->getConstructor()?->getParameters() ?? [];
+        $constructorParameters = array_combine(
+            array_column($constructorParameters, 'name'),
+            $constructorParameters,
+        );
+
+        return $constructorParameters[$property->name]->getDefaultValue();
     }
 
     private function firePrePersistEvent(object $object): void
