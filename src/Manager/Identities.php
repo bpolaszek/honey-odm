@@ -12,6 +12,7 @@ use IteratorAggregate;
 use SplObjectStorage;
 use Traversable;
 use WeakMap;
+use WeakReference;
 
 /**
  * @internal
@@ -35,6 +36,11 @@ final class Identities implements IteratorAggregate
     private WeakMap $rememberedStates;
 
     /**
+     * @var array<string, array<mixed, WeakReference<object>>>
+     */
+    private array $ids = [];
+
+    /**
      * @param ObjectManager<TClassMetadata, TPropertyMetadata, TCriteria> $objectManager
      */
     public function __construct(
@@ -46,7 +52,8 @@ final class Identities implements IteratorAggregate
 
     public function attach(object $object, mixed $id): void
     {
-        $this->storage->attach($object, $id);
+        $this->storage->attach($object);
+        $this->ids[$object::class][$id] = WeakReference::create($object);
     }
 
     /**
@@ -77,19 +84,12 @@ final class Identities implements IteratorAggregate
 
     public function containsId(string $className, mixed $id): bool
     {
-        return null !== $this->getObject($className, $id);
+        return isset($this->ids[$className][$id]);
     }
 
     public function getObject(string $className, mixed $id): ?object
     {
-        foreach ($this->storage as $object) {
-            $objectId = $this->storage->getInfo();
-            if (($object::class === $className) && 0 === ($objectId <=> $id)) {
-                return $object;
-            }
-        }
-
-        return null;
+        return $this->ids[$className][$id]?->get(); // @phpstan-ignore nullsafe.neverNull
     }
 
     /**
