@@ -1,0 +1,50 @@
+{
+  "name": "honey/odm-core",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Honey\\ODM\\Core\\": "src/"
+    },
+    "files": [
+      "src/functions.php"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Honey\\ODM\\Core\\Tests\\": "tests/"
+    }
+  },
+  "require": {
+    "php": ">=8.4",
+    "psr/event-dispatcher": "^1.0",
+    "symfony/property-access": "~7.0",
+    "bentools/reflection-plus": "^1.0",
+    "psr/container": "^2.0",
+    "bentools/iterable-functions": "^2.3"
+  },
+  "require-dev": {
+    "pestphp/pest": "^4.1",
+    "phpstan/phpstan": "^2.1",
+    "symfony/var-dumper": "^7.2",
+    "squizlabs/php_codesniffer": "^4.0",
+    "friendsofphp/php-cs-fixer": "^3.88",
+    "doctrine/collections": "^2.3"
+  },
+  "config": {
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
+  },
+  "scripts": {
+    "style:check": "vendor/bin/phpcs",
+    "style:fix": "vendor/bin/php-cs-fixer fix src --allow-risky=yes; vendor/bin/phpcbf",
+    "types:check": "vendor/bin/phpstan",
+    "tests:run": "vendor/bin/pest --coverage --min=100",
+    "ci:check": [
+      "@style:check",
+      "@types:check",
+      "@tests:run"
+    ]
+  }
+}
