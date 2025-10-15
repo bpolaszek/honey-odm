@@ -1,5 +1,5 @@
 {
-  "name": "honey/odm-core",
+  "name": "honey-odm/core",
   "type": "library",
   "license": "MIT",
   "autoload": {
