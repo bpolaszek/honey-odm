@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Manager;
 
 use BenTools\ReflectionPlus\Reflection;
-use Honey\ODM\Core\Config\ClassMetadataInterface;
+use Honey\ODM\Core\Config\ClassMetadata;
 use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
-use Honey\ODM\Core\Config\PropertyMetadataInterface;
+use Honey\ODM\Core\Config\PropertyMetadata;
 use Honey\ODM\Core\Event\PostLoadEvent;
 use Honey\ODM\Core\Event\PostPersistEvent;
 use Honey\ODM\Core\Event\PostRemoveEvent;
@@ -29,8 +29,8 @@ use function array_column;
 use function array_combine;
 
 /**
- * @template TClassMetadata of ClassMetadataInterface
- * @template TPropertyMetadata of PropertyMetadataInterface
+ * @template TClassMetadata of ClassMetadata
+ * @template TPropertyMetadata of PropertyMetadata
  * @template TCriteria of mixed
  */
 abstract class ObjectManager
@@ -183,11 +183,11 @@ abstract class ObjectManager
      * @template TObject of object
      *
      * @param array<string, mixed> $document
-     * @param ClassMetadataInterface<TObject, TPropertyMetadata> $classMetadata
+     * @param ClassMetadata<TObject, TPropertyMetadata> $classMetadata
      *
      * @return TObject
      */
-    final public function factory(array $document, ClassMetadataInterface $classMetadata): object
+    final public function factory(array $document, ClassMetadata $classMetadata): object
     {
         $id = $this->classMetadataRegistry->getIdFromDocument($document, $classMetadata->className);
         $className = $classMetadata->className;

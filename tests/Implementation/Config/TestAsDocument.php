@@ -5,45 +5,18 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Tests\Implementation\Config;
 
 use Attribute;
-use Honey\ODM\Core\Config\ClassMetadataInterface;
-use Honey\ODM\Core\Config\PropertyMetadataInterface;
-use ReflectionClass;
-
-use function array_find;
+use Honey\ODM\Core\Config\ClassMetadata;
 
 /**
  * @template O of object
  * @template P of TestAsField
- * @implements ClassMetadataInterface<O, P>
+ * @extends ClassMetadata<O, P>
  */
 #[Attribute(Attribute::TARGET_CLASS)]
-final class TestAsDocument implements ClassMetadataInterface
+final class TestAsDocument extends ClassMetadata
 {
-    /**
-     * @var class-string<O>
-     */
-    public string $className;
-
-    /**
-     * @var ReflectionClass<O>
-     */
-    public ReflectionClass $reflection;
-
-    /**
-     * @var array<string, P>
-     */
-    public array $propertiesMetadata = [];
-
     public function __construct(
         public ?string $bucket = null,
     ) {
-    }
-
-    public function getIdPropertyMetadata(): PropertyMetadataInterface
-    {
-        return array_find(
-            $this->propertiesMetadata,
-            fn (PropertyMetadataInterface $metadata) => $metadata->primary,
-        ) ?? throw new \RuntimeException('No primary property found in class metadata');
     }
 }

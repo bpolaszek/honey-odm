@@ -6,7 +6,7 @@ namespace Honey\ODM\Core\Tests\Implementation\Transport;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Honey\ODM\Core\Config\ClassMetadataInterface;
+use Honey\ODM\Core\Config\ClassMetadata;
 use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\Tests\Implementation\Config\TestAsDocument;
 use Honey\ODM\Core\Transport\TransportInterface;
@@ -61,7 +61,7 @@ final class TestTransport implements TransportInterface
      * @param mixed $id
      * @return array|object|null
      */
-    public function retrieveDocumentById(ClassMetadataInterface $classMetadata, mixed $id): array|null
+    public function retrieveDocumentById(ClassMetadata $classMetadata, mixed $id): array|null
     {
         $bucket = $classMetadata->bucket;
 

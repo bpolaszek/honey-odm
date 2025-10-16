@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Tests\Unit\Mapper\PropertyTransformer;
 
+use BenTools\ReflectionPlus\Reflection;
 use Honey\ODM\Core\Config\TransformerMetadata;
 use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Mapper\MappingContext;
@@ -119,7 +120,10 @@ it('infers target class from property reflection when no options provided', func
     $transformer = new BackedEnumTransformer();
     $metadata = new TestAsField();
     // Provide a ReflectionProperty with a backed enum type
-    $metadata->reflection = new ReflectionProperty(TestDocument::class, 'publicationState');
+    Reflection::property($metadata, 'reflection')->setValue(
+        $metadata,
+        new ReflectionProperty(TestDocument::class, 'publicationState'),
+    );
 
     $objectManager = new class (
         new TestClassMetadataRegistry(),
@@ -143,7 +147,7 @@ it('throws if it cannot infer a valid target class', function () {
     $anonymous = new class {
         public int $value = 42;
     };
-    $metadata->reflection = new ReflectionProperty($anonymous, 'value');
+    Reflection::property($metadata, 'reflection')->setValue($metadata, new ReflectionProperty($anonymous, 'value'));
 
     $objectManager = new class (
         new TestClassMetadataRegistry(),

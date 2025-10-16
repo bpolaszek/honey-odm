@@ -7,8 +7,8 @@ namespace Honey\ODM\Core\Config;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 /**
- * @template TClassMetadata of ClassMetadataInterface
- * @template TPropertyMetadata of PropertyMetadataInterface
+ * @template TClassMetadata of ClassMetadata
+ * @template TPropertyMetadata of PropertyMetadata
  */
 interface ClassMetadataRegistryInterface
 {
@@ -26,7 +26,7 @@ interface ClassMetadataRegistryInterface
      *
      * @return TClassMetadata<O, TPropertyMetadata>
      */
-    public function getClassMetadata(string $className): ClassMetadataInterface;
+    public function getClassMetadata(string $className): ClassMetadata;
 
     /**
      * @template O
