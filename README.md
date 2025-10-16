@@ -1,4 +1,4 @@
-# Honey ODM Core
+# 🐝 Honey / ODM 
 
 A framework-agnostic, core foundation library for building modern Object Document Mappers (ODM) in PHP.
 
@@ -7,7 +7,7 @@ A framework-agnostic, core foundation library for building modern Object Documen
 
 ## Overview
 
-Honey ODM Core provides the essential interfaces, components, and patterns needed to build robust ODMs that can work with various data sources like REST APIs, NoSQL databases, or any custom storage backend. The library focuses on providing a solid foundation with built-in features like property transformers, event mechanisms, and identity management.
+Honey ODM provides the essential interfaces, components, and patterns needed to build robust ODMs that can work with various data sources like REST APIs, NoSQL databases, or any custom storage backend. The library focuses on providing a solid foundation with built-in features like property transformers, event mechanisms, and identity management.
 
 ## Key Features
 
@@ -27,7 +27,7 @@ Honey ODM Core provides the essential interfaces, components, and patterns neede
 
 ## Building your own ODM
 
-Init your ODM project with Composer, then require Honey ODM Core:
+Init your ODM project with Composer, then require Honey ODM core library:
 
 ```bash
 composer require honey-odm/core
@@ -44,7 +44,7 @@ composer require honey-odm/core
 
 ### Essential Components
 
-To build an ODM using Honey ODM Core, you need to extend these abstract classes and implement these core interfaces:
+To build an ODM using Honey, you need to extend these abstract classes and implement these core interfaces:
 
 #### ClassMetadata
 
@@ -174,7 +174,6 @@ Your `ObjectRepository` implementation will likely depend on the `ObjectManager`
 Once you have implemented the above components, you can implement your own ObjectManager:
 
 ```php
-
 namespace MyODM\Manager;
 
 use Honey\ODM\Core\Manager\ObjectManager as BaseObjectManager
@@ -220,8 +219,6 @@ Here's a complete example of building an ODM that consumes a RESTful API:
 ### 1. Imagine your user entities
 
 ```php
-<?php
-
 namespace App;
 
 use Honey\ODM\Core\Config\TransformerMetadata;
@@ -266,8 +263,6 @@ final class Author
 ### 2. Create Metadata Attributes
 
 ```php
-<?php
-
 namespace RestBookODM;
 
 use Attribute;
@@ -296,8 +291,6 @@ final class AsField extends PropertyMetadata
 ### 3. Implement REST Transport
 
 ```php
-<?php
-
 namespace RestBookODM;
 
 use Honey\ODM\Core\Transport\TransportInterface;
@@ -376,8 +369,6 @@ final class RestTransport implements TransportInterface
 ### 4. Set Up the ODM
 
 ```php
-<?php
-
 namespace APp;
 
 use RestBookODM\ObjectManager;
