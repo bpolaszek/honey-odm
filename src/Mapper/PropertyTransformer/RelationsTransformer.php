@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Mapper\PropertyTransformer;
 
-use Honey\ODM\Core\Config\PropertyMetadataInterface;
+use Honey\ODM\Core\Config\PropertyMetadata;
 use Honey\ODM\Core\Mapper\MappingContextInterface;
 use LogicException;
 
@@ -19,7 +19,7 @@ final class RelationsTransformer implements PropertyTransformerInterface
      */
     public function fromDocument(
         mixed $value,
-        PropertyMetadataInterface $propertyMetadata,
+        PropertyMetadata $propertyMetadata,
         MappingContextInterface $context,
     ): ?array {
         if (null === $value) {
@@ -42,7 +42,7 @@ final class RelationsTransformer implements PropertyTransformerInterface
     // @phpstan-ignore missingType.iterableValue
     public function toDocument(
         mixed $value,
-        PropertyMetadataInterface $propertyMetadata,
+        PropertyMetadata $propertyMetadata,
         MappingContextInterface $context,
     ): ?array {
         if (null === $value) {

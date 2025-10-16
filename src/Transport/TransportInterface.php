@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Transport;
 
-use Honey\ODM\Core\Config\ClassMetadataInterface;
-use Honey\ODM\Core\Config\PropertyMetadataInterface;
+use Honey\ODM\Core\Config\ClassMetadata;
+use Honey\ODM\Core\Config\PropertyMetadata;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
 
 /**
@@ -14,8 +14,8 @@ use Honey\ODM\Core\UnitOfWork\UnitOfWork;
 interface TransportInterface
 {
     /**
-     * @template TClassMetadata of ClassMetadataInterface
-     * @template TPropertyMetadata of PropertyMetadataInterface
+     * @template TClassMetadata of ClassMetadata
+     * @template TPropertyMetadata of PropertyMetadata
      *
      * @param UnitOfWork<TClassMetadata, TPropertyMetadata, TCriteria> $unitOfWork
      */
@@ -31,9 +31,9 @@ interface TransportInterface
     /**
      * @template TObject of object
      *
-     * @param ClassMetadataInterface<TObject, PropertyMetadataInterface> $classMetadata
+     * @param ClassMetadata<TObject, PropertyMetadata> $classMetadata
      *
      * @return array<string, mixed>|null
      */
-    public function retrieveDocumentById(ClassMetadataInterface $classMetadata, mixed $id): ?array;
+    public function retrieveDocumentById(ClassMetadata $classMetadata, mixed $id): ?array;
 }

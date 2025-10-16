@@ -9,7 +9,7 @@ use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use Honey\ODM\Core\Config\PropertyMetadataInterface;
+use Honey\ODM\Core\Config\PropertyMetadata;
 use Honey\ODM\Core\Mapper\MappingContextInterface;
 use InvalidArgumentException;
 use RuntimeException;
@@ -23,7 +23,7 @@ final class DateTimeImmutableTransformer implements PropertyTransformerInterface
      */
     public function fromDocument(
         mixed $value,
-        PropertyMetadataInterface $propertyMetadata,
+        PropertyMetadata $propertyMetadata,
         MappingContextInterface $context,
     ): ?DateTimeImmutable {
         if (null === $value) {
@@ -49,7 +49,7 @@ final class DateTimeImmutableTransformer implements PropertyTransformerInterface
     // @phpstan-ignore return.unusedType, return.unusedType
     public function toDocument(
         mixed $value,
-        PropertyMetadataInterface $propertyMetadata,
+        PropertyMetadata $propertyMetadata,
         MappingContextInterface $context,
     ): string|int|float|null {
         if (null === $value) {

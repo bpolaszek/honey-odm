@@ -16,8 +16,8 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use function Honey\ODM\Core\throws;
 
 /**
- * @template TClassMetadata of ClassMetadataInterface
- * @template TPropertyMetadata of PropertyMetadataInterface
+ * @template TClassMetadata of ClassMetadata
+ * @template TPropertyMetadata of PropertyMetadata
  *
  * @implements ClassMetadataRegistryInterface<TClassMetadata, TPropertyMetadata>
  */
@@ -25,14 +25,14 @@ use function Honey\ODM\Core\throws;
 trait ClassMetadataRegistryTrait
 {
     /**
-     * @var ArrayObject<class-string, ClassMetadataInterface>
+     * @var ArrayObject<class-string, ClassMetadata>
      */
     private ArrayObject $storage; // @phpstan-ignore missingType.generics
 
     /**
      * @template O of object
      *
-     * @param array<class-string, ClassMetadataInterface<O, PropertyMetadataInterface>>|list<class-string<O>> $configurations
+     * @param array<class-string, ClassMetadata<O, PropertyMetadata>>|list<class-string<O>> $configurations
      */
     public function __construct(
         public readonly PropertyAccessorInterface $propertyAccessor = new PropertyAccessor(),
@@ -48,7 +48,7 @@ trait ClassMetadataRegistryTrait
             }
         } else {
             /**
-             * @var array<class-string<O>, ClassMetadataInterface<O, PropertyMetadataInterface>> $configurations
+             * @var array<class-string<O>, ClassMetadata<O, PropertyMetadata>> $configurations
              */
             foreach ($configurations as $className => $classMetadata) {
                 $this->storage->offsetSet(
@@ -59,7 +59,7 @@ trait ClassMetadataRegistryTrait
         }
     }
 
-    public function getClassMetadata(string $className): ClassMetadataInterface
+    public function getClassMetadata(string $className): ClassMetadata
     {
         if (!$this->storage->offsetExists($className)) {
             $this->storage->offsetSet($className, $this->readClassMetadata($className));
@@ -81,11 +81,11 @@ trait ClassMetadataRegistryTrait
      *
      * @return TClassMetadata<O, TPropertyMetadata>
      */
-    private function readClassMetadata(string $className): ClassMetadataInterface // @phpstan-ignore missingType.generics, return.unresolvableType
+    private function readClassMetadata(string $className): ClassMetadata // @phpstan-ignore missingType.generics, return.unresolvableType
     {
         $classRefl = Reflection::class($className);
 
-        /** @var ClassMetadataInterface<object, PropertyMetadataInterface> $classMetadata */
+        /** @var ClassMetadata<object, PropertyMetadata> $classMetadata */
         $classMetadata = $this->readClassMetadataAttribute($classRefl)->newInstance();
 
         return $this->populateClassMetadata($classRefl, $classMetadata);
@@ -95,34 +95,36 @@ trait ClassMetadataRegistryTrait
      * @template O of object
      *
      * @param ReflectionClass<O> $classRefl
-     * @param ClassMetadataInterface<object, PropertyMetadataInterface> $classMetadata
+     * @param ClassMetadata<object, PropertyMetadata> $classMetadata
      *
-     * @return ClassMetadataInterface<object, PropertyMetadataInterface>
+     * @return ClassMetadata<object, PropertyMetadata>
      */
     private function populateClassMetadata(
         ReflectionClass $classRefl,
-        ClassMetadataInterface $classMetadata,
-    ): ClassMetadataInterface {
-        $classMetadata->reflection = $classRefl;
-        $classMetadata->className = $classRefl->name;
+        ClassMetadata $classMetadata,
+    ): ClassMetadata {
         $hasPrimary = false;
+        $propertiesMetadata = [];
         foreach ($classRefl->getProperties() as $propertyRefl) {
             $reflAttributes = $propertyRefl->getAttributes(
-                PropertyMetadataInterface::class,
+                PropertyMetadata::class,
                 ReflectionAttribute::IS_INSTANCEOF,
             );
             if (!isset($reflAttributes[0])) {
                 break;
             }
-            /** @var PropertyMetadataInterface $propertyMetadata */
+            /** @var PropertyMetadata $propertyMetadata */
             $propertyMetadata = $reflAttributes[0]->newInstance();
-            $propertyMetadata->reflection = $propertyRefl;
-            $propertyMetadata->classMetadata = $classMetadata;
             if ($propertyMetadata->primary) {
                 $hasPrimary = true;
             }
-            $classMetadata->propertiesMetadata[$propertyRefl->name] = $propertyMetadata;
+            $propertiesMetadata[$propertyRefl->name] = $propertyMetadata;
+            Reflection::property($propertyMetadata, 'reflection')->setValue($propertyMetadata, $propertyRefl);
+            Reflection::property($propertyMetadata, 'classMetadata')->setValue($propertyMetadata, $classMetadata);
         }
+        Reflection::property($classMetadata, 'className')->setValue($classMetadata, $classRefl->name);
+        Reflection::property($classMetadata, 'reflection')->setValue($classMetadata, $classRefl);
+        Reflection::property($classMetadata, 'propertiesMetadata')->setValue($classMetadata, $propertiesMetadata);
 
         if (!$hasPrimary) {
             throw self::noPrimaryKeyMapException($classRefl->getName());
@@ -134,12 +136,12 @@ trait ClassMetadataRegistryTrait
     /**
      * @param ReflectionClass<object> $classRefl
      *
-     * @return ReflectionAttribute<ClassMetadataInterface<object, PropertyMetadataInterface>>
+     * @return ReflectionAttribute<ClassMetadata<object, PropertyMetadata>>
      */
     private function readClassMetadataAttribute(ReflectionClass $classRefl): ReflectionAttribute
     {
-        /** @var ReflectionAttribute<ClassMetadataInterface<object, PropertyMetadataInterface>>[] $attributes */
-        $attributes = $classRefl->getAttributes(ClassMetadataInterface::class, ReflectionAttribute::IS_INSTANCEOF);
+        /** @var ReflectionAttribute<ClassMetadata<object, PropertyMetadata>>[] $attributes */
+        $attributes = $classRefl->getAttributes(ClassMetadata::class, ReflectionAttribute::IS_INSTANCEOF);
 
         return $attributes[0]
             ?? throw self::noMetadataException($classRefl->getName());
