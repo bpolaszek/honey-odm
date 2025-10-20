@@ -34,6 +34,19 @@ describe('UniqueList', function () {
             ->and(count($list))->toBe(2);
     });
 
+    it('is constructed as a deduplicated list', function () {
+        $list = new UniqueList([
+            'duplicate',
+            'unique',
+            'duplicate', // Should be ignored
+        ]);
+
+        expect($list[0])->toBe('duplicate')
+            ->and($list[1])->toBe('unique')
+            ->and($list[2])->toBeNull()
+            ->and(count($list))->toBe(2);
+    });
+
     it('handles strict comparison for duplicates', function () {
         $list = new UniqueList();
         $list[] = 1;
