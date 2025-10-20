@@ -29,6 +29,16 @@ final class UniqueList implements ArrayAccess, IteratorAggregate, Countable
      */
     private array $storage = [];
 
+    /**
+     * @param T[] $storage
+     */
+    public function __construct(array $storage = [])
+    {
+        foreach ($storage as $value) {
+            $this[] = $value;
+        }
+    }
+
     public function offsetExists(mixed $offset): bool
     {
         return array_key_exists($offset, $this->storage);
