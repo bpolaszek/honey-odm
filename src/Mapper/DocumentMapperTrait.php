@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Mapper;
 
-use Honey\ODM\Core\Mapper\PropertyTransformer\BuiltinTransformers;
 use Honey\ODM\Core\Mapper\PropertyTransformer\PropertyTransformerInterface;
+use Honey\ODM\Core\Mapper\PropertyTransformer\PropertyTransformers;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\PropertyAccess\Exception\NoSuchPropertyException;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
@@ -16,7 +16,7 @@ trait DocumentMapperTrait
 {
     public function __construct(
         private readonly PropertyAccessorInterface $propertyAccessor = new PropertyAccessor(),
-        private readonly ContainerInterface $transformers = new BuiltinTransformers(),
+        private readonly ContainerInterface $transformers = new PropertyTransformers(),
     ) {
     }
 
