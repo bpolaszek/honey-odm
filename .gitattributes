@@ -1,0 +1,10 @@
+* text=auto
+
+/.github export-ignore
+/tests export-ignore
+/.php-cs-fixer.cache export-ignore
+/.php-cs-fixer.dist.php export-ignore
+/LICENSE export-ignore
+/phpcs.xml.dist export-ignore
+/phpstan.dist.neon export-ignore
+/phpunit.xml.dist export-ignore
