@@ -8,11 +8,16 @@ use Honey\ODM\Core\Config\ClassMetadata;
 use Honey\ODM\Core\Config\PropertyMetadata;
 use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\UnitOfWork\Changeset;
+use InvalidArgumentException;
 use IteratorAggregate;
 use SplObjectStorage;
+use Stringable;
 use Traversable;
 use WeakMap;
 use WeakReference;
+
+use function is_object;
+use function is_scalar;
 
 /**
  * @internal
@@ -58,6 +63,7 @@ final class Identities implements IteratorAggregate
 
     public function attach(object $object, mixed $id): void
     {
+        $id = $this->resolveId($id);
         $this->storage->attach($object);
         $this->idsToObjects[$object::class][$id] = WeakReference::create($object);
         $this->objectsToIds[$object] = $id;
@@ -97,11 +103,15 @@ final class Identities implements IteratorAggregate
 
     public function containsId(string $className, mixed $id): bool
     {
+        $id = $this->resolveId($id);
+
         return isset($this->idsToObjects[$className][$id]);
     }
 
     public function getObject(string $className, mixed $id): ?object
     {
+        $id = $this->resolveId($id);
+
         return $this->idsToObjects[$className][$id]?->get(); // @phpstan-ignore nullsafe.neverNull
     }
 
@@ -121,5 +131,14 @@ final class Identities implements IteratorAggregate
     public function getIterator(): Traversable
     {
         return $this->storage;
+    }
+
+    private function resolveId(mixed $id): mixed
+    {
+        return match (true) {
+            is_scalar($id) => $id,
+            is_object($id) && $id instanceof Stringable => (string) $id,
+            default => throw new InvalidArgumentException('Id must be scalar or implement toString()'),
+        };
     }
 }

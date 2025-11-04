@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Tests\Unit\Manager;
 
-use Honey\ODM\Core\Manager\Identities;
 use Honey\ODM\Core\Manager\ObjectManager;
+use Honey\ODM\Core\Tests\Implementation\Config\TestAsDocument;
+use Honey\ODM\Core\Tests\Implementation\Config\TestAsField;
 use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
 use Honey\ODM\Core\Tests\Implementation\Mapper\TestDocumentMapper;
 use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
 use Honey\ODM\Core\UnitOfWork\Changeset;
+use Symfony\Component\Uid\Ulid;
 
 use function array_keys;
+use function expect;
 
 describe('Identities', function () {
     it('attaches an object', function () {
@@ -173,5 +176,41 @@ describe('Identities', function () {
             ->and($changeset->changedProperties['name'][0])->toBe('Updated Name')
             ->and($changeset->changedProperties['name'][1])->toBe('Original Name')
         ;
+    });
+
+    it('accepts stringable objects as primary keys', function () {
+        $document = new class {
+            public function __construct(
+                #[TestAsField(primary: true)]
+                public Ulid $id = new Ulid(),
+                #[TestAsField]
+                public string $name = 'Original Name',
+            ) {
+            }
+        };
+        $objectManager = new class (
+            new TestClassMetadataRegistry(configurations: [
+                $document::class => new TestAsDocument('foo')
+            ]),
+            new TestDocumentMapper(),
+            new TestEventDispatcher(),
+            new TestTransport(),
+        ) extends ObjectManager {
+        };
+        $identities = $objectManager->identities;
+        $originalState = ['id' => (string) $document->id, 'name' => $document->name];
+
+        // When
+        $identities->attach($document, $document->id);
+        $identities->rememberState($document, $originalState);
+
+        // Then
+        $this->assertTrue($identities->containsId($document::class, $document->id));
+
+        // When
+        $identities->detach($document, $document->id);
+
+        // Then
+        $this->assertFalse($identities->containsId($document::class, $document->id));
     });
 });
