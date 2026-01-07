@@ -176,31 +176,35 @@ abstract class ObjectManager
             return null;
         }
 
-        return $this->factory($document, $classMetadata);
+        return $this->factory($document, $className);
     }
 
     /**
      * @template TObject of object
      *
      * @param array<string, mixed> $document
-     * @param ClassMetadata<TObject, TPropertyMetadata> $classMetadata
+     * @param class-string<TObject> $className
      *
      * @return TObject
      */
-    final public function factory(array $document, ClassMetadata $classMetadata): object
+    final public function factory(array $document, string $className, bool $refresh = false): object
     {
+        $classMetadata = $this->classMetadataRegistry->getClassMetadata($className);
         $id = $this->classMetadataRegistry->getIdFromDocument($document, $classMetadata->className);
         $className = $classMetadata->className;
         if ($this->identities->containsId($className, $id)) {
-            return $this->identities->getObject($className, $id); // @phpstan-ignore return.type
+            $object = $this->identities->getObject($className, $id);
+
+            if ($refresh) {
+                $context = new MappingContext($classMetadata, $this, $object, $document); // @phpstan-ignore argument.type
+                $this->documentMapper->documentToObject($document, $object, $context); // @phpstan-ignore argument.type, argument.templateType
+            }
+
+            return $object; // @phpstan-ignore return.type
         }
         $object = Reflection::class($className)->newLazyGhost(function (object $ghost) use ($document, $classMetadata) {
             $context = new MappingContext($classMetadata, $this, $ghost, $document);
-            $object = $this->documentMapper->documentToObject(
-                $document,
-                $ghost,
-                $context,
-            );
+            $object = $this->documentMapper->documentToObject($document, $ghost, $context);
             foreach (Reflection::class($object::class)->getProperties() as $property) {
                 if (!$property->isStatic() && !$property->isInitialized($object)) {
                     try {
