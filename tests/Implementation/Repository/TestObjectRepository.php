@@ -31,11 +31,10 @@ final readonly class TestObjectRepository implements ObjectRepositoryInterface
     {
         /** @var TestTransport $transport */
         $transport = $this->manager->transport;
-        $classMetadata = $this->manager->classMetadataRegistry->getClassMetadata($this->className);
         $documents = $transport->retrieveDocuments($criteria);
 
         return new TestResult(
-            array_map(fn (array $document) => $this->manager->factory($document, $classMetadata), $documents),
+            array_map(fn (array $document) => $this->manager->factory($document, $this->className), $documents),
         );
     }
 
@@ -54,7 +53,7 @@ final readonly class TestObjectRepository implements ObjectRepositoryInterface
 
         return $this->manager->factory(
             $this->manager->transport->retrieveDocumentById($classMetadata, $id),
-            $classMetadata,
+            $this->className,
         );
     }
 }

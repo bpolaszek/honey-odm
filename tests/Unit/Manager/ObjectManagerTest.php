@@ -34,11 +34,10 @@ describe('ObjectManager', function () {
         it('instantiates an object from a document', function () use ($objectManager, &$object) {
             // Given
             $document = ['id' => 1, 'name' => 'Test Name'];
-            $classMetadata = $objectManager->classMetadataRegistry->getClassMetadata(TestDocument::class);
 
             // When
             /** @var TestDocument $object */
-            $object = $objectManager->factory($document, $classMetadata);
+            $object = $objectManager->factory($document, TestDocument::class);
 
             // Then
             expect($object)->toBeInstanceOf(TestDocument::class)
@@ -49,12 +48,22 @@ describe('ObjectManager', function () {
         it(
             'returns an existing object when the document is already in the identity map',
             function () use ($objectManager, &$object) {
-                $document = ['id' => 1, 'name' => 'Test Name'];
-                $classMetadata = $objectManager->classMetadataRegistry->getClassMetadata(TestDocument::class);
-                expect($objectManager->factory($document, $classMetadata))->toBe($object);
+                $document = ['id' => 1, 'name' => 'Test Name 2'];
+                expect($objectManager->factory($document, TestDocument::class))->toBe($object)
+                ->and($object->name)->toBe('Test Name');
             },
         )
             ->depends('it instantiates an object from a document');
+
+        it(
+            'returns an existing, refreshed object when the document is already in the identity map',
+            function () use ($objectManager, &$object) {
+                $document = ['id' => 1, 'name' => 'Test Name 2'];
+                expect($objectManager->factory($document, TestDocument::class, true))->toBe($object)
+                ->and($object->name)->toBe('Test Name 2');
+            },
+        )
+            ->depends('it returns an existing object when the document is already in the identity map');
     });
 
     describe('Basic Operations', function () {
