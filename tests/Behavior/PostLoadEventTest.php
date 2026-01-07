@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Tests\Behavior;
 
+use BenTools\ReflectionPlus\Reflection;
 use Honey\ODM\Core\Event\PostLoadEvent;
 use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
@@ -26,13 +27,15 @@ describe('PostLoadEvent', function () {
     it('fires a PostLoadEvent after creating an object', function () use ($objectManager, $eventDispatcher) {
         // When
         $object = $objectManager->find(TestDocument::class, 1);
-        $object->id; // Trigger proxy load
+        Reflection::class($object)->initializeLazyObject($object);
 
         // Then
         expect($eventDispatcher->getFiredEvents(PostLoadEvent::class))->toHaveCount(1)
             ->and($eventDispatcher->getFiredEvents(PostLoadEvent::class)[0])->toBeInstanceOf(PostLoadEvent::class)
             ->and($eventDispatcher->getFiredEvents(PostLoadEvent::class)[0]->object)->toBe($object)
-            ->and($eventDispatcher->getFiredEvents(PostLoadEvent::class)[0]->objectManager)->toBe($objectManager);
+            ->and($eventDispatcher->getFiredEvents(PostLoadEvent::class)[0]->objectManager)->toBe($objectManager)
+            ->and($eventDispatcher->getFiredEvents(PostLoadEvent::class)[0]->document)->toBe(['id' => 1, 'name' => 'Test Name 1'])
+        ;
     });
 
     it(
