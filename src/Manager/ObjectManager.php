@@ -210,7 +210,7 @@ abstract class ObjectManager
                     }
                 }
             }
-            $this->eventDispatcher->dispatch(new PostLoadEvent($object, $this));
+            $this->eventDispatcher->dispatch(new PostLoadEvent($object, $this, $document));
         });
         $this->identities->attach($object, $id);
         $this->identities->rememberState($object, $document);

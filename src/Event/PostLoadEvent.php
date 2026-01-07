@@ -19,10 +19,12 @@ final readonly class PostLoadEvent
     /**
      * @param TObject $object
      * @param ObjectManager<TClassMetadata, TPropertyMetadata, TCriteria> $objectManager
+     * @param array<string, mixed> $document
      */
     public function __construct(
         public object $object,
         public ObjectManager $objectManager,
+        public array $document,
     ) {
     }
 }
