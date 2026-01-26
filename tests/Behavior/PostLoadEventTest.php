@@ -6,21 +6,17 @@ namespace Honey\ODM\Core\Tests\Behavior;
 
 use BenTools\ReflectionPlus\Reflection;
 use Honey\ODM\Core\Event\PostLoadEvent;
-use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
 use Honey\ODM\Core\Tests\Implementation\Manager\TestObjectManager;
-use Honey\ODM\Core\Tests\Implementation\Mapper\TestDocumentMapper;
 use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
 
 describe('PostLoadEvent', function () {
     $transport = new TestTransport();
     $eventDispatcher = new TestEventDispatcher();
     $objectManager = new TestObjectManager(
-        new TestClassMetadataRegistry(),
-        new TestDocumentMapper(),
-        $eventDispatcher,
-        $transport,
+        eventDispatcher: $eventDispatcher,
+        transport: $transport,
     );
     $transport->storage['documents'][1] = ['id' => 1, 'name' => 'Test Name 1'];
 
