@@ -43,7 +43,7 @@ final readonly class PropertyTransformers implements ContainerInterface, Iterato
 
     public function register(PropertyTransformerInterface $transformer): void
     {
-        $this->transformers->attach($transformer);
+        $this->transformers[$transformer] = null; // @phpstan-ignore assign.readOnlyProperty
     }
 
     public function get(string $id)
