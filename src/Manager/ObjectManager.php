@@ -27,6 +27,7 @@ use ReflectionProperty;
 
 use function array_column;
 use function array_combine;
+use function is_object;
 
 /**
  * @template TClassMetadata of ClassMetadata
@@ -66,6 +67,21 @@ abstract class ObjectManager
     ) {
         $this->identities = new Identities($this);
         $this->resetUnitOfWork();
+    }
+
+    /**
+     * @template O of object
+     *
+     * @param O|class-string<O> $classNameOrObject
+     *
+     * @return TClassMetadata<O, TPropertyMetadata>
+     */
+    public function getClassMetadata(object|string $classNameOrObject): ClassMetadata
+    {
+        return $this->classMetadataRegistry->getClassMetadata(match (is_object($classNameOrObject)) {
+            true => $classNameOrObject::class,
+            default => $classNameOrObject,
+        });
     }
 
     /**

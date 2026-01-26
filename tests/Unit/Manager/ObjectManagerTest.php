@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Tests\Unit\Manager;
 
 use BenTools\ReflectionPlus\Reflection;
+use Honey\ODM\Core\Config\ClassMetadata;
 use Honey\ODM\Core\Event\PrePersistEvent;
 use Honey\ODM\Core\Event\PreRemoveEvent;
 use Honey\ODM\Core\Event\PreUpdateEvent;
@@ -272,5 +273,34 @@ describe('ObjectManager', function () {
             expect($objectManager->getRepository(TestDocument::class))->toBe($repository);
         })
             ->depends('it complains if it cannot find a repository');
+    });
+
+    describe('Misc', function () {
+        it('can retrieve class metadata from a class name', function () {
+            $objectManager = new class (
+                new TestClassMetadataRegistry(),
+                new TestDocumentMapper(),
+                new TestEventDispatcher(),
+                new TestTransport(),
+            ) extends ObjectManager {
+            };
+            $metadata = $objectManager->getClassMetadata(TestDocument::class);
+            expect($metadata)->toBeInstanceOf(ClassMetadata::class)
+                ->and($metadata->className)->toBe(TestDocument::class)
+            ;
+        });
+        it('can retrieve class metadata from an object', function () {
+            $objectManager = new class (
+                new TestClassMetadataRegistry(),
+                new TestDocumentMapper(),
+                new TestEventDispatcher(),
+                new TestTransport(),
+            ) extends ObjectManager {
+            };
+            $metadata = $objectManager->getClassMetadata(new TestDocument(42, 'foo'));
+            expect($metadata)->toBeInstanceOf(ClassMetadata::class)
+                ->and($metadata->className)->toBe(TestDocument::class)
+            ;
+        });
     });
 });
