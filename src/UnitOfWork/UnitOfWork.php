@@ -64,7 +64,7 @@ final class UnitOfWork
     {
         foreach ([$object, ...$objects] as $object) {
             $operation = $this->objectManager->identities->contains($object) ? self::UPDATE : self::CREATE;
-            $this->scheduled->attach($object);
+            $this->scheduled[$object] = null;
             $this->pendingOperations[$object] = $operation;
         }
     }
@@ -72,7 +72,8 @@ final class UnitOfWork
     public function scheduleDeletion(object $object, object ...$objects): void
     {
         foreach ([$object, ...$objects] as $object) {
-            $this->scheduled->attach($object);
+            $this->scheduled->offsetSet($object);
+            $this->scheduled[$object] = null;
             $this->pendingOperations[$object] = self::DELETE;
         }
     }

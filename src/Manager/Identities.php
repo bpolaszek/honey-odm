@@ -64,7 +64,7 @@ final class Identities implements IteratorAggregate
     public function attach(object $object, mixed $id): void
     {
         $id = $this->resolveId($id);
-        $this->storage->attach($object);
+        $this->storage[$object] = $id;
         $this->idsToObjects[$object::class][$id] = WeakReference::create($object);
         $this->objectsToIds[$object] = $id;
     }
@@ -89,7 +89,7 @@ final class Identities implements IteratorAggregate
             if (null === $id) {
                 continue;
             }
-            $this->storage->detach($object);
+            unset($this->storage[$object]);
             unset($this->objectsToIds[$object]);
             unset($this->idsToObjects[$object::class][$id]);
             unset($this->rememberedStates[$object]);
@@ -98,7 +98,7 @@ final class Identities implements IteratorAggregate
 
     public function contains(object $object): bool
     {
-        return $this->storage->contains($object);
+        return isset($this->storage[$object]);
     }
 
     public function containsId(string $className, mixed $id): bool
