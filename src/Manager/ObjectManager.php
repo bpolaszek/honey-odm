@@ -76,7 +76,7 @@ abstract class ObjectManager
      *
      * @return TClassMetadata<O, TPropertyMetadata>
      */
-    public function getClassMetadata(object|string $classNameOrObject): ClassMetadata
+    final public function getClassMetadata(object|string $classNameOrObject): ClassMetadata
     {
         return $this->classMetadataRegistry->getClassMetadata(match (is_object($classNameOrObject)) {
             true => $classNameOrObject::class,
