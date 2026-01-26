@@ -6,12 +6,9 @@ namespace Honey\ODM\Core\Tests\Unit\Mapper\PropertyTransformer;
 
 use BenTools\ReflectionPlus\Reflection;
 use Doctrine\Common\Collections\ArrayCollection;
-use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
-use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestAuthor;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestBook;
 use Honey\ODM\Core\Tests\Implementation\Manager\TestObjectManager;
-use Honey\ODM\Core\Tests\Implementation\Mapper\TestDocumentMapper;
 use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
 
 use function expect;
@@ -21,12 +18,7 @@ describe('Relation Transformer', function () {
     $transport = new TestTransport();
 
     it('normalizes relations', function () use ($transport) {
-        $objectManager = new TestObjectManager(
-            new TestClassMetadataRegistry(),
-            new TestDocumentMapper(),
-            new TestEventDispatcher(),
-            $transport,
-        );
+        $objectManager = new TestObjectManager(transport: $transport);
         $books = [
             new TestBook('A', 'The Tommyknockers'),
             new TestBook('B', '1984'),
@@ -83,12 +75,7 @@ describe('Relation Transformer', function () {
     });
 
     it('retrieves relations', function () use ($transport) {
-        $objectManager = new TestObjectManager(
-            new TestClassMetadataRegistry(),
-            new TestDocumentMapper(),
-            new TestEventDispatcher(),
-            $transport,
-        );
+        $objectManager = new TestObjectManager(transport: $transport);
         $author = $objectManager->find(TestAuthor::class, 1);
         expect($author)->toBeInstanceOf(TestAuthor::class)
             ->and(Reflection::class(TestAuthor::class)->isUninitializedLazyObject($author))->toBeTrue()

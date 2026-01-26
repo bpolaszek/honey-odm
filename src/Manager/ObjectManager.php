@@ -32,16 +32,17 @@ use function array_combine;
  * @template TClassMetadata of ClassMetadata
  * @template TPropertyMetadata of PropertyMetadata
  * @template TCriteria of mixed
+ * @template TFlushOptions of array<string, mixed>
  */
 abstract class ObjectManager
 {
     /**
-     * @var Identities<TClassMetadata, TPropertyMetadata, TCriteria>
+     * @var Identities<TClassMetadata, TPropertyMetadata, TCriteria, TFlushOptions>
      */
     public private(set) Identities $identities;
 
     /**
-     * @var UnitOfWork<TClassMetadata, TPropertyMetadata, TCriteria>
+     * @var UnitOfWork<TClassMetadata, TPropertyMetadata, TCriteria, TFlushOptions>
      */
     public private(set) UnitOfWork $unitOfWork;
     private bool $isFlushing = false;
@@ -53,13 +54,15 @@ abstract class ObjectManager
 
     /**
      * @param ClassMetadataRegistryInterface<TClassMetadata, TPropertyMetadata> $classMetadataRegistry
-     * @param TransportInterface<TCriteria> $transport
+     * @param TransportInterface<TCriteria, TFlushOptions> $transport
+     * @param TFlushOptions $defaultFlushOptions
      */
     public function __construct(
         public readonly ClassMetadataRegistryInterface $classMetadataRegistry,
         public readonly DocumentMapperInterface $documentMapper,
         public readonly EventDispatcherInterface $eventDispatcher,
         public readonly TransportInterface $transport,
+        public private(set) array $defaultFlushOptions = [],
     ) {
         $this->identities = new Identities($this);
         $this->resetUnitOfWork();
@@ -107,8 +110,17 @@ abstract class ObjectManager
         $this->unitOfWork->scheduleDeletion($object, ...$objects);
     }
 
-    final public function flush(): void
+    /**
+     * @param TFlushOptions $flushOptions
+     */
+    final public function flush(array $flushOptions = []): void
     {
+        /* @var TFlushOptions $flushOptions */
+        $flushOptions = [
+            ...$this->defaultFlushOptions,
+            ...$flushOptions,
+        ];
+
         if ($this->isFlushing) {
             return; // Avoid recursive flush calls during event propagation
         }
@@ -138,7 +150,7 @@ abstract class ObjectManager
                 goto CheckChangesetsAndFireEvents;
             }
 
-            $this->transport->flushPendingOperations($this->unitOfWork);
+            $this->transport->flushPendingOperations($this->unitOfWork, $flushOptions); // @phpstan-ignore argument.type
             foreach ($this->unitOfWork->getPendingUpserts() as $object) {
                 $this->identities->attach($object, $this->classMetadataRegistry->getIdFromObject($object));
             }

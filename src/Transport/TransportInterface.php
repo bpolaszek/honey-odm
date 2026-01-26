@@ -10,6 +10,7 @@ use Honey\ODM\Core\UnitOfWork\UnitOfWork;
 
 /**
  * @template TCriteria of mixed
+ * @template TFlushOptions of array<string, mixed>
  */
 interface TransportInterface
 {
@@ -17,9 +18,10 @@ interface TransportInterface
      * @template TClassMetadata of ClassMetadata
      * @template TPropertyMetadata of PropertyMetadata
      *
-     * @param UnitOfWork<TClassMetadata, TPropertyMetadata, TCriteria> $unitOfWork
+     * @param UnitOfWork<TClassMetadata, TPropertyMetadata, TCriteria, TFlushOptions> $unitOfWork
+     * @param TFlushOptions $flushOptions
      */
-    public function flushPendingOperations(UnitOfWork $unitOfWork): void;
+    public function flushPendingOperations(UnitOfWork $unitOfWork, array $flushOptions = []): void;
 
     /**
      * @param TCriteria $criteria

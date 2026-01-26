@@ -27,11 +27,13 @@ use function is_scalar;
  * @template TCriteria of mixed
  *
  * @implements IteratorAggregate<int, object>
+ *
+ * @template TFlushOptions of array<string, mixed>
  */
 final class Identities implements IteratorAggregate
 {
     /**
-     * @var SplObjectStorage<object, null>
+     * @var SplObjectStorage<object, mixed>
      */
     private SplObjectStorage $storage;
 
@@ -51,7 +53,7 @@ final class Identities implements IteratorAggregate
     private WeakMap $objectsToIds;
 
     /**
-     * @param ObjectManager<TClassMetadata, TPropertyMetadata, TCriteria> $objectManager
+     * @param ObjectManager<TClassMetadata, TPropertyMetadata, TCriteria, TFlushOptions> $objectManager
      */
     public function __construct(
         private readonly ObjectManager $objectManager,

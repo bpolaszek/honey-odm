@@ -24,12 +24,7 @@ use function it;
 describe('ObjectManager', function () {
     describe('Object Factory', function () {
         $transport = new TestTransport();
-        $objectManager = new TestObjectManager(
-            new TestClassMetadataRegistry(),
-            new TestDocumentMapper(),
-            new TestEventDispatcher(),
-            $transport,
-        );
+        $objectManager = new TestObjectManager(transport: $transport);
         $object = null;
         it('instantiates an object from a document', function () use ($objectManager, &$object) {
             // Given
@@ -68,12 +63,7 @@ describe('ObjectManager', function () {
 
     describe('Basic Operations', function () {
         $transport = new TestTransport();
-        $objectManager = new TestObjectManager(
-            new TestClassMetadataRegistry(),
-            new TestDocumentMapper(),
-            new TestEventDispatcher(),
-            $transport,
-        );
+        $objectManager = new TestObjectManager(transport: $transport);
 
         $objects = [
             new TestDocument(1, 'Test Name 1'),
@@ -126,6 +116,17 @@ describe('ObjectManager', function () {
         })
             ->depends('it persists objects');
 
+        it('passes flush options to the transport', function () use ($objectManager, $transport) {
+            $objectManager = new TestObjectManager(transport: $transport, defaultFlushOptions: ['foo' => 'bar', 'bar' => 'baz']);
+            $objectManager->flush(['foo' => 'baz', 'baz' => 'bar']);
+            expect($transport->passedFlushOptions)->toBe([
+                'foo' => 'baz',
+                'bar' => 'baz',
+                'baz' => 'bar',
+            ]);
+        });
+        // phpcs:enable
+
         it('retrieves a document by its id', function () use ($objectManager, $objects, $transport) {
             // When
             $object = $objectManager->find(TestDocument::class, 1);
@@ -166,12 +167,7 @@ describe('ObjectManager', function () {
             $method = Reflection::method(ObjectManager::class, 'firePrePersistEvent');
             $transport = new TestTransport();
             $eventDispatcher = new TestEventDispatcher();
-            $objectManager = new TestObjectManager(
-                new TestClassMetadataRegistry(),
-                new TestDocumentMapper(),
-                $eventDispatcher,
-                $transport,
-            );
+            $objectManager = new TestObjectManager(eventDispatcher: $eventDispatcher, transport: $transport);
             $object = new TestDocument(1, 'Test Name 1');
             $objectManager->persist($object);
             $objectManager->flush();
@@ -190,12 +186,7 @@ describe('ObjectManager', function () {
             $method = Reflection::method(ObjectManager::class, 'firePreUpdateEvent');
             $transport = new TestTransport();
             $eventDispatcher = new TestEventDispatcher();
-            $objectManager = new TestObjectManager(
-                new TestClassMetadataRegistry(),
-                new TestDocumentMapper(),
-                $eventDispatcher,
-                $transport,
-            );
+            $objectManager = new TestObjectManager(eventDispatcher: $eventDispatcher, transport: $transport);
             $object = new TestDocument(1, 'Test Name 1');
             $objectManager->persist($object);
 
@@ -210,12 +201,7 @@ describe('ObjectManager', function () {
             $method = Reflection::method(ObjectManager::class, 'firePreUpdateEvent');
             $transport = new TestTransport();
             $eventDispatcher = new TestEventDispatcher();
-            $objectManager = new TestObjectManager(
-                new TestClassMetadataRegistry(),
-                new TestDocumentMapper(),
-                $eventDispatcher,
-                $transport,
-            );
+            $objectManager = new TestObjectManager(eventDispatcher: $eventDispatcher, transport: $transport);
             $object = new TestDocument(1, 'Test Name 1');
             $objectManager->persist($object);
             $objectManager->flush();
@@ -235,12 +221,7 @@ describe('ObjectManager', function () {
             $method = Reflection::method(ObjectManager::class, 'firePreRemoveEvent');
             $transport = new TestTransport();
             $eventDispatcher = new TestEventDispatcher();
-            $objectManager = new TestObjectManager(
-                new TestClassMetadataRegistry(),
-                new TestDocumentMapper(),
-                $eventDispatcher,
-                $transport,
-            );
+            $objectManager = new TestObjectManager(eventDispatcher: $eventDispatcher, transport: $transport);
             $object = new TestDocument(1, 'Test Name 1');
             $objectManager->persist($object);
             $objectManager->flush();
@@ -259,12 +240,7 @@ describe('ObjectManager', function () {
             $method = Reflection::method(ObjectManager::class, 'firePreRemoveEvent');
             $transport = new TestTransport();
             $eventDispatcher = new TestEventDispatcher();
-            $objectManager = new TestObjectManager(
-                new TestClassMetadataRegistry(),
-                new TestDocumentMapper(),
-                $eventDispatcher,
-                $transport,
-            );
+            $objectManager = new TestObjectManager(eventDispatcher: $eventDispatcher, transport: $transport);
             $object = new TestDocument(1, 'Test Name 1');
             $objectManager->remove($object);
 
