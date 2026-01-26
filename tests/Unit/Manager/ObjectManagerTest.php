@@ -126,6 +126,17 @@ describe('ObjectManager', function () {
         })
             ->depends('it persists objects');
 
+        it('passes flush options to the transport', function () use ($objectManager, $transport) {
+            $objectManager = new TestObjectManager(transport: $transport, defaultFlushOptions: ['foo' => 'bar', 'bar' => 'baz']);
+            $objectManager->flush(['foo' => 'baz', 'baz' => 'bar']);
+            expect($transport->passedFlushOptions)->toBe([
+                'foo' => 'baz',
+                'bar' => 'baz',
+                'baz' => 'bar',
+            ]);
+        });
+        // phpcs:enable
+
         it('retrieves a document by its id', function () use ($objectManager, $objects, $transport) {
             // When
             $object = $objectManager->find(TestDocument::class, 1);

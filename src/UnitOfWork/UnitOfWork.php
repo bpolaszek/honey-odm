@@ -19,6 +19,7 @@ use function in_array;
  * @template TClassMetadata of ClassMetadata
  * @template TPropertyMetadata of PropertyMetadata
  * @template TCriteria of mixed
+ * @template TFlushOptions of array<string, mixed>
  */
 final class UnitOfWork
 {
@@ -28,7 +29,7 @@ final class UnitOfWork
     public const int UPDATE = 3;
 
     /**
-     * @var SplObjectStorage <object, null>
+     * @var SplObjectStorage<object, mixed>
      */
     private readonly SplObjectStorage $scheduled;
 
@@ -49,7 +50,7 @@ final class UnitOfWork
     public private(set) string $hash;
 
     /**
-     * @param ObjectManager<TClassMetadata, TPropertyMetadata, TCriteria> $objectManager
+     * @param ObjectManager<TClassMetadata, TPropertyMetadata, TCriteria, TFlushOptions> $objectManager
      */
     public function __construct(
         public readonly ObjectManager $objectManager,

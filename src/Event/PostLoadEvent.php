@@ -12,13 +12,14 @@ use Honey\ODM\Core\Manager\ObjectManager;
  * @template TClassMetadata of ClassMetadata
  * @template TPropertyMetadata of PropertyMetadata
  * @template TCriteria of mixed
+ * @template TFlushOptions of array<string, mixed>
  * @template TObject of object
  */
 final readonly class PostLoadEvent
 {
     /**
      * @param TObject $object
-     * @param ObjectManager<TClassMetadata, TPropertyMetadata, TCriteria> $objectManager
+     * @param ObjectManager<TClassMetadata, TPropertyMetadata, TCriteria, TFlushOptions> $objectManager
      * @param array<string, mixed> $document
      */
     public function __construct(

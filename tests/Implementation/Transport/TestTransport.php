@@ -19,6 +19,8 @@ use function array_merge;
  */
 final class TestTransport implements TransportInterface
 {
+    private(set) array $passedFlushOptions = [];
+
     /**
      * @param array<string, ArrayCollection<int, array<string, mixed>> $storage
      */
@@ -26,8 +28,9 @@ final class TestTransport implements TransportInterface
     {
     }
 
-    public function flushPendingOperations(UnitOfWork $unitOfWork): void
+    public function flushPendingOperations(UnitOfWork $unitOfWork, array $flushOptions = []): void
     {
+        $this->passedFlushOptions = $flushOptions;
         $objectManager = $unitOfWork->objectManager;
         $classMetadataRegistry = $objectManager->classMetadataRegistry;
         $mapper = $objectManager->documentMapper;
