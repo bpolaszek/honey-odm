@@ -46,7 +46,7 @@ final readonly class PropertyTransformers implements ContainerInterface, Iterato
         $this->transformers->attach($transformer);
     }
 
-    public function get(string $id)
+    public function get(string $id): mixed
     {
         return array_find([...$this], fn (PropertyTransformerInterface $transformer) => $transformer::class === $id)
             ?? throw new RuntimeException("Service $id not found");
