@@ -16,7 +16,7 @@ use function Honey\ODM\Core\throws;
 /**
  * @implements IteratorAggregate<string, PropertyTransformerInterface>
  */
-final readonly class PropertyTransformers implements ContainerInterface, IteratorAggregate
+final class PropertyTransformers implements ContainerInterface, IteratorAggregate
 {
     /**
      * @var SplObjectStorage<PropertyTransformerInterface, null>
@@ -43,7 +43,7 @@ final readonly class PropertyTransformers implements ContainerInterface, Iterato
 
     public function register(PropertyTransformerInterface $transformer): void
     {
-        $this->transformers[$transformer] = null; // @phpstan-ignore assign.readOnlyProperty
+        $this->transformers[$transformer] = null;
     }
 
     public function get(string $id): mixed
