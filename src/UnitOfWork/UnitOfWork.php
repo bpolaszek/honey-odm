@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\UnitOfWork;
 
-use Honey\ODM\Core\Config\ClassMetadata;
-use Honey\ODM\Core\Config\PropertyMetadata;
 use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Misc\UniqueList;
 use SplObjectStorage;
@@ -15,12 +13,6 @@ use function BenTools\IterableFunctions\iterable;
 use function Honey\ODM\Core\weakmap_objects;
 use function in_array;
 
-/**
- * @template TClassMetadata of ClassMetadata
- * @template TPropertyMetadata of PropertyMetadata
- * @template TCriteria of mixed
- * @template TFlushOptions of array<string, mixed>
- */
 final class UnitOfWork
 {
     public const int NONE = 0;
@@ -49,9 +41,6 @@ final class UnitOfWork
     public private(set) WeakMap $firedEvents;
     public private(set) string $hash;
 
-    /**
-     * @param ObjectManager<TClassMetadata, TPropertyMetadata, TCriteria, TFlushOptions> $objectManager
-     */
     public function __construct(
         public readonly ObjectManager $objectManager,
     ) {

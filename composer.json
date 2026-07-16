@@ -7,7 +7,9 @@
       "Honey\\ODM\\Core\\": "src/"
     },
     "files": [
-      "src/functions.php"
+      "src/polyfill.php",
+      "src/functions.php",
+      "src/Criteria/functions.php"
     ]
   },
   "autoload-dev": {
@@ -29,7 +31,6 @@
     "symfony/var-dumper": "^7.2|~8.0",
     "squizlabs/php_codesniffer": "^4.0",
     "friendsofphp/php-cs-fixer": "^3.88",
-    "doctrine/collections": "^2.3",
     "symfony/uid": "^7.3|~8.0"
   },
   "config": {

@@ -10,23 +10,22 @@ use Honey\ODM\Core\Config\TransformerMetadata;
 use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\Mapper\PropertyTransformer\DateTimeImmutableTransformer;
-use Honey\ODM\Core\Tests\Implementation\Config\TestAsField;
-use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
+use Honey\ODM\Core\Config\AsField;
+use Honey\ODM\Core\Config\ClassMetadataRegistry;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
-use Honey\ODM\Core\Tests\Implementation\Mapper\TestDocumentMapper;
+use Honey\ODM\Core\Mapper\DocumentMapper;
 use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
 
 it('returns null when input is null', function () {
     $transformer = new DateTimeImmutableTransformer();
-    $metadata = new TestAsField();
-    $objectManager = new class (
-        new TestClassMetadataRegistry(),
-        new TestDocumentMapper(),
-        new TestEventDispatcher(),
+    $metadata = new AsField();
+    $objectManager = new ObjectManager(
         new TestTransport(),
-    ) extends ObjectManager {
-    };
+        new ClassMetadataRegistry(),
+        new DocumentMapper(),
+        new TestEventDispatcher(),
+    );
     $classMetadata = $objectManager->classMetadataRegistry->getClassMetadata(TestDocument::class);
     $context = new MappingContext($classMetadata, $objectManager, new \stdClass(), []);
     $result = $transformer->fromDocument(null, $metadata, $context);
@@ -37,14 +36,13 @@ it('returns null when input is null', function () {
 
 it('complains if value is not a DateTimeInterface instance', function () {
     $transformer = new DateTimeImmutableTransformer();
-    $metadata = new TestAsField();
-    $objectManager = new class (
-        new TestClassMetadataRegistry(),
-        new TestDocumentMapper(),
-        new TestEventDispatcher(),
+    $metadata = new AsField();
+    $objectManager = new ObjectManager(
         new TestTransport(),
-    ) extends ObjectManager {
-    };
+        new ClassMetadataRegistry(),
+        new DocumentMapper(),
+        new TestEventDispatcher(),
+    );
     $classMetadata = $objectManager->classMetadataRegistry->getClassMetadata(TestDocument::class);
     $context = new MappingContext($classMetadata, $objectManager, new \stdClass(), []);
     $transformer->toDocument('not a date', $metadata, $context);
@@ -52,7 +50,7 @@ it('complains if value is not a DateTimeInterface instance', function () {
 
 it('uses options', function () {
     $transformer = new DateTimeImmutableTransformer();
-    $metadata = new TestAsField(transformer: new TransformerMetadata(
+    $metadata = new AsField(transformer: new TransformerMetadata(
         service: DateTimeImmutableTransformer::class,
         options: [
             'from_format' => 'Y-m-d H:i:s',
@@ -62,13 +60,12 @@ it('uses options', function () {
             'to_type' => 'float',
         ],
     ));
-    $objectManager = new class (
-        new TestClassMetadataRegistry(),
-        new TestDocumentMapper(),
-        new TestEventDispatcher(),
+    $objectManager = new ObjectManager(
         new TestTransport(),
-    ) extends ObjectManager {
-    };
+        new ClassMetadataRegistry(),
+        new DocumentMapper(),
+        new TestEventDispatcher(),
+    );
     $classMetadata = $objectManager->classMetadataRegistry->getClassMetadata(TestDocument::class);
     $context = new MappingContext($classMetadata, $objectManager, new \stdClass(), []);
 
@@ -85,16 +82,15 @@ it('uses options', function () {
 
 it('uses default options', function () {
     $transformer = new DateTimeImmutableTransformer();
-    $metadata = new TestAsField(transformer: new TransformerMetadata(
+    $metadata = new AsField(transformer: new TransformerMetadata(
         service: DateTimeImmutableTransformer::class,
     ));
-    $objectManager = new class (
-        new TestClassMetadataRegistry(),
-        new TestDocumentMapper(),
-        new TestEventDispatcher(),
+    $objectManager = new ObjectManager(
         new TestTransport(),
-    ) extends ObjectManager {
-    };
+        new ClassMetadataRegistry(),
+        new DocumentMapper(),
+        new TestEventDispatcher(),
+    );
     $classMetadata = $objectManager->classMetadataRegistry->getClassMetadata(TestDocument::class);
     $context = new MappingContext($classMetadata, $objectManager, new \stdClass(), []);
 

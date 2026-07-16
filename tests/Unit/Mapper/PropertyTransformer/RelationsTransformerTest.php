@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Tests\Unit\Mapper\PropertyTransformer;
 
 use BenTools\ReflectionPlus\Reflection;
-use Doctrine\Common\Collections\ArrayCollection;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestAuthor;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestBook;
-use Honey\ODM\Core\Tests\Implementation\Manager\TestObjectManager;
+use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
 
 use function expect;
@@ -18,7 +17,7 @@ describe('Relation Transformer', function () {
     $transport = new TestTransport();
 
     it('normalizes relations', function () use ($transport) {
-        $objectManager = new TestObjectManager(transport: $transport);
+        $objectManager = new ObjectManager(transport: $transport);
         $books = [
             new TestBook('A', 'The Tommyknockers'),
             new TestBook('B', '1984'),
@@ -34,7 +33,7 @@ describe('Relation Transformer', function () {
         $objectManager->flush();
 
         expect($objectManager->transport->storage)->toEqual([
-            'authors' => new ArrayCollection([
+            'authors' => [
                 1 => [
                     'created_at' => null,
                     'author_id' => 1,
@@ -53,8 +52,8 @@ describe('Relation Transformer', function () {
                     'author_name' => 'Lazy writer',
                     'books' => null,
                 ],
-            ]),
-            'books' => new ArrayCollection([
+            ],
+            'books' => [
                 'A' => [
                     'id' => 'A',
                     'title' => 'The Tommyknockers',
@@ -70,12 +69,12 @@ describe('Relation Transformer', function () {
                     'title' => 'Carrie',
                     'author_id' => null,
                 ],
-            ]),
+            ],
         ]);
     });
 
     it('retrieves relations', function () use ($transport) {
-        $objectManager = new TestObjectManager(transport: $transport);
+        $objectManager = new ObjectManager(transport: $transport);
         $author = $objectManager->find(TestAuthor::class, 1);
         expect($author)->toBeInstanceOf(TestAuthor::class)
             ->and(Reflection::class(TestAuthor::class)->isUninitializedLazyObject($author))->toBeTrue()

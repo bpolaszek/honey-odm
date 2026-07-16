@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Manager;
 
 use BenTools\ReflectionPlus\Reflection;
-use Honey\ODM\Core\Config\ClassMetadata;
+use Honey\ODM\Core\Config\AsDocument;
+use Honey\ODM\Core\Config\ClassMetadataRegistry;
 use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
-use Honey\ODM\Core\Config\PropertyMetadata;
 use Honey\ODM\Core\Event\PostLoadEvent;
 use Honey\ODM\Core\Event\PostPersistEvent;
 use Honey\ODM\Core\Event\PostRemoveEvent;
@@ -15,12 +15,15 @@ use Honey\ODM\Core\Event\PostUpdateEvent;
 use Honey\ODM\Core\Event\PrePersistEvent;
 use Honey\ODM\Core\Event\PreRemoveEvent;
 use Honey\ODM\Core\Event\PreUpdateEvent;
+use Honey\ODM\Core\Mapper\DocumentMapper;
 use Honey\ODM\Core\Mapper\DocumentMapperInterface;
 use Honey\ODM\Core\Mapper\MappingContext;
+use Honey\ODM\Core\Misc\NullEventDispatcher;
+use Honey\ODM\Core\Repository\ObjectRepository;
 use Honey\ODM\Core\Repository\ObjectRepositoryInterface;
 use Honey\ODM\Core\Transport\TransportInterface;
+use Closure;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
-use InvalidArgumentException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use ReflectionException;
 use ReflectionProperty;
@@ -29,41 +32,28 @@ use function array_column;
 use function array_combine;
 use function is_object;
 
-/**
- * @template TClassMetadata of ClassMetadata
- * @template TPropertyMetadata of PropertyMetadata
- * @template TCriteria of mixed
- * @template TFlushOptions of array<string, mixed>
- */
-abstract class ObjectManager
+final class ObjectManager
 {
-    /**
-     * @var Identities<TClassMetadata, TPropertyMetadata, TCriteria, TFlushOptions>
-     */
     public private(set) Identities $identities;
-
-    /**
-     * @var UnitOfWork<TClassMetadata, TPropertyMetadata, TCriteria, TFlushOptions>
-     */
     public private(set) UnitOfWork $unitOfWork;
     private bool $isFlushing = false;
 
     /**
-     * @var array<class-string, ObjectRepositoryInterface<TClassMetadata, object>>
+     * @var array<class-string, ObjectRepositoryInterface<object>>
      */
-    protected array $repositories = [];
+    private array $repositories = [];
 
     /**
-     * @param ClassMetadataRegistryInterface<TClassMetadata, TPropertyMetadata> $classMetadataRegistry
-     * @param TransportInterface<TCriteria, TFlushOptions> $transport
-     * @param TFlushOptions $defaultFlushOptions
+     * @param array<string, mixed> $defaultFlushOptions
+     * @param (Closure(self, class-string): ObjectRepositoryInterface<object>)|null $repositoryFactory Creates the default repository for a class - implementations may provide their own
      */
     public function __construct(
-        public readonly ClassMetadataRegistryInterface $classMetadataRegistry,
-        public readonly DocumentMapperInterface $documentMapper,
-        public readonly EventDispatcherInterface $eventDispatcher,
         public readonly TransportInterface $transport,
+        public readonly ClassMetadataRegistryInterface $classMetadataRegistry = new ClassMetadataRegistry(),
+        public readonly DocumentMapperInterface $documentMapper = new DocumentMapper(),
+        public readonly EventDispatcherInterface $eventDispatcher = new NullEventDispatcher(),
         public private(set) array $defaultFlushOptions = [],
+        private readonly ?Closure $repositoryFactory = null,
     ) {
         $this->identities = new Identities($this);
         $this->resetUnitOfWork();
@@ -74,9 +64,9 @@ abstract class ObjectManager
      *
      * @param O|class-string<O> $classNameOrObject
      *
-     * @return TClassMetadata<O, TPropertyMetadata>
+     * @return AsDocument<O>
      */
-    final public function getClassMetadata(object|string $classNameOrObject): ClassMetadata
+    final public function getClassMetadata(object|string $classNameOrObject): AsDocument
     {
         return $this->classMetadataRegistry->getClassMetadata(match (is_object($classNameOrObject)) {
             true => $classNameOrObject::class,
@@ -88,9 +78,9 @@ abstract class ObjectManager
      * @template O of object
      *
      * @param class-string<O> $className
-     * @param ObjectRepositoryInterface<TClassMetadata, O> $repository
+     * @param ObjectRepositoryInterface<O> $repository
      *
-     * @return ObjectRepositoryInterface<TClassMetadata, O>
+     * @return ObjectRepositoryInterface<O>
      */
     public function registerRepository(
         string $className,
@@ -108,12 +98,18 @@ abstract class ObjectManager
      *
      * @param class-string<O> $className
      *
-     * @return ObjectRepositoryInterface<TCriteria, O>
+     * @return ObjectRepositoryInterface<O>
      */
     public function getRepository(string $className): ObjectRepositoryInterface
     {
         return $this->repositories[$className] // @phpstan-ignore return.type
-            ?? throw new InvalidArgumentException("No repository registered for class $className");
+            ?? $this->registerRepository(
+                $className,
+                match ($this->repositoryFactory) {
+                    null => new ObjectRepository($this, $className),
+                    default => ($this->repositoryFactory)($this, $className),
+                },
+            );
     }
 
     final public function persist(object $object, object ...$objects): void
@@ -127,11 +123,10 @@ abstract class ObjectManager
     }
 
     /**
-     * @param TFlushOptions $flushOptions
+     * @param array<string, mixed> $flushOptions
      */
     final public function flush(array $flushOptions = []): void
     {
-        /* @var TFlushOptions $flushOptions */
         $flushOptions = [
             ...$this->defaultFlushOptions,
             ...$flushOptions,
@@ -166,7 +161,7 @@ abstract class ObjectManager
                 goto CheckChangesetsAndFireEvents;
             }
 
-            $this->transport->flushPendingOperations($this->unitOfWork, $flushOptions); // @phpstan-ignore argument.type
+            $this->transport->flushPendingOperations($this->unitOfWork, $flushOptions);
             foreach ($this->unitOfWork->getPendingUpserts() as $object) {
                 $this->identities->attach($object, $this->classMetadataRegistry->getIdFromObject($object));
             }
@@ -225,7 +220,7 @@ abstract class ObjectManager
 
             if ($refresh) {
                 $context = new MappingContext($classMetadata, $this, $object, $document); // @phpstan-ignore argument.type
-                $this->documentMapper->documentToObject($document, $object, $context); // @phpstan-ignore argument.type, argument.templateType
+                $this->documentMapper->documentToObject($document, $object, $context); // @phpstan-ignore argument.type
             }
 
             return $object; // @phpstan-ignore return.type

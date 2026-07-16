@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Manager;
 
-use Honey\ODM\Core\Config\ClassMetadata;
-use Honey\ODM\Core\Config\PropertyMetadata;
 use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\UnitOfWork\Changeset;
 use InvalidArgumentException;
@@ -22,13 +20,7 @@ use function is_scalar;
 /**
  * @internal
  *
- * @template TClassMetadata of ClassMetadata
- * @template TPropertyMetadata of PropertyMetadata
- * @template TCriteria of mixed
- *
  * @implements IteratorAggregate<int, object>
- *
- * @template TFlushOptions of array<string, mixed>
  */
 final class Identities implements IteratorAggregate
 {
@@ -52,9 +44,6 @@ final class Identities implements IteratorAggregate
      */
     private WeakMap $objectsToIds;
 
-    /**
-     * @param ObjectManager<TClassMetadata, TPropertyMetadata, TCriteria, TFlushOptions> $objectManager
-     */
     public function __construct(
         private readonly ObjectManager $objectManager,
     ) {
@@ -114,7 +103,7 @@ final class Identities implements IteratorAggregate
     {
         $id = $this->resolveId($id);
 
-        return $this->idsToObjects[$className][$id]?->get(); // @phpstan-ignore nullsafe.neverNull
+        return $this->idsToObjects[$className][$id]?->get();
     }
 
     /**

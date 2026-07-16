@@ -11,22 +11,21 @@ use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\Mapper\PropertyTransformer\DateTimeImmutableTransformer;
 use Honey\ODM\Core\Mapper\PropertyTransformer\RelationsTransformer;
 use Honey\ODM\Core\Mapper\PropertyTransformer\RelationTransformer;
-use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
+use Honey\ODM\Core\Config\ClassMetadataRegistry;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestAuthor;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
-use Honey\ODM\Core\Tests\Implementation\Mapper\TestDocumentMapper;
+use Honey\ODM\Core\Mapper\DocumentMapper;
 use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
 use Psr\Container\ContainerInterface;
 
 it('maps a document to an object', function () {
-    $objectManager = new class (
-        new TestClassMetadataRegistry(),
-        new TestDocumentMapper(),
-        new TestEventDispatcher(),
+    $objectManager = new ObjectManager(
         new TestTransport(),
-    ) extends ObjectManager {
-    };
+        new ClassMetadataRegistry(),
+        new DocumentMapper(),
+        new TestEventDispatcher(),
+    );
     $author = Reflection::class(TestAuthor::class)->newInstanceWithoutConstructor();
     $classMetadata = $objectManager->classMetadataRegistry->getClassMetadata(TestAuthor::class);
 
@@ -51,13 +50,12 @@ it('maps a document to an object', function () {
 });
 
 it('maps an object to a document', function () {
-    $objectManager = new class (
-        new TestClassMetadataRegistry(),
-        new TestDocumentMapper(),
-        new TestEventDispatcher(),
+    $objectManager = new ObjectManager(
         new TestTransport(),
-    ) extends ObjectManager {
-    };
+        new ClassMetadataRegistry(),
+        new DocumentMapper(),
+        new TestEventDispatcher(),
+    );
     $classMetadata = $objectManager->classMetadataRegistry->getClassMetadata(TestAuthor::class);
 
     // Given

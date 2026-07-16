@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Repository;
 
+use Honey\ODM\Core\Criteria\Criteria;
+
 /**
- * @template TCriteria of mixed
  * @template TObject of object
  */
 interface ObjectRepositoryInterface
 {
     /**
-     * @param TCriteria $criteria
+     * @param Criteria|array<string, mixed>|null $criteria An array is interpreted as equality filters, AND-combined
      *
      * @return iterable<TObject>
      */
-    public function findBy(mixed $criteria): iterable;
+    public function findBy(Criteria|array|null $criteria): iterable;
 
     /**
      * @return iterable<TObject>
@@ -23,11 +24,11 @@ interface ObjectRepositoryInterface
     public function findAll(): iterable;
 
     /**
-     * @param TCriteria $criteria
+     * @param Criteria|array<string, mixed> $criteria
      *
      * @return TObject|null
      */
-    public function findOneBy(mixed $criteria): ?object;
+    public function findOneBy(Criteria|array $criteria): ?object;
 
     /**
      * @return TObject|null

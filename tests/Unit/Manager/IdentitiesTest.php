@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Tests\Unit\Manager;
 
 use Honey\ODM\Core\Manager\ObjectManager;
-use Honey\ODM\Core\Tests\Implementation\Config\TestAsDocument;
-use Honey\ODM\Core\Tests\Implementation\Config\TestAsField;
-use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
+use Honey\ODM\Core\Config\AsDocument;
+use Honey\ODM\Core\Config\AsField;
+use Honey\ODM\Core\Config\ClassMetadataRegistry;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
-use Honey\ODM\Core\Tests\Implementation\Mapper\TestDocumentMapper;
+use Honey\ODM\Core\Mapper\DocumentMapper;
 use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
 use Honey\ODM\Core\UnitOfWork\Changeset;
 use Symfony\Component\Uid\Ulid;
@@ -21,13 +21,12 @@ use function expect;
 describe('Identities', function () {
     it('attaches an object', function () {
         // Given
-        $objectManager = new class (
-            new TestClassMetadataRegistry(),
-            new TestDocumentMapper(),
-            new TestEventDispatcher(),
+        $objectManager = new ObjectManager(
             new TestTransport(),
-        ) extends ObjectManager {
-        };
+            new ClassMetadataRegistry(),
+            new DocumentMapper(),
+            new TestEventDispatcher(),
+        );
         $identities = $objectManager->identities;
         $document = new TestDocument(1, 'Test Name');
 
@@ -40,13 +39,12 @@ describe('Identities', function () {
 
     it('detaches an object', function () {
         // Given
-        $objectManager = new class (
-            new TestClassMetadataRegistry(),
-            new TestDocumentMapper(),
-            new TestEventDispatcher(),
+        $objectManager = new ObjectManager(
             new TestTransport(),
-        ) extends ObjectManager {
-        };
+            new ClassMetadataRegistry(),
+            new DocumentMapper(),
+            new TestEventDispatcher(),
+        );
         $identities = $objectManager->identities;
         $document = new TestDocument(1, 'Test Name');
         $identities->attach($document, $document->id);
@@ -60,13 +58,12 @@ describe('Identities', function () {
 
     it('checks if it contains an object', function () {
         // Given
-        $objectManager = new class (
-            new TestClassMetadataRegistry(),
-            new TestDocumentMapper(),
-            new TestEventDispatcher(),
+        $objectManager = new ObjectManager(
             new TestTransport(),
-        ) extends ObjectManager {
-        };
+            new ClassMetadataRegistry(),
+            new DocumentMapper(),
+            new TestEventDispatcher(),
+        );
         $identities = $objectManager->identities;
         $document1 = new TestDocument(1, 'Test Name');
         $document2 = new TestDocument(2, 'Another Name');
@@ -81,13 +78,12 @@ describe('Identities', function () {
 
     it('remembers the state of an object', function () {
         // Given
-        $objectManager = new class (
-            new TestClassMetadataRegistry(),
-            new TestDocumentMapper(),
-            new TestEventDispatcher(),
+        $objectManager = new ObjectManager(
             new TestTransport(),
-        ) extends ObjectManager {
-        };
+            new ClassMetadataRegistry(),
+            new DocumentMapper(),
+            new TestEventDispatcher(),
+        );
         $identities = $objectManager->identities;
         $document = new TestDocument(1, 'Test Name');
         $state = ['id' => 1, 'name' => 'Test Name', 'foo' => 'bar'];
@@ -102,13 +98,12 @@ describe('Identities', function () {
 
     it('forgets the state of an object', function () {
         // Given
-        $objectManager = new class (
-            new TestClassMetadataRegistry(),
-            new TestDocumentMapper(),
-            new TestEventDispatcher(),
+        $objectManager = new ObjectManager(
             new TestTransport(),
-        ) extends ObjectManager {
-        };
+            new ClassMetadataRegistry(),
+            new DocumentMapper(),
+            new TestEventDispatcher(),
+        );
         $identities = $objectManager->identities;
         $document = new TestDocument(1, 'Test Name');
         $state = ['id' => 1, 'name' => 'Test Name', 'foo' => 'bar'];
@@ -124,13 +119,12 @@ describe('Identities', function () {
 
     it('iterates over attached objects', function () {
         // Given
-        $objectManager = new class (
-            new TestClassMetadataRegistry(),
-            new TestDocumentMapper(),
-            new TestEventDispatcher(),
+        $objectManager = new ObjectManager(
             new TestTransport(),
-        ) extends ObjectManager {
-        };
+            new ClassMetadataRegistry(),
+            new DocumentMapper(),
+            new TestEventDispatcher(),
+        );
         $identities = $objectManager->identities;
         $document1 = new TestDocument(1, 'Test Name 1');
         $document2 = new TestDocument(2, 'Test Name 2');
@@ -152,13 +146,12 @@ describe('Identities', function () {
 
     it('computes the changeset of an object', function () {
         // Given
-        $objectManager = new class (
-            new TestClassMetadataRegistry(),
-            new TestDocumentMapper(),
-            new TestEventDispatcher(),
+        $objectManager = new ObjectManager(
             new TestTransport(),
-        ) extends ObjectManager {
-        };
+            new ClassMetadataRegistry(),
+            new DocumentMapper(),
+            new TestEventDispatcher(),
+        );
         $identities = $objectManager->identities;
         $document = new TestDocument(1, 'Original Name');
         $originalState = ['id' => 1, 'name' => 'Original Name'];
@@ -181,22 +174,21 @@ describe('Identities', function () {
     it('accepts stringable objects as primary keys', function () {
         $document = new class {
             public function __construct(
-                #[TestAsField(primary: true)]
+                #[AsField(primary: true)]
                 public Ulid $id = new Ulid(),
-                #[TestAsField]
+                #[AsField]
                 public string $name = 'Original Name',
             ) {
             }
         };
-        $objectManager = new class (
-            new TestClassMetadataRegistry(configurations: [
-                $document::class => new TestAsDocument('foo')
-            ]),
-            new TestDocumentMapper(),
-            new TestEventDispatcher(),
+        $objectManager = new ObjectManager(
             new TestTransport(),
-        ) extends ObjectManager {
-        };
+            new ClassMetadataRegistry(configurations: [
+                $document::class => new AsDocument('foo')
+            ]),
+            new DocumentMapper(),
+            new TestEventDispatcher(),
+        );
         $identities = $objectManager->identities;
         $originalState = ['id' => (string) $document->id, 'name' => $document->name];
 

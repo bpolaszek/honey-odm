@@ -24,7 +24,7 @@ trait DocumentMapperTrait
     {
         $document = (object) $source;
         foreach ($context->classMetadata->propertiesMetadata as $propertyName => $propertyMetadata) {
-            $sourcePropertyName = $propertyMetadata->name ?? $propertyName;
+            $sourcePropertyName = $propertyMetadata->fieldName;
             /** @var PropertyTransformerInterface|null $transformer */
             $transformer = $propertyMetadata->getTransformer()?->service ? $this->transformers->get($propertyMetadata->getTransformer()->service) : null;
             try {
@@ -50,13 +50,12 @@ trait DocumentMapperTrait
      *
      * @return array<string, mixed>
      */
-    public function objectToDocument(object $source, array $target, MappingContextInterface $context): array // @phpstan-ignore missingType.generics
+    public function objectToDocument(object $source, array $target, MappingContextInterface $context): array
     {
         foreach ($context->classMetadata->propertiesMetadata as $propertyName => $propertyMetadata) {
-            $targetPropertyName = $propertyMetadata->name ?? $propertyName;
+            $targetPropertyName = $propertyMetadata->fieldName;
             /** @var PropertyTransformerInterface|null $transformer */
             $transformer = $propertyMetadata->getTransformer()?->service ? $this->transformers->get($propertyMetadata->getTransformer()->service) : null;
-            /** @var array<string, mixed> $target */
             $rawValue = $this->propertyAccessor->getValue($source, $propertyName);
             $value = match ($transformer) {
                 null => $rawValue,
@@ -69,7 +68,6 @@ trait DocumentMapperTrait
             $target[$targetPropertyName] = $value;
         }
 
-        /* @var array<string, mixed> $target */
         return $target;
     }
 }
