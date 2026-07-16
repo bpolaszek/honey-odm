@@ -7,8 +7,6 @@ namespace Honey\ODM\Core\Repository;
 use Honey\ODM\Core\Criteria\Criteria;
 use Honey\ODM\Core\Manager\ObjectManager;
 
-use function Honey\ODM\Core\Criteria\field;
-
 /**
  * Generic, platform-agnostic repository.
  *
@@ -66,15 +64,9 @@ final readonly class ObjectRepository implements ObjectRepositoryInterface
      */
     private static function resolveCriteria(Criteria|array|null $criteria): Criteria
     {
-        if ($criteria instanceof Criteria) {
-            return $criteria;
-        }
-
-        $resolved = Criteria::create();
-        foreach ($criteria ?? [] as $property => $value) {
-            $resolved->andWhere(field($property)->equals($value));
-        }
-
-        return $resolved;
+        return match (true) {
+            $criteria instanceof Criteria => $criteria,
+            default => Criteria::fromArray($criteria ?? []),
+        };
     }
 }

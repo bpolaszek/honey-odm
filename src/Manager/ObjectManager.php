@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Manager;
 
 use BenTools\ReflectionPlus\Reflection;
+use Closure;
 use Honey\ODM\Core\Config\AsDocument;
 use Honey\ODM\Core\Config\ClassMetadataRegistry;
 use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
@@ -22,7 +23,6 @@ use Honey\ODM\Core\Misc\NullEventDispatcher;
 use Honey\ODM\Core\Repository\ObjectRepository;
 use Honey\ODM\Core\Repository\ObjectRepositoryInterface;
 use Honey\ODM\Core\Transport\TransportInterface;
-use Closure;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use ReflectionException;

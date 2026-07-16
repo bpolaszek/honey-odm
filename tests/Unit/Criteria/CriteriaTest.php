@@ -101,6 +101,14 @@ describe('Criteria', function () {
         Criteria::create()->orderBy('name', 'sideways');
     })->throws(InvalidArgumentException::class, 'Invalid sort direction `sideways`.');
 
+    it('builds criteria from an array of equality filters', function () {
+        $criteria = Criteria::fromArray(['name' => 'foo', 'year' => 2020]);
+
+        expect($criteria->where)->toEqual(
+            CompositeExpression::and(field('name')->equals('foo'), field('year')->equals(2020)),
+        );
+    });
+
     it('stores limit and offset', function () {
         $criteria = Criteria::create()->limit(10)->offset(20);
 

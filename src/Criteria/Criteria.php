@@ -36,6 +36,21 @@ final class Criteria
     }
 
     /**
+     * Builds criteria from an array of equality filters (property => value), AND-combined.
+     *
+     * @param array<string, mixed> $filters
+     */
+    public static function fromArray(array $filters): self
+    {
+        $criteria = new self();
+        foreach ($filters as $property => $value) {
+            $criteria->andWhere(new Comparison($property, Operator::EQUALS, $value));
+        }
+
+        return $criteria;
+    }
+
+    /**
      * Full-text search term - interpreted by search-capable platforms.
      */
     public function search(?string $search): self
