@@ -9,9 +9,12 @@ use Honey\ODM\Core\Criteria\Comparison;
 use Honey\ODM\Core\Criteria\CompositeExpression;
 use Honey\ODM\Core\Criteria\Criteria;
 use Honey\ODM\Core\Criteria\ExpressionInterface;
+use Honey\ODM\Core\Criteria\Geo\BoundingBox;
+use Honey\ODM\Core\Criteria\Geo\Radius;
 use Honey\ODM\Core\Criteria\LogicalOperator;
 use Honey\ODM\Core\Criteria\Negation;
 use Honey\ODM\Core\Criteria\Operator;
+use Honey\ODM\Core\Criteria\Range;
 use Honey\ODM\Core\Criteria\UnsupportedExpressionException;
 use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\Transport\TransportInterface;
@@ -21,12 +24,20 @@ use SortDirection;
 use function array_all;
 use function array_any;
 use function array_filter;
+use function array_key_exists;
 use function array_merge;
 use function array_slice;
 use function array_values;
+use function asin;
+use function cos;
+use function deg2rad;
 use function in_array;
+use function is_array;
 use function is_string;
+use function sin;
+use function sqrt;
 use function str_contains;
+use function str_ends_with;
 use function str_starts_with;
 use function strtolower;
 use function usort;
@@ -148,7 +159,14 @@ final class TestTransport implements TransportInterface
      */
     private static function compare(Comparison $comparison, array $document, AsDocument $classMetadata): bool
     {
-        $value = $document[$classMetadata->getFieldName($comparison->property)] ?? null;
+        $fieldName = $classMetadata->getFieldName($comparison->property);
+
+        // Resolved before the value itself: a missing key and a null value are indistinguishable afterwards.
+        if (Operator::EXISTS === $comparison->operator) {
+            return array_key_exists($fieldName, $document);
+        }
+
+        $value = $document[$fieldName] ?? null;
 
         return match ($comparison->operator) {
             Operator::EQUALS => 0 === ($value <=> $comparison->value),
@@ -157,12 +175,132 @@ final class TestTransport implements TransportInterface
             Operator::GREATER_THAN_OR_EQUALS => -1 !== ($value <=> $comparison->value),
             Operator::LESS_THAN => -1 === ($value <=> $comparison->value),
             Operator::LESS_THAN_OR_EQUALS => 1 !== ($value <=> $comparison->value),
-            Operator::IN => in_array($value, (array) $comparison->value, true),
-            Operator::NOT_IN => !in_array($value, (array) $comparison->value, true),
+            Operator::IN => self::holdsAny($value, (array) $comparison->value),
+            Operator::NOT_IN => !self::holdsAny($value, (array) $comparison->value),
+            Operator::HAS_ALL => self::holdsAll($value, (array) $comparison->value),
             Operator::CONTAINS => is_string($value) && str_contains($value, (string) $comparison->value), // @phpstan-ignore cast.string
             Operator::STARTS_WITH => is_string($value) && str_starts_with($value, (string) $comparison->value), // @phpstan-ignore cast.string
+            Operator::ENDS_WITH => is_string($value) && str_ends_with($value, (string) $comparison->value), // @phpstan-ignore cast.string
             Operator::IS_NULL => null === $value,
             Operator::IS_NOT_NULL => null !== $value,
+            Operator::IS_EMPTY => null === $value || '' === $value || [] === $value,
+            Operator::BETWEEN => self::within($value, $comparison->value), // @phpstan-ignore argument.type
+            Operator::WITHIN_GEO_RADIUS => self::withinRadius($value, $comparison->value), // @phpstan-ignore argument.type
+            Operator::WITHIN_GEO_BOUNDING_BOX => self::withinBoundingBox($value, $comparison->value), // @phpstan-ignore argument.type
+            Operator::EXISTS => true, // Unreachable - handled above
         };
+    }
+
+    /**
+     * On an array field, matches when at least one of the given values is held.
+     *
+     * @param list<mixed> $values
+     */
+    private static function holdsAny(mixed $value, array $values): bool
+    {
+        return match (is_array($value)) {
+            true => array_any($values, static fn (mixed $expected) => in_array($expected, $value, true)),
+            false => in_array($value, $values, true),
+        };
+    }
+
+    /**
+     * On an array field, matches when every given value is held.
+     *
+     * @param list<mixed> $values
+     */
+    private static function holdsAll(mixed $value, array $values): bool
+    {
+        $held = is_array($value) ? $value : [$value];
+
+        return array_all($values, static fn (mixed $expected) => in_array($expected, $held, true));
+    }
+
+    private static function within(mixed $value, Range $range): bool
+    {
+        if (null === $value) {
+            return false; // A range never matches a null value
+        }
+
+        if (null !== $range->left) {
+            $comparison = $value <=> $range->left;
+            if ($range->includeLeft ? $comparison < 0 : $comparison <= 0) {
+                return false;
+            }
+        }
+
+        if (null !== $range->right) {
+            $comparison = $value <=> $range->right;
+            if ($range->includeRight ? $comparison > 0 : $comparison >= 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static function withinRadius(mixed $value, Radius $radius): bool
+    {
+        $point = self::point($value);
+        if (null === $point) {
+            return false;
+        }
+
+        [$latitude, $longitude] = $point;
+        $distance = self::haversine(
+            $latitude,
+            $longitude,
+            $radius->center->latitude,
+            $radius->center->longitude,
+        );
+
+        return $distance <= $radius->meters;
+    }
+
+    private static function withinBoundingBox(mixed $value, BoundingBox $boundingBox): bool
+    {
+        $point = self::point($value);
+        if (null === $point) {
+            return false;
+        }
+
+        [$latitude, $longitude] = $point;
+        if ($latitude < $boundingBox->southWest->latitude || $latitude > $boundingBox->northEast->latitude) {
+            return false;
+        }
+
+        $west = $boundingBox->southWest->longitude;
+        $east = $boundingBox->northEast->longitude;
+
+        return match ($west <= $east) {
+            true => $longitude >= $west && $longitude <= $east,
+            false => $longitude >= $west || $longitude <= $east, // The box crosses the antimeridian
+        };
+    }
+
+    /**
+     * @return array{float, float}|null
+     */
+    private static function point(mixed $value): ?array
+    {
+        if (!is_array($value) || !isset($value['lat'], $value['lng'])) {
+            return null;
+        }
+
+        return [(float) $value['lat'], (float) $value['lng']]; // @phpstan-ignore cast.double, cast.double
+    }
+
+    /**
+     * Great-circle distance, in meters.
+     */
+    private static function haversine(float $lat1, float $lon1, float $lat2, float $lon2): float
+    {
+        $earthRadius = 6371008.8;
+        $deltaLat = deg2rad($lat2 - $lat1);
+        $deltaLon = deg2rad($lon2 - $lon1);
+        $a = sin($deltaLat / 2) ** 2
+            + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($deltaLon / 2) ** 2;
+
+        return 2 * $earthRadius * asin(sqrt($a));
     }
 }

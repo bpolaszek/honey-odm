@@ -6,9 +6,13 @@ namespace Honey\ODM\Core\Tests\Unit\Criteria;
 
 use Honey\ODM\Core\Criteria\Comparison;
 use Honey\ODM\Core\Criteria\CompositeExpression;
+use Honey\ODM\Core\Criteria\Geo\BoundingBox;
+use Honey\ODM\Core\Criteria\Geo\Coordinates;
+use Honey\ODM\Core\Criteria\Geo\Radius;
 use Honey\ODM\Core\Criteria\LogicalOperator;
 use Honey\ODM\Core\Criteria\Negation;
 use Honey\ODM\Core\Criteria\Operator;
+use Honey\ODM\Core\Criteria\Range;
 
 use function expect;
 use function Honey\ODM\Core\Criteria\field;
@@ -33,9 +37,36 @@ describe('Field', function () {
         'notIn' => ['notIn', [['a', 'b']], Operator::NOT_IN, ['a', 'b']],
         'contains' => ['contains', ['bar'], Operator::CONTAINS, 'bar'],
         'startsWith' => ['startsWith', ['bar'], Operator::STARTS_WITH, 'bar'],
+        'endsWith' => ['endsWith', ['bar'], Operator::ENDS_WITH, 'bar'],
+        'hasAll' => ['hasAll', [['a', 'b']], Operator::HAS_ALL, ['a', 'b']],
         'isNull' => ['isNull', [], Operator::IS_NULL, null],
         'isNotNull' => ['isNotNull', [], Operator::IS_NOT_NULL, null],
+        'exists' => ['exists', [], Operator::EXISTS, null],
+        'isEmpty' => ['isEmpty', [], Operator::IS_EMPTY, null],
     ]);
+
+    it('builds a range comparison', function () {
+        $comparison = field('price')->between(10, 100, includeRight: false);
+
+        expect($comparison->operator)->toBe(Operator::BETWEEN)
+            ->and($comparison->value)->toEqual(new Range(10, 100, true, false));
+    });
+
+    it('builds a geo radius comparison', function () {
+        $comparison = field('coordinates')->withinGeoRadius(48.8566, 2.3522, 5000);
+
+        expect($comparison->operator)->toBe(Operator::WITHIN_GEO_RADIUS)
+            ->and($comparison->value)->toEqual(new Radius(new Coordinates(48.8566, 2.3522), 5000.0));
+    });
+
+    it('builds a geo bounding box comparison, from the south-west corner to the north-east one', function () {
+        $comparison = field('coordinates')->withinGeoBoundingBox(48.80, 2.22, 48.90, 2.47);
+
+        expect($comparison->operator)->toBe(Operator::WITHIN_GEO_BOUNDING_BOX)
+            ->and($comparison->value)->toEqual(
+                new BoundingBox(new Coordinates(48.80, 2.22), new Coordinates(48.90, 2.47)),
+            );
+    });
 });
 
 describe('CompositeExpression', function () {

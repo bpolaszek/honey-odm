@@ -193,25 +193,106 @@ The expression tree is built from three node types, all implementing `Expression
 
 Available operators (`Honey\ODM\Core\Criteria\Operator`):
 
-| `Field` method                   | Operator                  |
-|----------------------------------|---------------------------|
-| `equals($value)`                 | `EQUALS`                  |
-| `notEquals($value)`              | `NOT_EQUALS`              |
-| `greaterThan($value)`            | `GREATER_THAN`            |
-| `greaterThanOrEquals($value)`    | `GREATER_THAN_OR_EQUALS`  |
-| `lessThan($value)`               | `LESS_THAN`               |
-| `lessThanOrEquals($value)`       | `LESS_THAN_OR_EQUALS`     |
-| `in(array $values)`              | `IN`                      |
-| `notIn(array $values)`           | `NOT_IN`                  |
-| `contains(string $value)`        | `CONTAINS`                |
-| `startsWith(string $value)`      | `STARTS_WITH`             |
-| `isNull()`                       | `IS_NULL`                 |
-| `isNotNull()`                    | `IS_NOT_NULL`             |
+| `Field` method                                                | Operator                   |
+|---------------------------------------------------------------|----------------------------|
+| `equals($value)`                                              | `EQUALS`                   |
+| `notEquals($value)`                                           | `NOT_EQUALS`               |
+| `greaterThan($value)`                                         | `GREATER_THAN`             |
+| `greaterThanOrEquals($value)`                                 | `GREATER_THAN_OR_EQUALS`   |
+| `lessThan($value)`                                            | `LESS_THAN`                |
+| `lessThanOrEquals($value)`                                    | `LESS_THAN_OR_EQUALS`      |
+| `between($left, $right, $includeLeft = true, $includeRight = true)` | `BETWEEN`            |
+| `in(array $values)`                                           | `IN`                       |
+| `notIn(array $values)`                                        | `NOT_IN`                   |
+| `hasAll(array $values)`                                       | `HAS_ALL`                  |
+| `contains(string $value)`                                     | `CONTAINS`                 |
+| `startsWith(string $value)`                                   | `STARTS_WITH`              |
+| `endsWith(string $value)`                                     | `ENDS_WITH`                |
+| `isNull()`                                                    | `IS_NULL`                  |
+| `isNotNull()`                                                 | `IS_NOT_NULL`              |
+| `exists()`                                                    | `EXISTS`                   |
+| `isEmpty()`                                                   | `IS_EMPTY`                 |
+| `withinGeoRadius($lat, $lon, $meters)`                        | `WITHIN_GEO_RADIUS`        |
+| `withinGeoBoundingBox($swLat, $swLon, $neLat, $neLon)`        | `WITHIN_GEO_BOUNDING_BOX`  |
 
 `search()` is a full-text search term, only meaningful on search-capable platforms.
 
+There are no negative variants of `exists()`, `isEmpty()`, `contains()`, `startsWith()` and `endsWith()` — wrap them in
+`not()`.
+
 > `Criteria` is mutable and fluent: `where()` replaces the current filter, `andWhere()` / `orWhere()` combine with it.
 > Clone it if you want to derive several queries from a common base.
+
+### Presence, emptiness and nullity
+
+Three distinct questions, three operators:
+
+```php
+field('summary')->exists();     // the key is present in the document, whatever its value - including null
+field('summary')->isNotNull();  // the key is present AND its value is not null
+field('summary')->isEmpty();    // the value is null, '', [] or {}
+```
+
+A document whose `summary` is explicitly `null` satisfies `exists()` and `isEmpty()`, but fails `isNotNull()`.
+
+### Ranges
+
+`between()` builds a single `BETWEEN` node carrying a `Range` value object, so adapters can emit native range syntax
+rather than a pair of comparisons. Inclusivity is per-side, and either bound may be `null` (but not both):
+
+```php
+field('price')->between(10, 100);                        // 10 <= price <= 100
+field('price')->between(10, 100, includeRight: false);   // 10 <= price < 100
+field('price')->between(null, 100);                      // price <= 100
+```
+
+A `null` field value never matches a range.
+
+### Sets
+
+On an array field, `in()` matches when **at least one** of the given values is held, `hasAll()` when **all** of them
+are:
+
+```php
+field('tags')->in(['monument', 'paris']);       // tagged monument OR paris
+field('tags')->hasAll(['monument', 'paris']);   // tagged monument AND paris
+```
+
+`contains()` / `startsWith()` / `endsWith()` are substring operators on **string** fields — don't confuse
+`contains('paris')` with `hasAll(['paris'])`.
+
+### Geo
+
+Geo filters carry value objects from `Honey\ODM\Core\Criteria\Geo`, and distances are always in **meters**:
+
+```php
+field('coordinates')->withinGeoRadius(48.8566, 2.3522, 5000);          // within 5 km of Paris
+field('coordinates')->withinGeoBoundingBox(48.80, 2.22, 48.90, 2.47);  // swLat, swLon, neLat, neLon
+```
+
+Bounding boxes go **from the south-west (min) corner to the north-east (max) one**, following GeoJSON, PostGIS,
+OGC/WMS, Leaflet and Google Maps. Platforms expecting another corner pair — Elasticsearch takes north-west /
+south-east, Meilisearch north-east / south-west — convert on their side. A box whose west longitude is greater than
+its east longitude legitimately crosses the antimeridian.
+
+`Coordinates`, `Radius` and `BoundingBox` validate their input, so an impossible query fails at build time rather
+than at the storage layer:
+
+```php
+use Honey\ODM\Core\Criteria\Geo\BoundingBox;
+use Honey\ODM\Core\Criteria\Geo\Coordinates;
+use Honey\ODM\Core\Criteria\Geo\Radius;
+
+new Coordinates(91.0, 0.0);                              // InvalidArgumentException: Invalid latitude
+new Radius(new Coordinates(48.85, 2.35), -1);            // InvalidArgumentException: Radius must be greater than 0
+new BoundingBox(new Coordinates(48.9, 2.2), new Coordinates(48.8, 2.4)); // InvalidArgumentException
+```
+
+Holding a pre-built value object? Use the node directly:
+
+```php
+new Comparison('coordinates', Operator::WITHIN_GEO_RADIUS, $radius);
+```
 
 ### Capability mismatches
 
