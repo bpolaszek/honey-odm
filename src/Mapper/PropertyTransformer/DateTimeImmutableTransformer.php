@@ -9,7 +9,7 @@ use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use Honey\ODM\Core\Config\PropertyMetadata;
+use Honey\ODM\Core\Config\AsField;
 use Honey\ODM\Core\Mapper\MappingContextInterface;
 use InvalidArgumentException;
 use RuntimeException;
@@ -23,7 +23,7 @@ final class DateTimeImmutableTransformer implements PropertyTransformerInterface
      */
     public function fromDocument(
         mixed $value,
-        PropertyMetadata $propertyMetadata,
+        AsField $propertyMetadata,
         MappingContextInterface $context,
     ): ?DateTimeImmutable {
         if (null === $value) {
@@ -46,10 +46,9 @@ final class DateTimeImmutableTransformer implements PropertyTransformerInterface
      *
      * @throws DateInvalidTimeZoneException
      */
-    // @phpstan-ignore return.unusedType, return.unusedType
     public function toDocument(
         mixed $value,
-        PropertyMetadata $propertyMetadata,
+        AsField $propertyMetadata,
         MappingContextInterface $context,
     ): string|int|float|null {
         if (null === $value) {
@@ -59,7 +58,7 @@ final class DateTimeImmutableTransformer implements PropertyTransformerInterface
             throw new InvalidArgumentException(sprintf("Expected instance of DateTimeInterface, got '%s'.", get_debug_type($value)));
         }
 
-        /** @var array{to_format?: string, to_tz?: string, to_type?: string} $transformerOptions */
+        /** @var array{to_format?: string, to_tz?: string, to_type?: 'int'|'integer'|'float'|'double'|'string'} $transformerOptions */
         $transformerOptions = $propertyMetadata->getTransformer()->options ?? [];
         $format = $transformerOptions['to_format'] ?? DateTimeInterface::ATOM;
         $timeZone = $transformerOptions['to_tz'] ?? null;

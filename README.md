@@ -1,4 +1,4 @@
-# 🐝 Honey / ODM 
+# 🐝 Honey / ODM
 
 A framework-agnostic, core foundation library for building modern Object Document Mappers (ODM) in PHP.
 
@@ -7,16 +7,23 @@ A framework-agnostic, core foundation library for building modern Object Documen
 
 ## Overview
 
-Honey ODM provides the essential interfaces, components, and patterns needed to build robust ODMs that can work with various data sources like REST APIs, NoSQL databases, or any custom storage backend. The library focuses on providing a solid foundation with built-in features like property transformers, event mechanisms, and identity management.
+Honey ODM provides the essential components and patterns needed to build robust ODMs on top of any data source:
+REST APIs, search engines, NoSQL databases, or any custom storage backend.
+
+The mapping layer is **portable**: a class annotated for Honey ODM can run on any implementation (Meilisearch, SQLite,
+Elasticsearch, ...) without being re-mapped. Everything platform-specific lives in dedicated attributes, and querying
+goes through a generic, compilable criteria model.
 
 ## Key Features
 
-- **Generic Interface Design**: Core interfaces that can be implemented for any data source
-- **Built-in Property Transformers**: Automatic data transformation between storage and PHP objects
-- **Event System**: Comprehensive lifecycle events (pre/post persist, update, remove, load)
-- **Identity Management**: Automatic object identity tracking and management
-- **Unit of Work Pattern**: Efficient batch operations and change tracking
-- **Trait-based Implementation**: Ready-to-use traits that simplify implementation
+- **Portable mapping**: `#[AsDocument]` / `#[AsField]` are core attributes — no subclassing, no per-implementation attributes
+- **Platform metadata**: implementations ship their own attributes, placed alongside the core ones
+- **Platform-agnostic criteria**: a fluent query builder + expression AST that each transport compiles to its own dialect
+- **Built-in property transformers**: dates, backed enums, relations, stringable value objects
+- **Event system**: full lifecycle events (pre/post persist, update, remove, load)
+- **Identity management**: objects are tracked, deduplicated, and lazily hydrated
+- **Unit of Work**: change tracking and batched insert / update / delete operations
+- **In-memory transport**: run your integration tests against the full API, without a database
 
 ## Requirements
 
@@ -24,432 +31,618 @@ Honey ODM provides the essential interfaces, components, and patterns needed to 
 - (Optional) PSR-14 Event Dispatcher implementation
 - (Optional) PSR-11 Container implementation
 
-
-## Building your own ODM
-
-Init your ODM project with Composer, then require Honey ODM core library:
+## Installation
 
 ```bash
 composer require honey-odm/core
 ```
 
-### Glossary
+> The library ships a polyfill for the native PHP 8.6 `SortDirection` enum, so sorting works on PHP 8.4+.
 
-- **Class Metadata**: Metadata about a document class (e.g. endpoint / bucket / table name, whatever)
-- **Property Metadata**: Metadata about a document property (e.g. name, transformer, is primary key, etc.)
-- **Transport**: Handles communication with your data source
-- **Object Manager**: Central component that orchestrates all ODM operations and events
-- **Unit of Work**: Tracks changes and scheduled actions (insert, update, delete). The Unit of Work is destructed and recreated after each flush operation.
-- **Object Repository**: Provides repository pattern methods for retrieving documents as objects.
+## Glossary
 
-### Essential Components
+- **Class Metadata** (`#[AsDocument]`): metadata about a document class (collection name, platform metadata, properties)
+- **Property Metadata** (`#[AsField]`): metadata about a document property (field name, primary key, transformer)
+- **Platform Metadata**: implementation-specific configuration, attached to a class or a property
+- **Transport**: handles communication with your data source, and compiles criteria into its native query language
+- **Object Manager**: central component that orchestrates all ODM operations and events
+- **Unit of Work**: tracks changes and scheduled actions (insert, update, delete). It is destructed and recreated after each flush.
+- **Object Repository**: provides repository pattern methods for retrieving documents as objects
 
-To build an ODM using Honey, you need to extend these abstract classes and implement these core interfaces:
+## Mapping your documents
 
-#### ClassMetadata
-
-Class (attribute) that holds metadata information about your document classes, example:
-
-```php
-namespace MyODM\Config;
-
-use Attribute;
-use Honey\ODM\Core\Config\ClassMetadata;
-
-#[Attribute(Attribute::TARGET_CLASS)]
-final class DocumentMetadata extends ClassMetadata
-{
-    public function __construct(
-        public ?string $endpoint = null, // <-- That's an example, depending on your own implementation
-    ) {
-    }
-}
-```
-
-#### PropertyMetadata
-
-Class (attribute) that defines metadata for individual properties, example:
-
-```php
-namespace MyODM\Config;
-
-use Attribute;
-use Honey\ODM\Core\Config\PropertyMetadata;
-use Honey\ODM\Core\Config\TransformerMetadataInterface;
-
-#[Attribute(Attribute::TARGET_PROPERTY)]
-final class TestAsField extends PropertyMetadata
-{
-    public function __construct(
-        public readonly bool $primary = false, // <-- You must implement a `$primary` property, it will be used for identity management
-        protected TransformerMetadataInterface|string|null $transformer = null, // <-- You can allow property transformers usage
-    ) {
-    }
-}
-```
-
-#### ClassMetadataRegistry
-
-Service responsible for retrieving metadata about your document classes.
-
-```php
-namespace MyODM\Config;
-
-use Honey\ODM\Core\Config\ClassMetadataRegistryInterface;
-use Honey\ODM\Core\Config\ClassMetadataRegistryTrait;
-
-final class ClassMetadataRegistry implements ClassMetadataRegistryInterface
-{
-    use ClassMetadataRegistryTrait; // <-- We've done most of the hard work for you
-
-    public function getIdFromObject(object $object): mixed
-    {
-        // Write your own logic to retrieve the ID of a document from an instantiated object 
-    }
-
-    public function getIdFromDocument(array $document, string $className): mixed
-    {
-        // Write your own logic to retrieve the ID of a document from an array
-        // You can call $this->getClassMetadata($className) to get the ClassMetadata for the given class
-    }
-}
-```
-
-#### DocumentMapper
-
-Service responsible for mapping documents (arrays) to objects and vice versa.
-
-```php
-namespace MyODM\Mapper;
-
-use Honey\ODM\Core\Mapper\DocumentMapperInterface;
-use Honey\ODM\Core\Mapper\DocumentMapperTrait;
-
-final readonly class DocumentMapper implements DocumentMapperInterface
-{
-    use DocumentMapperTrait; // <-- That's it - the default implementation leverages Symfony's PropertyAccess component
-}
-```
-
-#### TransportInterface
-
-Handles communication with your data source:
-
-```php
-interface TransportInterface
-{
-    public function retrieveDocuments(mixed $criteria): iterable;
-    public function retrieveDocumentById(ClassMetadata $classMetadata, mixed $id): ?array;
-    public function flushPendingOperations(UnitOfWork $unitOfWork): void;
-}
-```
-
-Important: 
-- `$criteria` depends on your own implementation. It is your role to translate it into a query that your data source can understand.
-- `retrieveDocuments` can return any type of document collections. It can be a simple array of arrays, a `Generator`, or any other type of collection (with metadata such as facets, aggregations, etc).
-- Important: documents must be returned as associative arrays. The `Transport` is not responsible for converting them to objects.
-- In `flushPendingOperations`, you'll read the Unit of Work for scheduled insertions / updates / deletions and perform the necessary operations.
-
-#### ObjectRepositoryInterface
-
-Provides repository pattern methods:
-
-```php
-interface ObjectRepositoryInterface
-{
-    public function findBy(mixed $criteria): iterable;
-    public function findAll(): iterable;
-    public function findOneBy(mixed $criteria): ?object;
-    public function find(mixed $id): ?object;
-}
-```
-
-Your `ObjectRepository` implementation will likely depend on the `ObjectManager`:
-- `$objectManager->transport` will give you access to the transport layer to retrieve documents as raw arrays
-- `$objectManager->classMetadataRegistry` will help you retrieve metadata about your document classes
-- `$objectManager->factory()` will instantiate (or reuse) objects from the documents returned by the transport layer
-
-#### ObjectManager
-
-Once you have implemented the above components, you can implement your own ObjectManager:
-
-```php
-namespace MyODM\Manager;
-
-use Honey\ODM\Core\Manager\ObjectManager as BaseObjectManager
-use MyODM\Repository\MyObjectRepository; // <-- Your repository implementation
-
-final class ObjectManager extends BaseObjectManager {
-
-    public function getRepository(string $className): ObjectRepositoryInterface
-    {
-        return $this->repositories[$className]
-            ??= $this->registerRepository($className, new MyObjectRepository($this, $className));
-    }
-}
-```
-
-The `ObjectManager` is the central component that orchestrates all ODM operations:
+Mapping relies on two **final** core attributes:
 
 ```php
 namespace App;
 
-use MyODM\Manager\ObjectManager;
-
-$objectManager = new ObjectManager(
-    $classMetadataRegistry, // <-- Your ClassMetadataRegistry implementation
-    $documentMapper, // <-- Your DocumentMapper implementation
-    $eventDispatcher, // <-- A PSR-14 Event Dispatcher implementation
-    $transport, // <-- Your Transport implementation
-);
-
-// Persist objects
-$objectManager->persist($object);
-$objectManager->flush();
-
-// Retrieve objects
-$object = $objectManager->find(MyEntity::class, $id);
-$repository = $objectManager->getRepository(MyEntity::class)->findBy(['id' => $id]); // <-- Repository pattern
-```
-
-## Example Implementation: RESTful API ODM
-
-Here's a complete example of building an ODM that consumes a RESTful API:
-
-### 1. Imagine your user entities
-
-```php
-namespace App;
-
+use DateTimeInterface;
+use Honey\ODM\Core\Config\AsDocument;
+use Honey\ODM\Core\Config\AsField;
 use Honey\ODM\Core\Config\TransformerMetadata;
+use Honey\ODM\Core\Mapper\PropertyTransformer\DateTimeImmutableTransformer;
 use Honey\ODM\Core\Mapper\PropertyTransformer\RelationTransformer;
-use RestBookODM\AsDocument;
-use RestBookODM\AsField;
 
-#[AsDocument(endpoint: '/api/books')]
+#[AsDocument(collection: 'books')]
 final class Book
 {
     public function __construct(
         #[AsField(primary: true)]
         public string $id,
-        
-        #[AsField(name: 'title')]
-        public string $title,
-        
-        #[AsField(name: 'author_id', transformer: new TransformerMetadata(RelationTransformer::class))]
-        public ?Author $author = null,
-        
-        #[AsField(name: 'published_at', transformer: 'datetime')]
-        public ?DateTimeImmutable $publishedAt = null,
-    ) {}
-}
 
-#[AsDocument(endpoint: '/api/authors')]
-final class Author
+        #[AsField(name: 'title')]
+        public string $name,
+
+        #[AsField(name: 'author_id', transformer: RelationTransformer::class)]
+        public ?Author $author = null,
+
+        #[AsField(name: 'published_at', transformer: new TransformerMetadata(DateTimeImmutableTransformer::class, ['from_format' => 'Y-m-d', 'to_format' => 'Y-m-d']))]
+        public ?DateTimeInterface $publishedAt = null,
+    ) {
+    }
+}
+```
+
+- `collection` is the logical name of the storage container (index, table, bucket, endpoint, ... — up to the implementation).
+- `AsField::$name` defaults to the PHP property name. The resolved value is exposed as `AsField::$fieldName`.
+- Exactly one property must be flagged `primary: true`, otherwise metadata reading throws.
+- `transformer` accepts either a service id (usually a class name) or a `TransformerMetadata` instance when you need options.
+
+### Platform-specific metadata
+
+Implementations provide their own attributes implementing `PlatformMetadataInterface`. They are placed alongside the
+core attributes and collected by the registry:
+
+```php
+use Honey\ODM\Core\Config\AsDocument;
+use Honey\ODM\Core\Config\AsField;
+use Honey\ODM\Meilisearch\Config as Meili;
+
+#[AsDocument(collection: 'books')]
+#[Meili\Document(rankingRules: ['words', 'typo', 'sort'])]
+final class Book
 {
     public function __construct(
         #[AsField(primary: true)]
-        public string $id,
-        
-        #[AsField(name: 'name')]
-        public string $name,
-        
-        #[AsField(name: 'email')]
-        public string $email,
-    ) {}
-}
-```
-
-### 2. Create Metadata Attributes
-
-```php
-namespace RestBookODM;
-
-use Attribute;
-use Honey\ODM\Core\Config\ClassMetadata;
-use Honey\ODM\Core\Config\PropertyMetadata;
-
-#[Attribute(Attribute::TARGET_CLASS)]
-final class AsDocument extends ClassMetadata
-{
-    public function __construct(
-        public readonly string $endpoint,
-    ) {}
-}
-
-#[Attribute(Attribute::TARGET_PROPERTY)]
-final class AsField extends PropertyMetadata
-{
-    public function __construct(
-        public readonly ?string $name = null,
-        public readonly bool $primary = false,
-        protected TransformerMetadataInterface|string|null $transformer = null,
-    ) {}
-}
-```
-
-### 3. Implement REST Transport
-
-```php
-namespace RestBookODM;
-
-use Honey\ODM\Core\Transport\TransportInterface;
-use Honey\ODM\Core\UnitOfWork\UnitOfWork;
-use GuzzleHttp\Client;
-
-final class RestTransport implements TransportInterface
-{
-    public function __construct(
-        private Client $httpClient,
-        private string $baseUrl,
-    ) {}
-
-    public function flushPendingOperations(UnitOfWork $unitOfWork): void
-    {
-        $objectManager = $unitOfWork->objectManager;
-        $classMetadataRegistry = $objectManager->classMetadataRegistry;
-        $mapper = $objectManager->documentMapper;
-
-        // Handle upserts (create/update)
-        foreach ($unitOfWork->getPendingUpserts() as $object) {
-            $classMetadata = $classMetadataRegistry->getClassMetadata($object::class);
-            $context = new MappingContext($classMetadata, $objectManager, $object, []);
-            $document = $mapper->objectToDocument($object, [], $context);
-            
-            $id = $classMetadataRegistry->getIdFromObject($object);
-            $endpoint = $this->baseUrl . $classMetadata->endpoint;
-            
-            if ($id) {
-                // Update existing
-                $this->httpClient->put("{$endpoint}/{$id}", ['json' => $document]);
-            } else {
-                // Create new
-                $response = $this->httpClient->post($endpoint, ['json' => $document]);
-                $data = json_decode($response->getBody()->getContents(), true);
-                // Set the generated ID back to the object
-                $idProperty = $classMetadata->getIdPropertyMetadata()->reflection;
-                $idProperty->setValue($object, $data['id']);
-            }
-        }
-
-        // Handle deletes
-        foreach ($unitOfWork->getPendingDeletes() as $object) {
-            $classMetadata = $classMetadataRegistry->getClassMetadata($object::class);
-            $id = $classMetadataRegistry->getIdFromObject($object);
-            $endpoint = $this->baseUrl . $classMetadata->endpoint;
-            
-            $this->httpClient->delete("{$endpoint}/{$id}");
-        }
-    }
-
-    public function retrieveDocuments(mixed $criteria): iterable
-    {
-        // Implementation depends on your API's query capabilities
-        // This is a simplified example
-        throw new LogicException('Query implementation depends on your specific API');
-    }
-
-    public function retrieveDocumentById(ClassMetadata $classMetadata, mixed $id): ?array
-    {
-        $endpoint = $this->baseUrl . $classMetadata->endpoint;
-        
-        try {
-            $response = $this->httpClient->get("{$endpoint}/{$id}");
-            return json_decode($response->getBody()->getContents(), true);
-        } catch (RequestException $e) {
-            if ($e->getResponse()?->getStatusCode() === 404) {
-                return null;
-            }
-            throw $e;
-        }
+        #[Meili\Attribute(filterable: true, sortable: true)]
+        public int $id,
+    ) {
     }
 }
 ```
 
-### 4. Set Up the ODM
+Retrieve them from either level:
 
 ```php
-namespace APp;
+$classMetadata = $objectManager->getClassMetadata(Book::class);
 
-use RestBookODM\ObjectManager;
-use GuzzleHttp\Client;
-use Symfony\Component\EventDispatcher\EventDispatcher;
+$classMetadata->getPlatformMetadata(Meili\Document::class)?->rankingRules;
+$classMetadata->getPropertyMetadata('id')->getPlatformMetadata(Meili\Attribute::class)?->filterable;
+```
 
-// Create HTTP client
-$httpClient = new Client([
-    'timeout' => 30,
-    'headers' => [
-        'Content-Type' => 'application/json',
-        'Accept' => 'application/json',
-    ],
+The same class can therefore carry metadata for several platforms at once — each implementation simply ignores what
+isn't addressed to it.
+
+### External metadata
+
+Classes you cannot annotate (third-party classes, anonymous classes) can be registered by providing their
+`AsDocument` instance to the registry:
+
+```php
+use Honey\ODM\Core\Config\AsDocument;
+use Honey\ODM\Core\Config\ClassMetadataRegistry;
+
+$registry = new ClassMetadataRegistry(configurations: [
+    Book::class => new AsDocument(collection: 'books'),
 ]);
+```
 
-// Set up components
-$transport = new RestTransport($httpClient, 'https://api.example.com');
-$eventDispatcher = new EventDispatcher();
-$classMetadataRegistry = new ClassMetadataRegistry(); // <-- Your implementation
-$documentMapper = new DocumentMapper(); // <-- Your implementation
+Passing a plain list of class names instead warms up the registry eagerly:
 
-// Create ObjectManager
+```php
+$registry = new ClassMetadataRegistry(configurations: [Book::class, Author::class]);
+```
+
+Otherwise, metadata is read lazily on first access. Note that external metadata replaces the **class-level** attribute
+only: properties are still read from their `#[AsField]` attributes.
+
+## Querying
+
+Queries are expressed with the generic `Criteria` object, in **PHP property names**. Each transport compiles them into
+its own native query language.
+
+```php
+use Honey\ODM\Core\Criteria\Criteria;
+
+use function Honey\ODM\Core\Criteria\field;
+use function Honey\ODM\Core\Criteria\not;
+
+$criteria = Criteria::create()
+    ->search('gatsby')
+    ->where(field('publishedAt')->greaterThan('1920-01-01'))
+    ->andWhere(field('author')->in([1, 2, 3]))
+    ->orWhere(not(field('name')->startsWith('Draft:')))
+    ->orderBy('publishedAt', 'desc')
+    ->orderBy('name')
+    ->limit(20)
+    ->offset(40);
+
+$books = $objectManager->getRepository(Book::class)->findBy($criteria);
+```
+
+Properties are named after their **PHP** name (`publishedAt`, not `published_at`), but values are compared against
+their **storage** representation: property transformers are not applied to criteria values. In the example above,
+`field('author')` is matched against author ids, since that's what the `author_id` field holds.
+
+For simple equality filters, an array is enough — it is AND-combined:
+
+```php
+$repository->findBy(['name' => 'The Great Gatsby']);   // shorthand for Criteria::fromArray([...])
+$repository->findOneBy(['id' => '123']);
+$repository->findAll();
+```
+
+### Expressions
+
+The expression tree is built from three node types, all implementing `ExpressionInterface`:
+
+| Node                 | Built with                                                        |
+|----------------------|-------------------------------------------------------------------|
+| `Comparison`         | `field('property')->equals($value)`, or `new Comparison(...)`      |
+| `CompositeExpression`| `CompositeExpression::and(...)` / `::or(...)`                      |
+| `Negation`           | `not($expression)`                                                 |
+
+Available operators (`Honey\ODM\Core\Criteria\Operator`):
+
+| `Field` method                                                      | Operator                   | Opposite                    |
+|---------------------------------------------------------------------|----------------------------|-----------------------------|
+| `equals($value)`                                                    | `EQUALS`                   | `notEquals($value)` *       |
+| `greaterThan($value)`                                               | `GREATER_THAN`             | —                           |
+| `greaterThanOrEquals($value)`                                       | `GREATER_THAN_OR_EQUALS`   | —                           |
+| `lessThan($value)`                                                  | `LESS_THAN`                | —                           |
+| `lessThanOrEquals($value)`                                          | `LESS_THAN_OR_EQUALS`      | —                           |
+| `between($left, $right, $includeLeft = true, $includeRight = true)` | `BETWEEN`                  | `notBetween(...)`           |
+| `in(array $values)`                                                 | `IN`                       | `notIn(array $values)` *    |
+| `hasAll(array $values)`                                             | `HAS_ALL`                  | `notHasAll(array $values)`  |
+| `contains(string $value)`                                           | `CONTAINS`                 | `notContains($value)`       |
+| `startsWith(string $value)`                                         | `STARTS_WITH`              | `notStartsWith($value)`     |
+| `endsWith(string $value)`                                           | `ENDS_WITH`                | `notEndsWith($value)`       |
+| `isNull()`                                                          | `IS_NULL`                  | `isNotNull()` *             |
+| `exists()`                                                          | `EXISTS`                   | `notExists()`               |
+| `isEmpty()`                                                         | `IS_EMPTY`                 | `isNotEmpty()`              |
+| `withinGeoRadius($lat, $lon, $meters)`                              | `WITHIN_GEO_RADIUS`        | `outsideGeoRadius(...)`     |
+| `withinGeoBoundingBox($swLat, $swLon, $neLat, $neLon)`              | `WITHIN_GEO_BOUNDING_BOX`  | `outsideGeoBoundingBox(...)`|
+
+`search()` is a full-text search term, only meaningful on search-capable platforms.
+
+Only the three starred methods are operators of their own (`NOT_EQUALS`, `NOT_IN`, `IS_NOT_NULL`), because every
+platform spells them natively. All the other `not*` / `outside*` methods return a `Negation` wrapping their positive
+counterpart — `field('name')->notContains('draft')` is exactly `not(field('name')->contains('draft'))`. Transports get
+them for free, and adapter authors have nothing to implement beyond `Negation` itself.
+
+⚠️ A negation is *not* the mirror of its operator on absent values: `notBetween(10, 100)` and `outsideGeoRadius(...)`
+match documents holding no value at all, since those don't match the positive form either.
+
+> `Criteria` is mutable and fluent: `where()` replaces the current filter, `andWhere()` / `orWhere()` combine with it.
+> Clone it if you want to derive several queries from a common base.
+
+### Presence, emptiness and nullity
+
+Three distinct questions, three operators:
+
+```php
+field('summary')->exists();     // the key is present in the document, whatever its value - including null
+field('summary')->isNotNull();  // the key is present AND its value is not null
+field('summary')->isEmpty();    // the value is null, '', [] or {}
+```
+
+A document whose `summary` is explicitly `null` satisfies `exists()` and `isEmpty()`, but fails `isNotNull()`.
+
+### Ranges
+
+`between()` builds a single `BETWEEN` node carrying a `Range` value object, so adapters can emit native range syntax
+rather than a pair of comparisons. Inclusivity is per-side, and either bound may be `null` (but not both):
+
+```php
+field('price')->between(10, 100);                        // 10 <= price <= 100
+field('price')->between(10, 100, includeRight: false);   // 10 <= price < 100
+field('price')->between(null, 100);                      // price <= 100
+```
+
+A `null` field value never matches a range.
+
+### Sets
+
+On an array field, `in()` matches when **at least one** of the given values is held, `hasAll()` when **all** of them
+are:
+
+```php
+field('tags')->in(['monument', 'paris']);       // tagged monument OR paris
+field('tags')->hasAll(['monument', 'paris']);   // tagged monument AND paris
+```
+
+Their opposites are easy to mix up, so here they are side by side:
+
+| `tags`             | `in([a, b])` | `notIn([a, b])` | `hasAll([a, b])` | `notHasAll([a, b])` |
+|--------------------|--------------|-----------------|------------------|---------------------|
+| `['a', 'b']`       | ✅            | ❌               | ✅                | ❌                   |
+| `['a']`            | ✅            | ❌               | ❌                | ✅                   |
+| `['c']`            | ❌            | ✅               | ❌                | ✅                   |
+
+`notIn()` means *none of them*; `notHasAll()` means *not all of them*.
+
+`contains()` / `startsWith()` / `endsWith()` are substring operators on **string** fields — don't confuse
+`contains('paris')` with `hasAll(['paris'])`.
+
+### Geo
+
+Geo filters carry value objects from `Honey\ODM\Core\Criteria\Geo`, and distances are always in **meters**:
+
+```php
+field('coordinates')->withinGeoRadius(48.8566, 2.3522, 5000);          // within 5 km of Paris
+field('coordinates')->withinGeoBoundingBox(48.80, 2.22, 48.90, 2.47);  // swLat, swLon, neLat, neLon
+```
+
+Bounding boxes go **from the south-west (min) corner to the north-east (max) one**, following GeoJSON, PostGIS,
+OGC/WMS, Leaflet and Google Maps. Platforms expecting another corner pair — Elasticsearch takes north-west /
+south-east, Meilisearch north-east / south-west — convert on their side. A box whose west longitude is greater than
+its east longitude legitimately crosses the antimeridian.
+
+`Coordinates`, `Radius` and `BoundingBox` validate their input, so an impossible query fails at build time rather
+than at the storage layer:
+
+```php
+use Honey\ODM\Core\Criteria\Geo\BoundingBox;
+use Honey\ODM\Core\Criteria\Geo\Coordinates;
+use Honey\ODM\Core\Criteria\Geo\Radius;
+
+new Coordinates(91.0, 0.0);                              // InvalidArgumentException: Invalid latitude
+new Radius(new Coordinates(48.85, 2.35), -1);            // InvalidArgumentException: Radius must be greater than 0
+new BoundingBox(new Coordinates(48.9, 2.2), new Coordinates(48.8, 2.4)); // InvalidArgumentException
+```
+
+Holding a pre-built value object? Use the node directly:
+
+```php
+new Comparison('coordinates', Operator::WITHIN_GEO_RADIUS, $radius);
+```
+
+### Platform-specific criteria
+
+Some queries have no portable form at all: vector search, image similarity, a matching strategy… Rather than forcing
+you to subclass `Criteria`, it carries a free-form `metadata` bag that transports read at will:
+
+```php
+$criteria = Criteria::create()
+    ->search('a bee on a flower')
+    ->metadata('vector', $embedding)
+    ->metadata('semanticRatio', 0.9);
+```
+
+A transport that knows the key uses it; one that doesn't **ignores it silently** — this is opt-in, so unlike an
+unsupported operator it never throws. Keys are yours; prefix them if you target several platforms at once.
+
+### Capability mismatches
+
+No platform supports everything. When a transport cannot compile an expression, an operator or a feature, it throws
+`UnsupportedExpressionException`:
+
+```php
+use Honey\ODM\Core\Criteria\UnsupportedExpressionException;
+
+throw UnsupportedExpressionException::expression($expression);
+throw UnsupportedExpressionException::operator(Operator::STARTS_WITH);
+throw UnsupportedExpressionException::feature('offset');
+```
+
+## Using the Object Manager
+
+```php
+use Honey\ODM\Core\Manager\ObjectManager;
+
+$objectManager = new ObjectManager(new MyTransport(...));
+```
+
+That's the only mandatory argument. Everything else is optional and has a sensible default:
+
+```php
 $objectManager = new ObjectManager(
-    $classMetadataRegistry,
-    $documentMapper,
-    $eventDispatcher,
-    $transport
+    transport: $transport,
+    classMetadataRegistry: new ClassMetadataRegistry(),  // default
+    documentMapper: new DocumentMapper(),                // default
+    eventDispatcher: $psr14EventDispatcher,              // defaults to a no-op dispatcher
+    defaultFlushOptions: [],                             // implementation-specific options passed to the transport
+    repositoryFactory: null,                             // Closure(ObjectManager, class-string): ObjectRepositoryInterface
 );
+```
 
-// Use the ODM
-$book = new Book(
-    id: 123456,
-    title: 'The Great Gatsby',
-    publishedAt: new DateTimeImmutable('1925-04-10')
-);
+### Persisting and retrieving
+
+```php
+$book = new Book(id: '1', name: 'The Great Gatsby');
 
 $objectManager->persist($book);
-$objectManager->flush(); // Makes HTTP POST to /api/books
+$objectManager->flush();
 
-// Retrieve data
-$foundBook = $objectManager->find(Book::class, $book->id); // Makes HTTP GET
+$objectManager->remove($book);
+$objectManager->flush(['wait' => true]); // options are merged with $defaultFlushOptions
+
+$book = $objectManager->find(Book::class, '1');
+$books = $objectManager->getRepository(Book::class)->findBy(['name' => 'The Great Gatsby']);
+
+$objectManager->clear(); // detaches everything and resets the Unit of Work
 ```
 
-## Built-in Features
+Objects returned by `find()` / repositories are **lazy ghosts**: the document is only mapped to the object when one of
+its properties is actually accessed.
 
-### Property Transformers
+### Repositories
 
-The library includes several built-in transformers:
-
-- **DateTimeImmutableTransformer**: Handles DateTime objects
-- **RelationTransformer**: Manages object relationships
-- **Custom transformers**: Implement `PropertyTransformerInterface`
-
-### Event System
-
-Listen to object lifecycle events:
+By default, `getRepository()` returns the generic `ObjectRepository`. Implementations exposing native query
+capabilities can provide their own default through the `repositoryFactory` closure:
 
 ```php
-use Honey\ODM\Core\Event\PrePersistEvent;
-
-$eventDispatcher->addListener(PrePersistEvent::class, function (PrePersistEvent $event) {
-    $object = $event->object;
-    // Modify object before persistence
-});
+$objectManager = new ObjectManager(
+    transport: $transport,
+    repositoryFactory: fn (ObjectManager $om, string $className) => new MyRepository($om, $className),
+);
 ```
 
-Available events:
-- `PrePersistEvent` / `PostPersistEvent`
-- `PreUpdateEvent` / `PostUpdateEvent`  
-- `PreRemoveEvent` / `PostRemoveEvent`
-- `PostLoadEvent` (when an object is retrieved from the persistence layer)
+You can also register a repository for a single class:
 
-### Identity Management
+```php
+$objectManager->registerRepository(Book::class, new BookRepository($objectManager, Book::class));
+```
 
-Objects are automatically tracked and managed:
+Repositories implement `ObjectRepositoryInterface`:
+
+```php
+interface ObjectRepositoryInterface
+{
+    public function findBy(Criteria|array|null $criteria): iterable;
+    public function findAll(): iterable;
+    public function findOneBy(Criteria|array $criteria): ?object;
+    public function find(mixed $id): ?object;
+}
+```
+
+### Identity management
+
+Objects are tracked and deduplicated per class + id:
 
 ```php
 $book1 = $objectManager->find(Book::class, '123');
 $book2 = $objectManager->find(Book::class, '123');
 
 var_dump($book1 === $book2); // true - same instance returned
+```
+
+Changes made on managed objects are detected at flush time by the Unit of Work — you don't need to `persist()` an
+object that is already managed.
+
+### Events
+
+```php
+use Honey\ODM\Core\Event\PrePersistEvent;
+
+$eventDispatcher->addListener(PrePersistEvent::class, function (PrePersistEvent $event) {
+    $event->object->createdAt = new DateTimeImmutable();
+});
+```
+
+Available events:
+
+- `PrePersistEvent` / `PostPersistEvent`
+- `PreUpdateEvent` / `PostUpdateEvent`
+- `PreRemoveEvent` / `PostRemoveEvent`
+- `PostLoadEvent` (when an object is hydrated from the persistence layer — also exposes the raw `$document`)
+
+Pre-flush events may modify objects: changesets are recomputed until they stabilize. Calling `flush()` from within a
+listener is a no-op, to prevent recursion.
+
+## Property transformers
+
+Transformers convert values between the storage representation and PHP:
+
+| Transformer                  | Purpose                                                                 | Options                                                     |
+|------------------------------|-------------------------------------------------------------------------|-------------------------------------------------------------|
+| `DateTimeImmutableTransformer` | Dates                                                                 | `from_format`, `from_tz`, `to_format`, `to_tz`, `to_type`   |
+| `BackedEnumTransformer`      | Backed enums (target class inferred from the property type)              | `target_class`                                              |
+| `RelationTransformer`        | To-one relation, stored as the related document id                       | `target_class`                                              |
+| `RelationsTransformer`       | To-many relation, stored as a list of ids                                | `target_class` (required)                                   |
+| `StringableTransformer`      | Value objects exposing `fromString()` and `__toString()` (e.g. `Ulid`)   | —                                                           |
+
+Writing your own is a matter of implementing `PropertyTransformerInterface`:
+
+```php
+use Honey\ODM\Core\Config\AsField;
+use Honey\ODM\Core\Mapper\MappingContextInterface;
+use Honey\ODM\Core\Mapper\PropertyTransformer\PropertyTransformerInterface;
+
+final class MoneyTransformer implements PropertyTransformerInterface
+{
+    public function fromDocument(mixed $value, AsField $propertyMetadata, MappingContextInterface $context): ?Money
+    {
+        return null === $value ? null : Money::fromCents($value);
+    }
+
+    public function toDocument(mixed $value, AsField $propertyMetadata, MappingContextInterface $context): ?int
+    {
+        return $value?->cents;
+    }
+}
+```
+
+Then register it in the transformers container passed to the mapper:
+
+```php
+use Honey\ODM\Core\Mapper\DocumentMapper;
+use Honey\ODM\Core\Mapper\PropertyTransformer\PropertyTransformers;
+
+$transformers = new PropertyTransformers();
+$transformers->register(new MoneyTransformer());
+
+$objectManager = new ObjectManager(
+    transport: $transport,
+    documentMapper: new DocumentMapper(transformers: $transformers),
+);
+```
+
+`PropertyTransformers` is a PSR-11 container keyed by class name — any other PSR-11 container will do.
+
+## Testing without a database
+
+`InMemoryTransport` is a complete transport backed by a plain array. Swap it in and your tests exercise the real
+object manager — mapping, transformers, identity map, unit of work, events — with no service to boot:
+
+```php
+use Honey\ODM\Core\Manager\ObjectManager;
+use Honey\ODM\Core\Transport\InMemoryTransport;
+
+$transport = new InMemoryTransport();
+$objectManager = new ObjectManager($transport);
+
+$objectManager->persist(new Book('123', 'The Great Gatsby'));
+$objectManager->flush();
+
+$books = $objectManager->getRepository(Book::class)->findBy(
+    Criteria::create()->where(field('name')->contains('Gatsby')),
+);
+```
+
+Its `$storage` property is public, so fixtures can be seeded without going through a flush — documents are indexed by
+collection, then by id:
+
+```php
+$transport->storage['books'] = [
+    '123' => ['id' => '123', 'title' => 'The Great Gatsby', 'author_id' => 1],
+];
+```
+
+It supports **every** operator of the criteria API, which also makes it the executable specification of what a
+transport is supposed to do. Its filtering is naive (it walks the whole collection in PHP) — it's built for
+correctness in tests, not for volume.
+
+`search()` matches literal substrings across every string field, ignoring case and diacritics — `cafe` finds `Café`.
+No typo tolerance, no stemming, no ranking, and that's deliberate: a double that *approximated* a real engine's
+relevance would let tests pass locally and fail in production. The diacritics folding needs **ext-intl**, which the
+package doesn't require — searching without it throws, everything else works.
+
+## Building your own ODM
+
+Since metadata, mapping, criteria, repositories and the object manager are all provided by the core, an implementation
+boils down to **one transport**, plus optional platform metadata attributes.
+
+### 1. Implement the transport
+
+```php
+interface TransportInterface
+{
+    public function flushPendingOperations(UnitOfWork $unitOfWork, array $flushOptions = []): void;
+
+    /**
+     * @param AsDocument<object> $classMetadata
+     * @return iterable<array<string, mixed>>
+     * @throws UnsupportedExpressionException
+     */
+    public function retrieveDocuments(AsDocument $classMetadata, Criteria $criteria): iterable;
+
+    /**
+     * @param AsDocument<object> $classMetadata
+     * @return array<string, mixed>|null
+     */
+    public function retrieveDocumentById(AsDocument $classMetadata, mixed $id): ?array;
+}
+```
+
+Important:
+
+- Documents are exchanged as **associative arrays**. The transport never deals with objects — mapping is the mapper's job.
+- `retrieveDocuments()` may return any iterable: a plain array, a `Generator`, or a richer collection carrying facets,
+  aggregations, etc.
+- `retrieveDocuments()` is where you compile the generic `Criteria` into your native query language. Use
+  `$classMetadata->getFieldName($property)` to translate PHP property names into storage-side field names, and throw
+  `UnsupportedExpressionException` for anything your platform can't express.
+- In `flushPendingOperations()`, read the Unit of Work for scheduled operations and perform them.
+
+`src/Transport/InMemoryTransport.php` is a complete reference implementation (filters, negation, composite
+expressions, multi-key sorting, pagination, search) — a good starting point for adapter authors.
+
+### 2. Flushing pending operations
+
+```php
+use Honey\ODM\Core\Mapper\MappingContext;
+use Honey\ODM\Core\Transport\TransportInterface;
+use Honey\ODM\Core\UnitOfWork\UnitOfWork;
+
+final class RestTransport implements TransportInterface
+{
+    public function __construct(
+        private ClientInterface $httpClient,
+        private string $baseUrl,
+    ) {
+    }
+
+    public function flushPendingOperations(UnitOfWork $unitOfWork, array $flushOptions = []): void
+    {
+        $objectManager = $unitOfWork->objectManager;
+        $registry = $objectManager->classMetadataRegistry;
+        $mapper = $objectManager->documentMapper;
+
+        foreach ($unitOfWork->getPendingUpserts() as $object) {
+            $classMetadata = $registry->getClassMetadata($object::class);
+            $context = new MappingContext($classMetadata, $objectManager, $object, []);
+            $document = $mapper->objectToDocument($object, [], $context);
+            $id = $registry->getIdFromObject($object);
+            $endpoint = $this->baseUrl . '/' . $classMetadata->collection;
+
+            $this->httpClient->put("{$endpoint}/{$id}", ['json' => $document]);
+        }
+
+        foreach ($unitOfWork->getPendingDeletes() as $object) {
+            $classMetadata = $registry->getClassMetadata($object::class);
+            $id = $registry->getIdFromObject($object);
+
+            $this->httpClient->delete("{$this->baseUrl}/{$classMetadata->collection}/{$id}");
+        }
+    }
+
+    // retrieveDocuments() / retrieveDocumentById() omitted for brevity
+}
+```
+
+The Unit of Work exposes `getPendingInserts()`, `getPendingUpdates()`, `getPendingUpserts()`, `getPendingDeletes()`,
+`getChangedObjects()` and `getPendingOperation($object)` — use whichever granularity your backend needs (an API with a
+dedicated `POST` for creations, a bulk endpoint, ...).
+
+### 3. Add platform metadata (optional)
+
+```php
+namespace MyODM\Config;
+
+use Attribute;
+use Honey\ODM\Core\Config\PlatformMetadataInterface;
+
+#[Attribute(Attribute::TARGET_CLASS)]
+final readonly class Collection implements PlatformMetadataInterface
+{
+    public function __construct(
+        public ?int $shards = null,
+    ) {
+    }
+}
+```
+
+### 4. Wire everything
+
+```php
+$objectManager = new ObjectManager(new RestTransport($httpClient, 'https://api.example.com'));
+
+$book = new Book(id: '1', name: 'The Great Gatsby');
+$objectManager->persist($book);
+$objectManager->flush(); // HTTP PUT /books/1
+
+$foundBook = $objectManager->find(Book::class, '1'); // HTTP GET /books/1
 ```
 
 ## Contributing
@@ -480,7 +673,7 @@ The library uses Pest for testing. Tests are located in the `tests/` directory:
 
 - `tests/Unit/` - Unit tests
 - `tests/Behavior/` - Behavioral tests
-- `tests/Implementation/` - Example implementation (great for understanding usage patterns)
+- `tests/Implementation/` - Example documents and services (great for understanding usage patterns)
 
 Run the full test suite:
 ```bash

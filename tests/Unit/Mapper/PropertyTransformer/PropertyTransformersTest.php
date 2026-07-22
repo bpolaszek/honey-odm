@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Tests\Unit\Mapper\PropertyTransformer;
 
-use Honey\ODM\Core\Config\PropertyMetadata;
+use Honey\ODM\Core\Config\AsField;
 use Honey\ODM\Core\Mapper\MappingContextInterface;
 use Honey\ODM\Core\Mapper\PropertyTransformer\BackedEnumTransformer;
 use Honey\ODM\Core\Mapper\PropertyTransformer\DateTimeImmutableTransformer;
@@ -23,7 +23,7 @@ describe('PropertyTransformer', function () {
     $custom = new class implements PropertyTransformerInterface {
         public function fromDocument(
             mixed $value,
-            PropertyMetadata $propertyMetadata,
+            AsField $propertyMetadata,
             MappingContextInterface $context,
         ): mixed {
             return $value;
@@ -31,7 +31,7 @@ describe('PropertyTransformer', function () {
 
         public function toDocument(
             mixed $value,
-            PropertyMetadata $propertyMetadata,
+            AsField $propertyMetadata,
             MappingContextInterface $context,
         ): mixed {
             return $value;
@@ -88,7 +88,7 @@ describe('PropertyTransformer', function () {
         $custom1 = new class implements PropertyTransformerInterface {
             public function fromDocument(
                 mixed $value,
-                PropertyMetadata $propertyMetadata,
+                AsField $propertyMetadata,
                 MappingContextInterface $context,
             ): mixed {
                 return $value;
@@ -96,7 +96,7 @@ describe('PropertyTransformer', function () {
 
             public function toDocument(
                 mixed $value,
-                PropertyMetadata $propertyMetadata,
+                AsField $propertyMetadata,
                 MappingContextInterface $context,
             ): mixed {
                 return $value;
@@ -106,7 +106,7 @@ describe('PropertyTransformer', function () {
         $custom2 = new class implements PropertyTransformerInterface {
             public function fromDocument(
                 mixed $value,
-                PropertyMetadata $propertyMetadata,
+                AsField $propertyMetadata,
                 MappingContextInterface $context,
             ): mixed {
                 return $value;
@@ -114,7 +114,7 @@ describe('PropertyTransformer', function () {
 
             public function toDocument(
                 mixed $value,
-                PropertyMetadata $propertyMetadata,
+                AsField $propertyMetadata,
                 MappingContextInterface $context,
             ): mixed {
                 return $value;
@@ -197,7 +197,7 @@ describe('PropertyTransformer', function () {
         $custom1 = new class implements PropertyTransformerInterface {
             public function fromDocument(
                 mixed $value,
-                PropertyMetadata $propertyMetadata,
+                AsField $propertyMetadata,
                 MappingContextInterface $context,
             ): mixed {
                 return 'custom1';
@@ -205,7 +205,7 @@ describe('PropertyTransformer', function () {
 
             public function toDocument(
                 mixed $value,
-                PropertyMetadata $propertyMetadata,
+                AsField $propertyMetadata,
                 MappingContextInterface $context,
             ): mixed {
                 return 'custom1';
@@ -217,7 +217,7 @@ describe('PropertyTransformer', function () {
         $custom2 = new class implements PropertyTransformerInterface {
             public function fromDocument(
                 mixed $value,
-                PropertyMetadata $propertyMetadata,
+                AsField $propertyMetadata,
                 MappingContextInterface $context,
             ): mixed {
                 return 'custom2';
@@ -225,7 +225,7 @@ describe('PropertyTransformer', function () {
 
             public function toDocument(
                 mixed $value,
-                PropertyMetadata $propertyMetadata,
+                AsField $propertyMetadata,
                 MappingContextInterface $context,
             ): mixed {
                 return 'custom2';

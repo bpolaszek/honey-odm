@@ -7,16 +7,16 @@ namespace Honey\ODM\Core\Tests\Behavior;
 use Honey\ODM\Core\Event\PrePersistEvent;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
-use Honey\ODM\Core\Tests\Implementation\Manager\TestObjectManager;
-use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
+use Honey\ODM\Core\Manager\ObjectManager;
+use Honey\ODM\Core\Transport\InMemoryTransport;
 
 use function expect;
 
 describe('Prevent flushing during flush', function () {
     it('prevents infinite flushing loop during flush operation', function () {
-        $transport = new TestTransport();
+        $transport = new InMemoryTransport();
         $eventDispatcher = new TestEventDispatcher();
-        $objectManager = new TestObjectManager(
+        $objectManager = new ObjectManager(
             eventDispatcher: $eventDispatcher,
             transport: $transport,
         );

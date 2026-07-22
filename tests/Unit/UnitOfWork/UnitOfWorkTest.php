@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Tests\Unit\UnitOfWork;
 
 use Honey\ODM\Core\Mapper\MappingContext;
-use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
+use Honey\ODM\Core\Config\ClassMetadataRegistry;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
-use Honey\ODM\Core\Tests\Implementation\Manager\TestObjectManager;
-use Honey\ODM\Core\Tests\Implementation\Mapper\TestDocumentMapper;
-use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
+use Honey\ODM\Core\Manager\ObjectManager;
+use Honey\ODM\Core\Mapper\DocumentMapper;
+use Honey\ODM\Core\Transport\InMemoryTransport;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
 
 use function iterator_to_array;
@@ -18,11 +18,11 @@ use function iterator_to_array;
 describe('UnitOfWork', function () {
     it('schedules an upsert', function () {
         // Given
-        $registry = new TestClassMetadataRegistry();
-        $mapper = new TestDocumentMapper();
-        $transport = new TestTransport();
+        $registry = new ClassMetadataRegistry();
+        $mapper = new DocumentMapper();
+        $transport = new InMemoryTransport();
         $eventDispatcher = new TestEventDispatcher();
-        $objectManager = new TestObjectManager(
+        $objectManager = new ObjectManager(
             classMetadataRegistry: $registry,
             documentMapper: $mapper,
             eventDispatcher: $eventDispatcher,
@@ -46,11 +46,11 @@ describe('UnitOfWork', function () {
 
     it('schedules a deletion', function () {
         // Given
-        $registry = new TestClassMetadataRegistry();
-        $mapper = new TestDocumentMapper();
-        $transport = new TestTransport();
+        $registry = new ClassMetadataRegistry();
+        $mapper = new DocumentMapper();
+        $transport = new InMemoryTransport();
         $eventDispatcher = new TestEventDispatcher();
-        $objectManager = new TestObjectManager(
+        $objectManager = new ObjectManager(
             classMetadataRegistry: $registry,
             documentMapper: $mapper,
             eventDispatcher: $eventDispatcher,
@@ -74,11 +74,11 @@ describe('UnitOfWork', function () {
 
     it('lists pending upserts', function () {
         // Given
-        $registry = new TestClassMetadataRegistry();
-        $mapper = new TestDocumentMapper();
-        $transport = new TestTransport();
+        $registry = new ClassMetadataRegistry();
+        $mapper = new DocumentMapper();
+        $transport = new InMemoryTransport();
         $eventDispatcher = new TestEventDispatcher();
-        $objectManager = new TestObjectManager(
+        $objectManager = new ObjectManager(
             classMetadataRegistry: $registry,
             documentMapper: $mapper,
             eventDispatcher: $eventDispatcher,
@@ -101,11 +101,11 @@ describe('UnitOfWork', function () {
 
     it('lists pending deletions', function () {
         // Given
-        $registry = new TestClassMetadataRegistry();
-        $mapper = new TestDocumentMapper();
-        $transport = new TestTransport();
+        $registry = new ClassMetadataRegistry();
+        $mapper = new DocumentMapper();
+        $transport = new InMemoryTransport();
         $eventDispatcher = new TestEventDispatcher();
-        $objectManager = new TestObjectManager(
+        $objectManager = new ObjectManager(
             classMetadataRegistry: $registry,
             documentMapper: $mapper,
             eventDispatcher: $eventDispatcher,
@@ -128,11 +128,11 @@ describe('UnitOfWork', function () {
 
     it('computes changesets', function () {
         // Given
-        $registry = new TestClassMetadataRegistry();
-        $mapper = new TestDocumentMapper();
-        $transport = new TestTransport();
+        $registry = new ClassMetadataRegistry();
+        $mapper = new DocumentMapper();
+        $transport = new InMemoryTransport();
         $eventDispatcher = new TestEventDispatcher();
-        $objectManager = new TestObjectManager(
+        $objectManager = new ObjectManager(
             classMetadataRegistry: $registry,
             documentMapper: $mapper,
             eventDispatcher: $eventDispatcher,
@@ -158,11 +158,11 @@ describe('UnitOfWork', function () {
 
     it('lists objects which contains changes', function () {
         // Given
-        $registry = new TestClassMetadataRegistry();
-        $mapper = new TestDocumentMapper();
-        $transport = new TestTransport();
+        $registry = new ClassMetadataRegistry();
+        $mapper = new DocumentMapper();
+        $transport = new InMemoryTransport();
         $eventDispatcher = new TestEventDispatcher();
-        $objectManager = new TestObjectManager(
+        $objectManager = new ObjectManager(
             classMetadataRegistry: $registry,
             documentMapper: $mapper,
             eventDispatcher: $eventDispatcher,
@@ -195,11 +195,11 @@ describe('UnitOfWork', function () {
 
     test('its hash changes when changesets are computed', function () {
         // Given
-        $registry = new TestClassMetadataRegistry();
-        $mapper = new TestDocumentMapper();
-        $transport = new TestTransport();
+        $registry = new ClassMetadataRegistry();
+        $mapper = new DocumentMapper();
+        $transport = new InMemoryTransport();
         $eventDispatcher = new TestEventDispatcher();
-        $objectManager = new TestObjectManager(
+        $objectManager = new ObjectManager(
             classMetadataRegistry: $registry,
             documentMapper: $mapper,
             eventDispatcher: $eventDispatcher,

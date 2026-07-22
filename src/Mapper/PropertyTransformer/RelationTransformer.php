@@ -4,19 +4,21 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Mapper\PropertyTransformer;
 
-use Honey\ODM\Core\Config\PropertyMetadata;
+use Honey\ODM\Core\Config\AsField;
 use Honey\ODM\Core\Mapper\MappingContextInterface;
 use LogicException;
 use ReflectionNamedType;
 
+use function class_exists;
 use function is_object;
+use function is_string;
 use function ltrim;
 
 final class RelationTransformer implements PropertyTransformerInterface
 {
     public function fromDocument(
         mixed $value,
-        PropertyMetadata $propertyMetadata,
+        AsField $propertyMetadata,
         MappingContextInterface $context,
     ): mixed {
         if (null === $value) {
@@ -31,12 +33,16 @@ final class RelationTransformer implements PropertyTransformerInterface
             $targetClass = ltrim($reflType->getName(), '?');
         }
 
-        return $context->objectManager->find($targetClass, $value); // @phpstan-ignore argument.templateType
+        if (!is_string($targetClass) || !class_exists($targetClass)) {
+            throw new LogicException('Invalid target class.'); // @codeCoverageIgnore
+        }
+
+        return $context->objectManager->find($targetClass, $value);
     }
 
     public function toDocument(
         mixed $value,
-        PropertyMetadata $propertyMetadata,
+        AsField $propertyMetadata,
         MappingContextInterface $context,
     ): mixed {
         if (null === $value) {

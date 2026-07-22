@@ -6,10 +6,6 @@ namespace Honey\ODM\Core\Config;
 
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
-/**
- * @template TClassMetadata of ClassMetadata
- * @template TPropertyMetadata of PropertyMetadata
- */
 interface ClassMetadataRegistryInterface
 {
     public PropertyAccessorInterface $propertyAccessor {get; }
@@ -24,15 +20,13 @@ interface ClassMetadataRegistryInterface
      *
      * @param class-string<O> $className
      *
-     * @return TClassMetadata<O, TPropertyMetadata>
+     * @return AsDocument<O>
      */
-    public function getClassMetadata(string $className): ClassMetadata;
+    public function getClassMetadata(string $className): AsDocument;
 
     /**
-     * @template O
-     *
      * @param array<string, mixed> $document
-     * @param class-string<O> $className
+     * @param class-string $className
      */
     public function getIdFromDocument(array $document, string $className): mixed;
 

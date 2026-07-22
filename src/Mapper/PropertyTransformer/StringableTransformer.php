@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Mapper\PropertyTransformer;
 
 use BenTools\ReflectionPlus\Reflection;
-use Honey\ODM\Core\Config\PropertyMetadata;
+use Honey\ODM\Core\Config\AsField;
 use Honey\ODM\Core\Mapper\MappingContextInterface;
 use ReflectionException;
 use ReflectionNamedType;
@@ -18,7 +18,7 @@ final readonly class StringableTransformer implements PropertyTransformerInterfa
 {
     public function fromDocument(
         mixed $value,
-        PropertyMetadata $propertyMetadata,
+        AsField $propertyMetadata,
         MappingContextInterface $context,
     ): mixed {
         if (null === $value) {
@@ -42,7 +42,7 @@ final readonly class StringableTransformer implements PropertyTransformerInterfa
 
     public function toDocument(
         mixed $value,
-        PropertyMetadata $propertyMetadata,
+        AsField $propertyMetadata,
         MappingContextInterface $context,
     ): ?string {
         if (null === $value) {

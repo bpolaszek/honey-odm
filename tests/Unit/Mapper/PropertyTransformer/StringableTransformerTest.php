@@ -8,13 +8,13 @@ use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\Mapper\MappingContextInterface;
 use Honey\ODM\Core\Mapper\PropertyTransformer\StringableTransformer;
-use Honey\ODM\Core\Tests\Implementation\Config\TestAsDocument;
-use Honey\ODM\Core\Tests\Implementation\Config\TestAsField;
-use Honey\ODM\Core\Tests\Implementation\Config\TestClassMetadataRegistry;
+use Honey\ODM\Core\Config\AsDocument;
+use Honey\ODM\Core\Config\AsField;
+use Honey\ODM\Core\Config\ClassMetadataRegistry;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
-use Honey\ODM\Core\Tests\Implementation\Mapper\TestDocumentMapper;
-use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
+use Honey\ODM\Core\Mapper\DocumentMapper;
+use Honey\ODM\Core\Transport\InMemoryTransport;
 use stdClass;
 use Symfony\Component\Uid\Ulid;
 
@@ -24,15 +24,14 @@ use function mock;
 describe('StringableTransformer', function () {
     it('converts an object to its string representation', function () {
         $transformer = new StringableTransformer();
-        $objectManager = new class (
-            new TestClassMetadataRegistry(),
-            new TestDocumentMapper(),
+        $objectManager = new ObjectManager(
+            new InMemoryTransport(),
+            new ClassMetadataRegistry(),
+            new DocumentMapper(),
             new TestEventDispatcher(),
-            new TestTransport(),
-        ) extends ObjectManager {
-        };
+        );
         $classMetadata = $objectManager->classMetadataRegistry->getClassMetadata(TestDocument::class);
-        $metadata = new TestAsField(transformer: StringableTransformer::class);
+        $metadata = new AsField(transformer: StringableTransformer::class);
         $context = new MappingContext($classMetadata, $objectManager, new stdClass(), []);
         $ulid = new Ulid('01K9722GJZ2XE4ZDKZSSX0MY5B');
         $value = $transformer->toDocument($ulid, $metadata, $context);
@@ -46,21 +45,20 @@ describe('StringableTransformer', function () {
 
         $foo = new class {
             public function __construct(
-                #[TestAsField(primary: true, transformer: StringableTransformer::class)]
+                #[AsField(primary: true, transformer: StringableTransformer::class)]
                 public ?Ulid $id = null,
             ) {
             }
         };
 
-        $objectManager = new class (
-            new TestClassMetadataRegistry(configurations: [
-                $foo::class => new TestAsDocument('foos'),
+        $objectManager = new ObjectManager(
+            new InMemoryTransport(),
+            new ClassMetadataRegistry(configurations: [
+                $foo::class => new AsDocument('foos'),
             ]),
-            new TestDocumentMapper(),
+            new DocumentMapper(),
             new TestEventDispatcher(),
-            new TestTransport(),
-        ) extends ObjectManager {
-        };
+        );
         $classMetadata = $objectManager->classMetadataRegistry->getClassMetadata($foo::class);
         $context = new MappingContext($classMetadata, $objectManager, $foo, []);
         $ulid = '01K9722GJZ2XE4ZDKZSSX0MY5B';
@@ -74,18 +72,17 @@ describe('StringableTransformer', function () {
     it('complains when settable type is invalid', function () {
         $transformer = new StringableTransformer();
         $foo = new class {
-            #[TestAsField(primary: true, transformer: StringableTransformer::class)]
+            #[AsField(primary: true, transformer: StringableTransformer::class)]
             public Ulid|stdClass|null $id = null;
         };
-        $objectManager = new class (
-            new TestClassMetadataRegistry(configurations: [
-                $foo::class => new TestAsDocument('foos'),
+        $objectManager = new ObjectManager(
+            new InMemoryTransport(),
+            new ClassMetadataRegistry(configurations: [
+                $foo::class => new AsDocument('foos'),
             ]),
-            new TestDocumentMapper(),
+            new DocumentMapper(),
             new TestEventDispatcher(),
-            new TestTransport(),
-        ) extends ObjectManager {
-        };
+        );
 
         $classMetadata = $objectManager->classMetadataRegistry->getClassMetadata($foo::class);
         $propertyMetadata = $classMetadata->getIdPropertyMetadata();
@@ -96,18 +93,17 @@ describe('StringableTransformer', function () {
     it('complains when settable type has no string factory', function () {
         $transformer = new StringableTransformer();
         $foo = new class {
-            #[TestAsField(primary: true, transformer: StringableTransformer::class)]
+            #[AsField(primary: true, transformer: StringableTransformer::class)]
             public ?stdClass $id = null;
         };
-        $objectManager = new class (
-            new TestClassMetadataRegistry(configurations: [
-                $foo::class => new TestAsDocument('foos'),
+        $objectManager = new ObjectManager(
+            new InMemoryTransport(),
+            new ClassMetadataRegistry(configurations: [
+                $foo::class => new AsDocument('foos'),
             ]),
-            new TestDocumentMapper(),
+            new DocumentMapper(),
             new TestEventDispatcher(),
-            new TestTransport(),
-        ) extends ObjectManager {
-        };
+        );
 
         $classMetadata = $objectManager->classMetadataRegistry->getClassMetadata($foo::class);
         $propertyMetadata = $classMetadata->getIdPropertyMetadata();
@@ -118,18 +114,17 @@ describe('StringableTransformer', function () {
     it('complains when settable type is not stringable', function () {
         $transformer = new StringableTransformer();
         $foo = new class {
-            #[TestAsField(primary: true, transformer: StringableTransformer::class)]
+            #[AsField(primary: true, transformer: StringableTransformer::class)]
             public ?stdClass $id = null;
         };
-        $objectManager = new class (
-            new TestClassMetadataRegistry(configurations: [
-                $foo::class => new TestAsDocument('foos'),
+        $objectManager = new ObjectManager(
+            new InMemoryTransport(),
+            new ClassMetadataRegistry(configurations: [
+                $foo::class => new AsDocument('foos'),
             ]),
-            new TestDocumentMapper(),
+            new DocumentMapper(),
             new TestEventDispatcher(),
-            new TestTransport(),
-        ) extends ObjectManager {
-        };
+        );
 
         $classMetadata = $objectManager->classMetadataRegistry->getClassMetadata($foo::class);
         $propertyMetadata = $classMetadata->getIdPropertyMetadata();
