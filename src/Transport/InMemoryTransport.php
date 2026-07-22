@@ -19,6 +19,7 @@ use Honey\ODM\Core\Criteria\UnsupportedExpressionException;
 use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
 use InvalidArgumentException;
+use RuntimeException;
 use SortDirection;
 
 use function array_all;
@@ -31,6 +32,7 @@ use function array_values;
 use function asin;
 use function cos;
 use function deg2rad;
+use function extension_loaded;
 use function get_debug_type;
 use function Honey\ODM\Core\id_to_array_key;
 use function in_array;
@@ -42,7 +44,7 @@ use function sqrt;
 use function str_contains;
 use function str_ends_with;
 use function str_starts_with;
-use function strtolower;
+use function transliterator_transliterate;
 use function usort;
 
 /**
@@ -92,12 +94,12 @@ final class InMemoryTransport implements TransportInterface
         $documents = array_values($this->storage[(string) $classMetadata->collection] ?? []);
 
         if (null !== $criteria->search) {
-            $search = strtolower($criteria->search);
+            $search = self::fold($criteria->search);
             $documents = array_filter(
                 $documents,
                 fn (array $document) => array_any(
                     $document,
-                    fn (mixed $value) => is_string($value) && str_contains(strtolower($value), $search),
+                    fn (mixed $value) => is_string($value) && str_contains(self::fold($value), $search),
                 ),
             );
         }
@@ -200,6 +202,25 @@ final class InMemoryTransport implements TransportInterface
                 self::valueObject($comparison, BoundingBox::class),
             ),
         };
+    }
+
+    /**
+     * Case- and diacritics-insensitive form of a string, so that `cafe` finds `Café`.
+     *
+     * @throws RuntimeException when ext-intl is missing - the package doesn't require it, only this search does
+     */
+    private static function fold(string $value): string
+    {
+        if (!extension_loaded('intl')) {
+            // @codeCoverageIgnoreStart
+            throw new RuntimeException(
+                'Full-text search on InMemoryTransport requires ext-intl. Install it, or drop `search()` from your criteria.',
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        // Malformed UTF-8 transliterates to false; matching it as-is beats crashing a test double.
+        return transliterator_transliterate('Any-Latin; Latin-ASCII; Lower', $value) ?: $value;
     }
 
     /**

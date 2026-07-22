@@ -523,6 +523,11 @@ It supports **every** operator of the criteria API, which also makes it the exec
 transport is supposed to do. Its filtering is naive (it walks the whole collection in PHP) — it's built for
 correctness in tests, not for volume.
 
+`search()` matches literal substrings across every string field, ignoring case and diacritics — `cafe` finds `Café`.
+No typo tolerance, no stemming, no ranking, and that's deliberate: a double that *approximated* a real engine's
+relevance would let tests pass locally and fail in production. The diacritics folding needs **ext-intl**, which the
+package doesn't require — searching without it throws, everything else works.
+
 ## Building your own ODM
 
 Since metadata, mapping, criteria, repositories and the object manager are all provided by the core, an implementation

@@ -261,6 +261,21 @@ describe('ObjectRepository operators', function () {
         expect($ids($repository->findBy($criteria)))->toBe(['colosseum', 'atoll']);
     });
 
+    it('searches regardless of case and diacritics', function () use ($ids) {
+        $transport = new InMemoryTransport();
+        // Ids are opaque on purpose: the search scans every string field, ids included.
+        $transport->storage['places'] = [
+            'p1' => ['id' => 'p1', 'label' => 'Café de Flore'],
+            'p2' => ['id' => 'p2', 'label' => 'Chez Gérard'],
+        ];
+        $repository = new ObjectManager($transport)->getRepository(TestPlace::class);
+        $searching = static fn (string $term) => $ids($repository->findBy(Criteria::create()->search($term)));
+
+        expect($searching('cafe'))->toBe(['p1'])          // unaccented term, accented content
+            ->and($searching('GÉRARD'))->toBe(['p2'])     // accented term, and the wrong case
+            ->and($searching('flore'))->toBe(['p1']);     // plain match still works
+    });
+
     it('never locates a document without coordinates, and always considers it outside', function () use ($ids) {
         $transport = new InMemoryTransport();
         $transport->storage['places'] = ['ghost' => ['id' => 'ghost', 'label' => 'Nowhere']];
