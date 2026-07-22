@@ -10,7 +10,12 @@ use Honey\ODM\Core\Mapper\MappingContextInterface;
 use LogicException;
 use ReflectionNamedType;
 
+use function get_debug_type;
+use function is_a;
+use function is_int;
+use function is_string;
 use function ltrim;
+use function sprintf;
 
 final readonly class BackedEnumTransformer implements PropertyTransformerInterface
 {
@@ -33,6 +38,13 @@ final readonly class BackedEnumTransformer implements PropertyTransformerInterfa
                 throw new LogicException('Invalid target class.'); // @codeCoverageIgnore
             }
             $targetClass = ltrim($reflType->getName(), '?');
+        }
+
+        if (!is_string($targetClass) || !is_a($targetClass, BackedEnum::class, true)) {
+            throw new LogicException('Invalid target class.'); // @codeCoverageIgnore
+        }
+        if (!is_int($value) && !is_string($value)) {
+            throw new LogicException(sprintf('Expected int|string, got %s', get_debug_type($value))); // @codeCoverageIgnore
         }
 
         return $targetClass::from($value);

@@ -18,6 +18,7 @@ use Honey\ODM\Core\Criteria\Range;
 use Honey\ODM\Core\Criteria\UnsupportedExpressionException;
 use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
+use InvalidArgumentException;
 use SortDirection;
 
 use function array_all;
@@ -30,10 +31,13 @@ use function array_values;
 use function asin;
 use function cos;
 use function deg2rad;
+use function get_debug_type;
+use function Honey\ODM\Core\id_to_array_key;
 use function in_array;
 use function is_array;
 use function is_string;
 use function sin;
+use function sprintf;
 use function sqrt;
 use function str_contains;
 use function str_ends_with;
@@ -70,7 +74,7 @@ final class InMemoryTransport implements TransportInterface
 
         foreach ($unitOfWork->getPendingUpserts() as $object) {
             $classMetadata = $classMetadataRegistry->getClassMetadata($object::class);
-            $id = $classMetadataRegistry->getIdFromObject($object);
+            $id = id_to_array_key($classMetadataRegistry->getIdFromObject($object));
             $collection = (string) $classMetadata->collection;
             $context = new MappingContext($classMetadata, $objectManager, $object, []);
             $document = $mapper->objectToDocument($object, [], $context);
@@ -78,7 +82,7 @@ final class InMemoryTransport implements TransportInterface
         }
         foreach ($unitOfWork->getPendingDeletes() as $object) {
             $classMetadata = $classMetadataRegistry->getClassMetadata($object::class);
-            $id = $classMetadataRegistry->getIdFromObject($object);
+            $id = id_to_array_key($classMetadataRegistry->getIdFromObject($object));
             unset($this->storage[(string) $classMetadata->collection][$id]);
         }
     }
@@ -131,7 +135,7 @@ final class InMemoryTransport implements TransportInterface
      */
     public function retrieveDocumentById(AsDocument $classMetadata, mixed $id): ?array
     {
-        return $this->storage[(string) $classMetadata->collection][$id] ?? null;
+        return $this->storage[(string) $classMetadata->collection][id_to_array_key($id)] ?? null;
     }
 
     /**
@@ -182,17 +186,50 @@ final class InMemoryTransport implements TransportInterface
             Operator::IN => self::holdsAny($value, (array) $comparison->value),
             Operator::NOT_IN => !self::holdsAny($value, (array) $comparison->value),
             Operator::HAS_ALL => self::holdsAll($value, (array) $comparison->value),
-            Operator::CONTAINS => is_string($value) && str_contains($value, (string) $comparison->value),
-            Operator::STARTS_WITH => is_string($value) && str_starts_with($value, (string) $comparison->value),
-            Operator::ENDS_WITH => is_string($value) && str_ends_with($value, (string) $comparison->value),
+            Operator::CONTAINS => self::substring($value, $comparison->value, str_contains(...)),
+            Operator::STARTS_WITH => self::substring($value, $comparison->value, str_starts_with(...)),
+            Operator::ENDS_WITH => self::substring($value, $comparison->value, str_ends_with(...)),
             Operator::IS_NULL => null === $value,
             Operator::IS_NOT_NULL => null !== $value,
             Operator::IS_EMPTY => null === $value || '' === $value || [] === $value,
-            Operator::BETWEEN => self::within($value, $comparison->value),
-            Operator::WITHIN_GEO_RADIUS => self::withinRadius($value, $comparison->value),
+            Operator::BETWEEN => self::within($value, self::valueObject($comparison, Range::class)),
+            Operator::WITHIN_GEO_RADIUS => self::withinRadius($value, self::valueObject($comparison, Radius::class)),
             // `Operator::EXISTS` is deliberately absent: it returned above.
-            Operator::WITHIN_GEO_BOUNDING_BOX => self::withinBoundingBox($value, $comparison->value),
+            Operator::WITHIN_GEO_BOUNDING_BOX => self::withinBoundingBox(
+                $value,
+                self::valueObject($comparison, BoundingBox::class),
+            ),
         };
+    }
+
+    /**
+     * @param callable(string, string): bool $matches
+     */
+    private static function substring(mixed $value, mixed $needle, callable $matches): bool
+    {
+        return is_string($value) && is_string($needle) && $matches($value, $needle);
+    }
+
+    /**
+     * @template T of object
+     *
+     * @param class-string<T> $expected
+     *
+     * @return T
+     */
+    private static function valueObject(Comparison $comparison, string $expected): object
+    {
+        $value = $comparison->value;
+        if (!$value instanceof $expected) {
+            throw new InvalidArgumentException(sprintf(
+                'Operator `%s` expects a %s value, got `%s`.',
+                $comparison->operator->value,
+                $expected,
+                get_debug_type($value),
+            ));
+        }
+
+        return $value;
     }
 
     /**

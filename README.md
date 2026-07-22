@@ -680,7 +680,7 @@ composer tests:run
 - Follow PSR-12 coding standards
 - Use strict types (`declare(strict_types=1)`)
 - Maintain 100% test coverage
-- Use PHPStan level 8 for static analysis
+- Use PHPStan level 9 for static analysis
 
 ### Submitting Changes
 

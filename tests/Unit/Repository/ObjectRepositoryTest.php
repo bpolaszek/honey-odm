@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\Tests\Unit\Repository;
 
+use Honey\ODM\Core\Criteria\Comparison;
 use Honey\ODM\Core\Criteria\Criteria;
 use Honey\ODM\Core\Criteria\ExpressionInterface;
+use Honey\ODM\Core\Criteria\Operator;
 use Honey\ODM\Core\Criteria\UnsupportedExpressionException;
 use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestBook;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestPlace;
 use Honey\ODM\Core\Transport\InMemoryTransport;
+use InvalidArgumentException;
 
 use function array_map;
 use function expect;
@@ -241,6 +244,15 @@ describe('ObjectRepository operators', function () {
         expect($ids($repository->findBy($crossing)))->toBe(['atoll'])
             ->and($ids($repository->findBy($notCrossing)))->toBe([]);
     });
+
+    it('rejects a comparison carrying the wrong value object', function () use ($repository) {
+        $criteria = Criteria::create()->where(new Comparison('rating', Operator::BETWEEN, 'not a range'));
+
+        [...$repository->findBy($criteria)];
+    })->throws(
+        InvalidArgumentException::class,
+        'Operator `between` expects a Honey\ODM\Core\Criteria\Range value, got `string`.',
+    );
 
     it('filters outside a geo radius', function () use ($repository, $ids) {
         $criteria = Criteria::create()

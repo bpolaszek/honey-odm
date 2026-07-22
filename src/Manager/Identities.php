@@ -6,16 +6,13 @@ namespace Honey\ODM\Core\Manager;
 
 use Honey\ODM\Core\Mapper\MappingContext;
 use Honey\ODM\Core\UnitOfWork\Changeset;
-use InvalidArgumentException;
 use IteratorAggregate;
 use SplObjectStorage;
-use Stringable;
 use Traversable;
 use WeakMap;
 use WeakReference;
 
-use function is_object;
-use function is_scalar;
+use function Honey\ODM\Core\id_to_array_key;
 
 /**
  * @internal
@@ -25,7 +22,7 @@ use function is_scalar;
 final class Identities implements IteratorAggregate
 {
     /**
-     * @var SplObjectStorage<object, mixed>
+     * @var SplObjectStorage<object, int|string>
      */
     private SplObjectStorage $storage;
 
@@ -35,12 +32,12 @@ final class Identities implements IteratorAggregate
     private WeakMap $rememberedStates;
 
     /**
-     * @var array<string, array<mixed, WeakReference<object>>>
+     * @var array<string, array<int|string, WeakReference<object>>>
      */
     private array $idsToObjects = [];
 
     /**
-     * @var WeakMap<object, mixed>
+     * @var WeakMap<object, int|string>
      */
     private WeakMap $objectsToIds;
 
@@ -124,12 +121,8 @@ final class Identities implements IteratorAggregate
         return $this->storage;
     }
 
-    private function resolveId(mixed $id): mixed
+    private function resolveId(mixed $id): int|string
     {
-        return match (true) {
-            is_scalar($id) => $id,
-            is_object($id) && $id instanceof Stringable => (string) $id,
-            default => throw new InvalidArgumentException('Id must be scalar or implement toString()'),
-        };
+        return id_to_array_key($id);
     }
 }

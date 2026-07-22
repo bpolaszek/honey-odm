@@ -9,7 +9,9 @@ use Honey\ODM\Core\Mapper\MappingContextInterface;
 use LogicException;
 use ReflectionNamedType;
 
+use function class_exists;
 use function is_object;
+use function is_string;
 use function ltrim;
 
 final class RelationTransformer implements PropertyTransformerInterface
@@ -31,7 +33,11 @@ final class RelationTransformer implements PropertyTransformerInterface
             $targetClass = ltrim($reflType->getName(), '?');
         }
 
-        return $context->objectManager->find($targetClass, $value); // @phpstan-ignore argument.templateType
+        if (!is_string($targetClass) || !class_exists($targetClass)) {
+            throw new LogicException('Invalid target class.'); // @codeCoverageIgnore
+        }
+
+        return $context->objectManager->find($targetClass, $value);
     }
 
     public function toDocument(
