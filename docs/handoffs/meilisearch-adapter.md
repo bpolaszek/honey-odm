@@ -3,8 +3,10 @@
 Target: `honey-odm/meilisearch`, `MeiliTransport::retrieveDocuments(AsDocument $classMetadata, Criteria $criteria)`.
 
 This document maps every node and operator of `Honey\ODM\Core\Criteria` onto Meilisearch's search API. It is written
-against core as of the 7-operator extension (`ENDS_WITH`, `HAS_ALL`, `EXISTS`, `IS_EMPTY`, `BETWEEN`,
-`WITHIN_GEO_RADIUS`, `WITHIN_GEO_BOUNDING_BOX`).
+against core as of the 19-operator enum, the `not*` / `outside*` shorthands and `Criteria::metadata()`.
+
+Everything marked *verified* was run against a live **Meilisearch 1.49** on a throwaway index; the rest is read from
+the docs and deserves an integration test.
 
 Reference implementation of the same contract, in memory:
 `src/Transport/InMemoryTransport.php` in this repository.
@@ -84,8 +86,8 @@ equivalent.
 | `IN`                       | `field IN [a, b]`                                   | |
 | `NOT_IN`                   | `field NOT IN [a, b]`                               | |
 | `HAS_ALL`                  | `(field = a AND field = b)`                         | see below |
-| `CONTAINS`                 | `field CONTAINS substring`                          | version-gated, see below |
-| `STARTS_WITH`              | `field STARTS WITH prefix`                          | version-gated, see below |
+| `CONTAINS`                 | `field CONTAINS substring`                          | behind an experimental flag, see below |
+| `STARTS_WITH`              | `field STARTS WITH prefix`                          | no flag needed |
 | `ENDS_WITH`                | ❌                                                   | **throw** `::operator()` — no suffix filter exists |
 | `IS_NULL`                  | `field IS NULL`                                     | |
 | `IS_NOT_NULL`              | `field IS NOT NULL`                                 | |
@@ -117,14 +119,23 @@ On a scalar attribute, `HAS_ALL` with more than one value can never match — th
 
 ### `CONTAINS` / `STARTS_WITH`
 
-These arrived in Meilisearch 1.12 behind the `containsFilter` experimental feature flag. **Verify against the version
-you target**: if the flag is off, the engine returns an error the adapter cannot recover from. Two defensible options —
-pick one and document it:
+Both arrived in Meilisearch 1.12, but they are **not** gated the same way — checked against 1.49:
 
-- always emit them, and let the engine's error surface
-- expose an adapter-level switch, and throw `UnsupportedExpressionException::operator()` when disabled
+- `STARTS WITH` works out of the box.
+- `CONTAINS` requires the `contains filter` experimental feature. Without it, the engine answers:
 
-The second is friendlier: the failure names the operator instead of surfacing an opaque 400.
+  ```
+  code:    feature_not_enabled
+  message: Using `CONTAINS` in a filter requires enabling the `contains filter` experimental feature.
+           See https://github.com/orgs/meilisearch/discussions/7636
+  ```
+
+**Decision: always emit them, and let the engine's error surface.** No adapter-level switch — it would be a copy of
+the instance's configuration, and a copy drifts. The engine is the authority on what it supports, and the error above
+points at the actual fix (enable the feature) better than an `UnsupportedExpressionException` naming an operator that
+*is* supported, one setting away.
+
+Worth a line in the adapter's README so the error isn't a surprise.
 
 ### Geo
 
@@ -156,12 +167,27 @@ sprintf(
 );
 ```
 
-**Open question for the implementer:** a box crossing the antimeridian is legal in core — it is signalled by
-`southWest->longitude > northEast->longitude`, and `InMemoryTransport` handles it by testing
-`lng >= west || lng <= east`. Confirm how Meilisearch behaves on such a box against your target version. If it does
-not support the wrap, the two correct options are to split it into two OR'd boxes (`[west, 180]` and `[-180, east]`),
-or to throw `UnsupportedExpressionException::feature('antimeridian-crossing bounding box')`. Do not let it through
-untested — the failure mode is silently empty results.
+**Antimeridian: nothing to do.** A box crossing it is legal in core — signalled by
+`southWest->longitude > northEast->longitude`, which `InMemoryTransport` handles by testing `lng >= west || lng <= east`
+instead of `&&`. Meilisearch does the same natively, verified against 1.49 on four documents:
+
+| filter                                    | returns                |
+|-------------------------------------------|------------------------|
+| `_geoBoundingBox([0, 178], [-20, 170])`   | Fiji (177)             |
+| `_geoBoundingBox([0, -170], [-20, 170])`  | Fiji, Funafuti (179.19), Samoa (-172.1) |
+
+So the corner swap above is the whole implementation — no splitting into two OR'd boxes, no
+`UnsupportedExpressionException`.
+
+**Bonus: forgetting the swap fails loudly**, which is the good news here. Passing the corners in core order gives:
+
+```
+code:    invalid_search_filter
+message: The top latitude `-20` is below the bottom latitude `0`.
+```
+
+An integration test on a real index will catch a missing flip immediately — it does not silently return the wrong
+set.
 
 ## Escaping
 
