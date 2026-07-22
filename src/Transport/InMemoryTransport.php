@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Honey\ODM\Core\Tests\Implementation\Transport;
+namespace Honey\ODM\Core\Transport;
 
 use Honey\ODM\Core\Config\AsDocument;
 use Honey\ODM\Core\Criteria\Comparison;
@@ -17,7 +17,6 @@ use Honey\ODM\Core\Criteria\Operator;
 use Honey\ODM\Core\Criteria\Range;
 use Honey\ODM\Core\Criteria\UnsupportedExpressionException;
 use Honey\ODM\Core\Mapper\MappingContext;
-use Honey\ODM\Core\Transport\TransportInterface;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
 use SortDirection;
 
@@ -44,15 +43,20 @@ use function usort;
 
 /**
  * In-memory reference implementation of a Honey ODM transport.
+ *
+ * Supports the whole criteria API, and is meant to be used as-is for integration tests running
+ * without a database - or as an executable specification when writing a real transport.
  */
-final class TestTransport implements TransportInterface
+final class InMemoryTransport implements TransportInterface
 {
     /**
      * @var array<string, mixed>
      */
-    private(set) array $passedFlushOptions = [];
+    public private(set) array $passedFlushOptions = [];
 
     /**
+     * Documents, indexed by collection then by id. Writable, so that fixtures can be seeded directly.
+     *
      * @var array<string, array<int|string, array<string, mixed>>>
      */
     public array $storage = [];
@@ -178,23 +182,23 @@ final class TestTransport implements TransportInterface
             Operator::IN => self::holdsAny($value, (array) $comparison->value),
             Operator::NOT_IN => !self::holdsAny($value, (array) $comparison->value),
             Operator::HAS_ALL => self::holdsAll($value, (array) $comparison->value),
-            Operator::CONTAINS => is_string($value) && str_contains($value, (string) $comparison->value), // @phpstan-ignore cast.string
-            Operator::STARTS_WITH => is_string($value) && str_starts_with($value, (string) $comparison->value), // @phpstan-ignore cast.string
-            Operator::ENDS_WITH => is_string($value) && str_ends_with($value, (string) $comparison->value), // @phpstan-ignore cast.string
+            Operator::CONTAINS => is_string($value) && str_contains($value, (string) $comparison->value),
+            Operator::STARTS_WITH => is_string($value) && str_starts_with($value, (string) $comparison->value),
+            Operator::ENDS_WITH => is_string($value) && str_ends_with($value, (string) $comparison->value),
             Operator::IS_NULL => null === $value,
             Operator::IS_NOT_NULL => null !== $value,
             Operator::IS_EMPTY => null === $value || '' === $value || [] === $value,
-            Operator::BETWEEN => self::within($value, $comparison->value), // @phpstan-ignore argument.type
-            Operator::WITHIN_GEO_RADIUS => self::withinRadius($value, $comparison->value), // @phpstan-ignore argument.type
-            Operator::WITHIN_GEO_BOUNDING_BOX => self::withinBoundingBox($value, $comparison->value), // @phpstan-ignore argument.type
-            Operator::EXISTS => true, // Unreachable - handled above
+            Operator::BETWEEN => self::within($value, $comparison->value),
+            Operator::WITHIN_GEO_RADIUS => self::withinRadius($value, $comparison->value),
+            // `Operator::EXISTS` is deliberately absent: it returned above.
+            Operator::WITHIN_GEO_BOUNDING_BOX => self::withinBoundingBox($value, $comparison->value),
         };
     }
 
     /**
      * On an array field, matches when at least one of the given values is held.
      *
-     * @param list<mixed> $values
+     * @param array<mixed> $values
      */
     private static function holdsAny(mixed $value, array $values): bool
     {
@@ -207,7 +211,7 @@ final class TestTransport implements TransportInterface
     /**
      * On an array field, matches when every given value is held.
      *
-     * @param list<mixed> $values
+     * @param array<mixed> $values
      */
     private static function holdsAll(mixed $value, array $values): bool
     {
@@ -287,7 +291,7 @@ final class TestTransport implements TransportInterface
             return null;
         }
 
-        return [(float) $value['lat'], (float) $value['lng']]; // @phpstan-ignore cast.double, cast.double
+        return [(float) $value['lat'], (float) $value['lng']];
     }
 
     /**

@@ -45,6 +45,27 @@ describe('Field', function () {
         'isEmpty' => ['isEmpty', [], Operator::IS_EMPTY, null],
     ]);
 
+    it('builds negations of the comparisons they mirror', function (string $method, string $mirrored, array $arguments) {
+        $negation = field('foo')->{$method}(...$arguments);
+
+        expect($negation)->toBeInstanceOf(Negation::class)
+            ->and($negation->expression)->toEqual(field('foo')->{$mirrored}(...$arguments));
+    })->with([
+        'notContains' => ['notContains', 'contains', ['bar']],
+        'notStartsWith' => ['notStartsWith', 'startsWith', ['bar']],
+        'notEndsWith' => ['notEndsWith', 'endsWith', ['bar']],
+        'notHasAll' => ['notHasAll', 'hasAll', [['a', 'b']]],
+        'notExists' => ['notExists', 'exists', []],
+        'isNotEmpty' => ['isNotEmpty', 'isEmpty', []],
+        'notBetween' => ['notBetween', 'between', [10, 100, true, false]],
+        'outsideGeoRadius' => ['outsideGeoRadius', 'withinGeoRadius', [48.8566, 2.3522, 5000.0]],
+        'outsideGeoBoundingBox' => [
+            'outsideGeoBoundingBox',
+            'withinGeoBoundingBox',
+            [48.80, 2.22, 48.90, 2.47],
+        ],
+    ]);
+
     it('builds a range comparison', function () {
         $comparison = field('price')->between(10, 100, includeRight: false);
 

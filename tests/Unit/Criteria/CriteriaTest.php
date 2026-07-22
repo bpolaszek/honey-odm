@@ -22,7 +22,16 @@ describe('Criteria', function () {
             ->and($criteria->orderBy)->toBe([])
             ->and($criteria->search)->toBeNull()
             ->and($criteria->limit)->toBeNull()
-            ->and($criteria->offset)->toBe(0);
+            ->and($criteria->offset)->toBe(0)
+            ->and($criteria->metadata)->toBe([]);
+    });
+
+    it('carries arbitrary platform-specific metadata', function () {
+        $criteria = Criteria::create()
+            ->metadata('vector', [0.1, 0.2])
+            ->metadata('semanticRatio', 0.9);
+
+        expect($criteria->metadata)->toBe(['vector' => [0.1, 0.2], 'semanticRatio' => 0.9]);
     });
 
     it('stores a search term', function () {

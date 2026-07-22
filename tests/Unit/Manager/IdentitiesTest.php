@@ -11,7 +11,7 @@ use Honey\ODM\Core\Config\ClassMetadataRegistry;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
 use Honey\ODM\Core\Mapper\DocumentMapper;
-use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
+use Honey\ODM\Core\Transport\InMemoryTransport;
 use Honey\ODM\Core\UnitOfWork\Changeset;
 use Symfony\Component\Uid\Ulid;
 
@@ -22,7 +22,7 @@ describe('Identities', function () {
     it('attaches an object', function () {
         // Given
         $objectManager = new ObjectManager(
-            new TestTransport(),
+            new InMemoryTransport(),
             new ClassMetadataRegistry(),
             new DocumentMapper(),
             new TestEventDispatcher(),
@@ -40,7 +40,7 @@ describe('Identities', function () {
     it('detaches an object', function () {
         // Given
         $objectManager = new ObjectManager(
-            new TestTransport(),
+            new InMemoryTransport(),
             new ClassMetadataRegistry(),
             new DocumentMapper(),
             new TestEventDispatcher(),
@@ -59,7 +59,7 @@ describe('Identities', function () {
     it('checks if it contains an object', function () {
         // Given
         $objectManager = new ObjectManager(
-            new TestTransport(),
+            new InMemoryTransport(),
             new ClassMetadataRegistry(),
             new DocumentMapper(),
             new TestEventDispatcher(),
@@ -79,7 +79,7 @@ describe('Identities', function () {
     it('remembers the state of an object', function () {
         // Given
         $objectManager = new ObjectManager(
-            new TestTransport(),
+            new InMemoryTransport(),
             new ClassMetadataRegistry(),
             new DocumentMapper(),
             new TestEventDispatcher(),
@@ -99,7 +99,7 @@ describe('Identities', function () {
     it('forgets the state of an object', function () {
         // Given
         $objectManager = new ObjectManager(
-            new TestTransport(),
+            new InMemoryTransport(),
             new ClassMetadataRegistry(),
             new DocumentMapper(),
             new TestEventDispatcher(),
@@ -120,7 +120,7 @@ describe('Identities', function () {
     it('iterates over attached objects', function () {
         // Given
         $objectManager = new ObjectManager(
-            new TestTransport(),
+            new InMemoryTransport(),
             new ClassMetadataRegistry(),
             new DocumentMapper(),
             new TestEventDispatcher(),
@@ -147,7 +147,7 @@ describe('Identities', function () {
     it('computes the changeset of an object', function () {
         // Given
         $objectManager = new ObjectManager(
-            new TestTransport(),
+            new InMemoryTransport(),
             new ClassMetadataRegistry(),
             new DocumentMapper(),
             new TestEventDispatcher(),
@@ -182,7 +182,7 @@ describe('Identities', function () {
             }
         };
         $objectManager = new ObjectManager(
-            new TestTransport(),
+            new InMemoryTransport(),
             new ClassMetadataRegistry(configurations: [
                 $document::class => new AsDocument('foo')
             ]),

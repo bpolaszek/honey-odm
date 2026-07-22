@@ -30,6 +30,13 @@ final class Criteria
      */
     public private(set) int $offset = 0;
 
+    /**
+     * Platform-specific criteria (vectors, images, ...), for implementations to handle or ignore.
+     *
+     * @var array<string, mixed>
+     */
+    public private(set) array $metadata = [];
+
     public static function create(): self
     {
         return new self();
@@ -131,6 +138,16 @@ final class Criteria
     public function offset(int $offset): self
     {
         $this->offset = $offset;
+
+        return $this;
+    }
+
+    /**
+     * Attaches a platform-specific criterion. Implementations that don't know the key ignore it.
+     */
+    public function metadata(string $key, mixed $value): self
+    {
+        $this->metadata[$key] = $value;
 
         return $this;
     }

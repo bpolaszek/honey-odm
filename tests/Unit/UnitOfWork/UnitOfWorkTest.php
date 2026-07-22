@@ -10,7 +10,7 @@ use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
 use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Mapper\DocumentMapper;
-use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
+use Honey\ODM\Core\Transport\InMemoryTransport;
 use Honey\ODM\Core\UnitOfWork\UnitOfWork;
 
 use function iterator_to_array;
@@ -20,7 +20,7 @@ describe('UnitOfWork', function () {
         // Given
         $registry = new ClassMetadataRegistry();
         $mapper = new DocumentMapper();
-        $transport = new TestTransport();
+        $transport = new InMemoryTransport();
         $eventDispatcher = new TestEventDispatcher();
         $objectManager = new ObjectManager(
             classMetadataRegistry: $registry,
@@ -48,7 +48,7 @@ describe('UnitOfWork', function () {
         // Given
         $registry = new ClassMetadataRegistry();
         $mapper = new DocumentMapper();
-        $transport = new TestTransport();
+        $transport = new InMemoryTransport();
         $eventDispatcher = new TestEventDispatcher();
         $objectManager = new ObjectManager(
             classMetadataRegistry: $registry,
@@ -76,7 +76,7 @@ describe('UnitOfWork', function () {
         // Given
         $registry = new ClassMetadataRegistry();
         $mapper = new DocumentMapper();
-        $transport = new TestTransport();
+        $transport = new InMemoryTransport();
         $eventDispatcher = new TestEventDispatcher();
         $objectManager = new ObjectManager(
             classMetadataRegistry: $registry,
@@ -103,7 +103,7 @@ describe('UnitOfWork', function () {
         // Given
         $registry = new ClassMetadataRegistry();
         $mapper = new DocumentMapper();
-        $transport = new TestTransport();
+        $transport = new InMemoryTransport();
         $eventDispatcher = new TestEventDispatcher();
         $objectManager = new ObjectManager(
             classMetadataRegistry: $registry,
@@ -130,7 +130,7 @@ describe('UnitOfWork', function () {
         // Given
         $registry = new ClassMetadataRegistry();
         $mapper = new DocumentMapper();
-        $transport = new TestTransport();
+        $transport = new InMemoryTransport();
         $eventDispatcher = new TestEventDispatcher();
         $objectManager = new ObjectManager(
             classMetadataRegistry: $registry,
@@ -160,7 +160,7 @@ describe('UnitOfWork', function () {
         // Given
         $registry = new ClassMetadataRegistry();
         $mapper = new DocumentMapper();
-        $transport = new TestTransport();
+        $transport = new InMemoryTransport();
         $eventDispatcher = new TestEventDispatcher();
         $objectManager = new ObjectManager(
             classMetadataRegistry: $registry,
@@ -197,7 +197,7 @@ describe('UnitOfWork', function () {
         // Given
         $registry = new ClassMetadataRegistry();
         $mapper = new DocumentMapper();
-        $transport = new TestTransport();
+        $transport = new InMemoryTransport();
         $eventDispatcher = new TestEventDispatcher();
         $objectManager = new ObjectManager(
             classMetadataRegistry: $registry,

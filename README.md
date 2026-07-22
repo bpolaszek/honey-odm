@@ -23,6 +23,7 @@ goes through a generic, compilable criteria model.
 - **Event system**: full lifecycle events (pre/post persist, update, remove, load)
 - **Identity management**: objects are tracked, deduplicated, and lazily hydrated
 - **Unit of Work**: change tracking and batched insert / update / delete operations
+- **In-memory transport**: run your integration tests against the full API, without a database
 
 ## Requirements
 
@@ -193,32 +194,34 @@ The expression tree is built from three node types, all implementing `Expression
 
 Available operators (`Honey\ODM\Core\Criteria\Operator`):
 
-| `Field` method                                                | Operator                   |
-|---------------------------------------------------------------|----------------------------|
-| `equals($value)`                                              | `EQUALS`                   |
-| `notEquals($value)`                                           | `NOT_EQUALS`               |
-| `greaterThan($value)`                                         | `GREATER_THAN`             |
-| `greaterThanOrEquals($value)`                                 | `GREATER_THAN_OR_EQUALS`   |
-| `lessThan($value)`                                            | `LESS_THAN`                |
-| `lessThanOrEquals($value)`                                    | `LESS_THAN_OR_EQUALS`      |
-| `between($left, $right, $includeLeft = true, $includeRight = true)` | `BETWEEN`            |
-| `in(array $values)`                                           | `IN`                       |
-| `notIn(array $values)`                                        | `NOT_IN`                   |
-| `hasAll(array $values)`                                       | `HAS_ALL`                  |
-| `contains(string $value)`                                     | `CONTAINS`                 |
-| `startsWith(string $value)`                                   | `STARTS_WITH`              |
-| `endsWith(string $value)`                                     | `ENDS_WITH`                |
-| `isNull()`                                                    | `IS_NULL`                  |
-| `isNotNull()`                                                 | `IS_NOT_NULL`              |
-| `exists()`                                                    | `EXISTS`                   |
-| `isEmpty()`                                                   | `IS_EMPTY`                 |
-| `withinGeoRadius($lat, $lon, $meters)`                        | `WITHIN_GEO_RADIUS`        |
-| `withinGeoBoundingBox($swLat, $swLon, $neLat, $neLon)`        | `WITHIN_GEO_BOUNDING_BOX`  |
+| `Field` method                                                      | Operator                   | Opposite                    |
+|---------------------------------------------------------------------|----------------------------|-----------------------------|
+| `equals($value)`                                                    | `EQUALS`                   | `notEquals($value)` *       |
+| `greaterThan($value)`                                               | `GREATER_THAN`             | —                           |
+| `greaterThanOrEquals($value)`                                       | `GREATER_THAN_OR_EQUALS`   | —                           |
+| `lessThan($value)`                                                  | `LESS_THAN`                | —                           |
+| `lessThanOrEquals($value)`                                          | `LESS_THAN_OR_EQUALS`      | —                           |
+| `between($left, $right, $includeLeft = true, $includeRight = true)` | `BETWEEN`                  | `notBetween(...)`           |
+| `in(array $values)`                                                 | `IN`                       | `notIn(array $values)` *    |
+| `hasAll(array $values)`                                             | `HAS_ALL`                  | `notHasAll(array $values)`  |
+| `contains(string $value)`                                           | `CONTAINS`                 | `notContains($value)`       |
+| `startsWith(string $value)`                                         | `STARTS_WITH`              | `notStartsWith($value)`     |
+| `endsWith(string $value)`                                           | `ENDS_WITH`                | `notEndsWith($value)`       |
+| `isNull()`                                                          | `IS_NULL`                  | `isNotNull()` *             |
+| `exists()`                                                          | `EXISTS`                   | `notExists()`               |
+| `isEmpty()`                                                         | `IS_EMPTY`                 | `isNotEmpty()`              |
+| `withinGeoRadius($lat, $lon, $meters)`                              | `WITHIN_GEO_RADIUS`        | `outsideGeoRadius(...)`     |
+| `withinGeoBoundingBox($swLat, $swLon, $neLat, $neLon)`              | `WITHIN_GEO_BOUNDING_BOX`  | `outsideGeoBoundingBox(...)`|
 
 `search()` is a full-text search term, only meaningful on search-capable platforms.
 
-There are no negative variants of `exists()`, `isEmpty()`, `contains()`, `startsWith()` and `endsWith()` — wrap them in
-`not()`.
+Only the three starred methods are operators of their own (`NOT_EQUALS`, `NOT_IN`, `IS_NOT_NULL`), because every
+platform spells them natively. All the other `not*` / `outside*` methods return a `Negation` wrapping their positive
+counterpart — `field('name')->notContains('draft')` is exactly `not(field('name')->contains('draft'))`. Transports get
+them for free, and adapter authors have nothing to implement beyond `Negation` itself.
+
+⚠️ A negation is *not* the mirror of its operator on absent values: `notBetween(10, 100)` and `outsideGeoRadius(...)`
+match documents holding no value at all, since those don't match the positive form either.
 
 > `Criteria` is mutable and fluent: `where()` replaces the current filter, `andWhere()` / `orWhere()` combine with it.
 > Clone it if you want to derive several queries from a common base.
@@ -258,6 +261,16 @@ field('tags')->in(['monument', 'paris']);       // tagged monument OR paris
 field('tags')->hasAll(['monument', 'paris']);   // tagged monument AND paris
 ```
 
+Their opposites are easy to mix up, so here they are side by side:
+
+| `tags`             | `in([a, b])` | `notIn([a, b])` | `hasAll([a, b])` | `notHasAll([a, b])` |
+|--------------------|--------------|-----------------|------------------|---------------------|
+| `['a', 'b']`       | ✅            | ❌               | ✅                | ❌                   |
+| `['a']`            | ✅            | ❌               | ❌                | ✅                   |
+| `['c']`            | ❌            | ✅               | ❌                | ✅                   |
+
+`notIn()` means *none of them*; `notHasAll()` means *not all of them*.
+
 `contains()` / `startsWith()` / `endsWith()` are substring operators on **string** fields — don't confuse
 `contains('paris')` with `hasAll(['paris'])`.
 
@@ -293,6 +306,21 @@ Holding a pre-built value object? Use the node directly:
 ```php
 new Comparison('coordinates', Operator::WITHIN_GEO_RADIUS, $radius);
 ```
+
+### Platform-specific criteria
+
+Some queries have no portable form at all: vector search, image similarity, a matching strategy… Rather than forcing
+you to subclass `Criteria`, it carries a free-form `metadata` bag that transports read at will:
+
+```php
+$criteria = Criteria::create()
+    ->search('a bee on a flower')
+    ->metadata('vector', $embedding)
+    ->metadata('semanticRatio', 0.9);
+```
+
+A transport that knows the key uses it; one that doesn't **ignores it silently** — this is opt-in, so unlike an
+unsupported operator it never throws. Keys are yours; prefix them if you target several platforms at once.
 
 ### Capability mismatches
 
@@ -462,6 +490,39 @@ $objectManager = new ObjectManager(
 
 `PropertyTransformers` is a PSR-11 container keyed by class name — any other PSR-11 container will do.
 
+## Testing without a database
+
+`InMemoryTransport` is a complete transport backed by a plain array. Swap it in and your tests exercise the real
+object manager — mapping, transformers, identity map, unit of work, events — with no service to boot:
+
+```php
+use Honey\ODM\Core\Manager\ObjectManager;
+use Honey\ODM\Core\Transport\InMemoryTransport;
+
+$transport = new InMemoryTransport();
+$objectManager = new ObjectManager($transport);
+
+$objectManager->persist(new Book('123', 'The Great Gatsby'));
+$objectManager->flush();
+
+$books = $objectManager->getRepository(Book::class)->findBy(
+    Criteria::create()->where(field('name')->contains('Gatsby')),
+);
+```
+
+Its `$storage` property is public, so fixtures can be seeded without going through a flush — documents are indexed by
+collection, then by id:
+
+```php
+$transport->storage['books'] = [
+    '123' => ['id' => '123', 'title' => 'The Great Gatsby', 'author_id' => 1],
+];
+```
+
+It supports **every** operator of the criteria API, which also makes it the executable specification of what a
+transport is supposed to do. Its filtering is naive (it walks the whole collection in PHP) — it's built for
+correctness in tests, not for volume.
+
 ## Building your own ODM
 
 Since metadata, mapping, criteria, repositories and the object manager are all provided by the core, an implementation
@@ -499,8 +560,8 @@ Important:
   `UnsupportedExpressionException` for anything your platform can't express.
 - In `flushPendingOperations()`, read the Unit of Work for scheduled operations and perform them.
 
-`tests/Implementation/Transport/TestTransport.php` is a complete in-memory reference implementation (filters, negation,
-composite expressions, multi-key sorting, pagination, search) — a good starting point for adapter authors.
+`src/Transport/InMemoryTransport.php` is a complete reference implementation (filters, negation, composite
+expressions, multi-key sorting, pagination, search) — a good starting point for adapter authors.
 
 ### 2. Flushing pending operations
 
@@ -607,7 +668,7 @@ The library uses Pest for testing. Tests are located in the `tests/` directory:
 
 - `tests/Unit/` - Unit tests
 - `tests/Behavior/` - Behavioral tests
-- `tests/Implementation/` - Example implementation (great for understanding usage patterns)
+- `tests/Implementation/` - Example documents and services (great for understanding usage patterns)
 
 Run the full test suite:
 ```bash

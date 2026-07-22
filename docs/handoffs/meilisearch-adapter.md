@@ -7,7 +7,7 @@ against core as of the 7-operator extension (`ENDS_WITH`, `HAS_ALL`, `EXISTS`, `
 `WITHIN_GEO_RADIUS`, `WITHIN_GEO_BOUNDING_BOX`).
 
 Reference implementation of the same contract, in memory:
-`tests/Implementation/Transport/TestTransport.php` in this repository.
+`src/Transport/InMemoryTransport.php` in this repository.
 
 ## Ground rules
 
@@ -31,9 +31,21 @@ Reference implementation of the same contract, in memory:
 | `orderBy`      | `sort`, as `["field:asc", "other:desc"]`                                 |
 | `limit`        | `limit`                                                                 |
 | `offset`       | `offset`                                                                |
+| `metadata`     | opt-in passthrough, see below                                           |
 
 `SortDirection::Ascending` → `asc`, `SortDirection::Descending` → `desc`. Sorted attributes must be declared in
 `sortableAttributes`.
+
+### `metadata`
+
+`Criteria::metadata(string $key, mixed $value)` is a free-form bag for what the portable API cannot express. It is the
+natural home for Meilisearch's own search parameters — `vector`, `hybrid`, `matchingStrategy`,
+`attributesToHighlight`, `distinct`… Pick the keys you support, forward them, and **ignore the rest silently**: unlike
+an unsupported operator, an unknown metadata key must never throw, since the same criteria may be aimed at several
+platforms.
+
+Whatever you decide to support, document the exact key list in the adapter's README — it is the only part of the
+query API that isn't discoverable from the core.
 
 ## Nodes
 
@@ -47,6 +59,16 @@ Reference implementation of the same contract, in memory:
 
 Parenthesizing unconditionally is the safe move: `a AND b OR c` and `a AND (b OR c)` differ, and the AST is the only
 thing that knows which one the caller meant.
+
+`Negation` carries more weight than it looks: most of the `Field` shorthands (`notContains()`, `notExists()`,
+`isNotEmpty()`, `notBetween()`, `notHasAll()`, `outsideGeoRadius()`, `outsideGeoBoundingBox()`…) build one around
+their positive counterpart instead of introducing an operator. Get `NOT (…)` right and they all work — including
+`NOT (_geoRadius(…))`, which Meilisearch does support. Only `NOT_EQUALS`, `NOT_IN` and `IS_NOT_NULL` are operators of
+their own.
+
+Meilisearch also has native `field NOT EXISTS`, `field IS NOT EMPTY` and `field IS NOT NULL` forms. Folding
+`Negation(Comparison(EXISTS))` into them is a legitimate optimisation, not a requirement — plain `NOT (…)` is
+equivalent.
 
 ## Operators
 
@@ -135,7 +157,7 @@ sprintf(
 ```
 
 **Open question for the implementer:** a box crossing the antimeridian is legal in core — it is signalled by
-`southWest->longitude > northEast->longitude`, and `TestTransport` handles it by testing
+`southWest->longitude > northEast->longitude`, and `InMemoryTransport` handles it by testing
 `lng >= west || lng <= east`. Confirm how Meilisearch behaves on such a box against your target version. If it does
 not support the wrap, the two correct options are to split it into two OR'd boxes (`[west, 180]` and `[-180, east]`),
 or to throw `UnsupportedExpressionException::feature('antimeridian-crossing bounding box')`. Do not let it through

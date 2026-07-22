@@ -15,7 +15,7 @@ use Honey\ODM\Core\Mapper\DocumentMapper;
 use Honey\ODM\Core\Repository\ObjectRepository;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
-use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
+use Honey\ODM\Core\Transport\InMemoryTransport;
 
 use function array_slice;
 use function expect;
@@ -23,7 +23,7 @@ use function it;
 
 describe('ObjectManager', function () {
     describe('Object Factory', function () {
-        $transport = new TestTransport();
+        $transport = new InMemoryTransport();
         $objectManager = new ObjectManager(transport: $transport);
         $object = null;
         it('instantiates an object from a document', function () use ($objectManager, &$object) {
@@ -62,7 +62,7 @@ describe('ObjectManager', function () {
     });
 
     describe('Basic Operations', function () {
-        $transport = new TestTransport();
+        $transport = new InMemoryTransport();
         $objectManager = new ObjectManager(transport: $transport);
 
         $objects = [
@@ -165,7 +165,7 @@ describe('ObjectManager', function () {
     describe('Events', function () {
         it("won't fire a PrePersistEvent on an object not supposed to be persisted", function () {
             $method = Reflection::method(ObjectManager::class, 'firePrePersistEvent');
-            $transport = new TestTransport();
+            $transport = new InMemoryTransport();
             $eventDispatcher = new TestEventDispatcher();
             $objectManager = new ObjectManager(eventDispatcher: $eventDispatcher, transport: $transport);
             $object = new TestDocument(1, 'Test Name 1');
@@ -184,7 +184,7 @@ describe('ObjectManager', function () {
 
         it("won't fire a PreUpdateEvent on an object not supposed to be persisted", function () {
             $method = Reflection::method(ObjectManager::class, 'firePreUpdateEvent');
-            $transport = new TestTransport();
+            $transport = new InMemoryTransport();
             $eventDispatcher = new TestEventDispatcher();
             $objectManager = new ObjectManager(eventDispatcher: $eventDispatcher, transport: $transport);
             $object = new TestDocument(1, 'Test Name 1');
@@ -199,7 +199,7 @@ describe('ObjectManager', function () {
 
         it("won't fire a PreUpdateEvent twice on the same object during the same flush session", function () {
             $method = Reflection::method(ObjectManager::class, 'firePreUpdateEvent');
-            $transport = new TestTransport();
+            $transport = new InMemoryTransport();
             $eventDispatcher = new TestEventDispatcher();
             $objectManager = new ObjectManager(eventDispatcher: $eventDispatcher, transport: $transport);
             $object = new TestDocument(1, 'Test Name 1');
@@ -219,7 +219,7 @@ describe('ObjectManager', function () {
 
         it("won't fire a PreRemoveEvent on an object not supposed to be removed", function () {
             $method = Reflection::method(ObjectManager::class, 'firePreRemoveEvent');
-            $transport = new TestTransport();
+            $transport = new InMemoryTransport();
             $eventDispatcher = new TestEventDispatcher();
             $objectManager = new ObjectManager(eventDispatcher: $eventDispatcher, transport: $transport);
             $object = new TestDocument(1, 'Test Name 1');
@@ -238,7 +238,7 @@ describe('ObjectManager', function () {
 
         it("won't fire a PreRemoveEvent twice on the same object during the same flush session", function () {
             $method = Reflection::method(ObjectManager::class, 'firePreRemoveEvent');
-            $transport = new TestTransport();
+            $transport = new InMemoryTransport();
             $eventDispatcher = new TestEventDispatcher();
             $objectManager = new ObjectManager(eventDispatcher: $eventDispatcher, transport: $transport);
             $object = new TestDocument(1, 'Test Name 1');
@@ -255,7 +255,7 @@ describe('ObjectManager', function () {
 
     describe('Repositories', function () {
         $objectManager = new ObjectManager(
-            new TestTransport(),
+            new InMemoryTransport(),
             new ClassMetadataRegistry(),
             new DocumentMapper(),
             new TestEventDispatcher(),
@@ -280,7 +280,7 @@ describe('ObjectManager', function () {
         it('uses the provided repository factory', function () {
             $repositories = new \ArrayObject();
             $objectManager = new ObjectManager(
-                transport: new TestTransport(),
+                transport: new InMemoryTransport(),
                 repositoryFactory: function (ObjectManager $objectManager, string $className) use ($repositories) {
                     return $repositories[$className] = new ObjectRepository($objectManager, $className);
                 },
@@ -293,14 +293,14 @@ describe('ObjectManager', function () {
 
     describe('Misc', function () {
         it('can retrieve class metadata from a class name', function () {
-            $objectManager = new ObjectManager(new TestTransport());
+            $objectManager = new ObjectManager(new InMemoryTransport());
             $metadata = $objectManager->getClassMetadata(TestDocument::class);
             expect($metadata)->toBeInstanceOf(AsDocument::class)
                 ->and($metadata->className)->toBe(TestDocument::class)
             ;
         });
         it('can retrieve class metadata from an object', function () {
-            $objectManager = new ObjectManager(new TestTransport());
+            $objectManager = new ObjectManager(new InMemoryTransport());
             $metadata = $objectManager->getClassMetadata(new TestDocument(42, 'foo'));
             expect($metadata)->toBeInstanceOf(AsDocument::class)
                 ->and($metadata->className)->toBe(TestDocument::class)

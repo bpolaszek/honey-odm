@@ -16,7 +16,7 @@ use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestIntStatus;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestStringStatus;
 use Honey\ODM\Core\Mapper\DocumentMapper;
-use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
+use Honey\ODM\Core\Transport\InMemoryTransport;
 use LogicException;
 use ReflectionProperty;
 
@@ -24,7 +24,7 @@ it('returns null when input is null', function () {
     $transformer = new BackedEnumTransformer();
     $metadata = new AsField();
     $objectManager = new ObjectManager(
-        new TestTransport(),
+        new InMemoryTransport(),
         new ClassMetadataRegistry(),
         new DocumentMapper(),
         new TestEventDispatcher(),
@@ -48,7 +48,7 @@ it('uses options[target_class] to hydrate enum from document value (string-backe
         ],
     ));
     $objectManager = new ObjectManager(
-        new TestTransport(),
+        new InMemoryTransport(),
         new ClassMetadataRegistry(),
         new DocumentMapper(),
         new TestEventDispatcher(),
@@ -72,7 +72,7 @@ it('uses options[target_class] to hydrate enum from document value (int-backed) 
         ],
     ));
     $objectManager = new ObjectManager(
-        new TestTransport(),
+        new InMemoryTransport(),
         new ClassMetadataRegistry(),
         new DocumentMapper(),
         new TestEventDispatcher(),
@@ -100,7 +100,7 @@ it('toDocument returns underlying scalar value for string-backed enums', functio
         ],
     ));
     $objectManager = new ObjectManager(
-        new TestTransport(),
+        new InMemoryTransport(),
         new ClassMetadataRegistry(),
         new DocumentMapper(),
         new TestEventDispatcher(),
@@ -122,7 +122,7 @@ it('infers target class from property reflection when no options provided', func
     );
 
     $objectManager = new ObjectManager(
-        new TestTransport(),
+        new InMemoryTransport(),
         new ClassMetadataRegistry(),
         new DocumentMapper(),
         new TestEventDispatcher(),
@@ -145,7 +145,7 @@ it('throws if it cannot infer a valid target class', function () {
     Reflection::property($metadata, 'reflection')->setValue($metadata, new ReflectionProperty($anonymous, 'value'));
 
     $objectManager = new ObjectManager(
-        new TestTransport(),
+        new InMemoryTransport(),
         new ClassMetadataRegistry(),
         new DocumentMapper(),
         new TestEventDispatcher(),

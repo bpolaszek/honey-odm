@@ -69,14 +69,29 @@ final readonly class Field
         return new Comparison($this->property, Operator::CONTAINS, $value);
     }
 
+    public function notContains(string $value): Negation
+    {
+        return not($this->contains($value));
+    }
+
     public function startsWith(string $value): Comparison
     {
         return new Comparison($this->property, Operator::STARTS_WITH, $value);
     }
 
+    public function notStartsWith(string $value): Negation
+    {
+        return not($this->startsWith($value));
+    }
+
     public function endsWith(string $value): Comparison
     {
         return new Comparison($this->property, Operator::ENDS_WITH, $value);
+    }
+
+    public function notEndsWith(string $value): Negation
+    {
+        return not($this->endsWith($value));
     }
 
     /**
@@ -87,6 +102,17 @@ final readonly class Field
     public function hasAll(array $values): Comparison
     {
         return new Comparison($this->property, Operator::HAS_ALL, $values);
+    }
+
+    /**
+     * Matches when the field misses at least one of the given values. To match fields holding none of
+     * them, use `notIn()`.
+     *
+     * @param list<mixed> $values
+     */
+    public function notHasAll(array $values): Negation
+    {
+        return not($this->hasAll($values));
     }
 
     public function isNull(): Comparison
@@ -108,11 +134,24 @@ final readonly class Field
     }
 
     /**
+     * Matches when the field is absent from the document - as opposed to `isNull()`, which requires it.
+     */
+    public function notExists(): Negation
+    {
+        return not($this->exists());
+    }
+
+    /**
      * Matches when the field holds an empty value: null, an empty string, or an empty array / object.
      */
     public function isEmpty(): Comparison
     {
         return new Comparison($this->property, Operator::IS_EMPTY);
+    }
+
+    public function isNotEmpty(): Negation
+    {
+        return not($this->isEmpty());
     }
 
     /**
@@ -132,6 +171,18 @@ final readonly class Field
     }
 
     /**
+     * Matches values outside the given interval - including fields holding no value at all.
+     */
+    public function notBetween(
+        mixed $left,
+        mixed $right,
+        bool $includeLeft = true,
+        bool $includeRight = true,
+    ): Negation {
+        return not($this->between($left, $right, $includeLeft, $includeRight));
+    }
+
+    /**
      * Matches points located within $meters of the given center.
      */
     public function withinGeoRadius(float $latitude, float $longitude, float $meters): Comparison
@@ -141,6 +192,14 @@ final readonly class Field
             Operator::WITHIN_GEO_RADIUS,
             new Radius(new Coordinates($latitude, $longitude), $meters),
         );
+    }
+
+    /**
+     * Matches points located further than $meters from the given center - including unlocated ones.
+     */
+    public function outsideGeoRadius(float $latitude, float $longitude, float $meters): Negation
+    {
+        return not($this->withinGeoRadius($latitude, $longitude, $meters));
     }
 
     /**
@@ -160,5 +219,22 @@ final readonly class Field
                 new Coordinates($northEastLatitude, $northEastLongitude),
             ),
         );
+    }
+
+    /**
+     * Matches points located outside that box - including unlocated ones.
+     */
+    public function outsideGeoBoundingBox(
+        float $southWestLatitude,
+        float $southWestLongitude,
+        float $northEastLatitude,
+        float $northEastLongitude,
+    ): Negation {
+        return not($this->withinGeoBoundingBox(
+            $southWestLatitude,
+            $southWestLongitude,
+            $northEastLatitude,
+            $northEastLongitude,
+        ));
     }
 }

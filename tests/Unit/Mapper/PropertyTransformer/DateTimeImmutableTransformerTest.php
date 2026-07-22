@@ -15,13 +15,13 @@ use Honey\ODM\Core\Config\ClassMetadataRegistry;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
 use Honey\ODM\Core\Mapper\DocumentMapper;
-use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
+use Honey\ODM\Core\Transport\InMemoryTransport;
 
 it('returns null when input is null', function () {
     $transformer = new DateTimeImmutableTransformer();
     $metadata = new AsField();
     $objectManager = new ObjectManager(
-        new TestTransport(),
+        new InMemoryTransport(),
         new ClassMetadataRegistry(),
         new DocumentMapper(),
         new TestEventDispatcher(),
@@ -38,7 +38,7 @@ it('complains if value is not a DateTimeInterface instance', function () {
     $transformer = new DateTimeImmutableTransformer();
     $metadata = new AsField();
     $objectManager = new ObjectManager(
-        new TestTransport(),
+        new InMemoryTransport(),
         new ClassMetadataRegistry(),
         new DocumentMapper(),
         new TestEventDispatcher(),
@@ -61,7 +61,7 @@ it('uses options', function () {
         ],
     ));
     $objectManager = new ObjectManager(
-        new TestTransport(),
+        new InMemoryTransport(),
         new ClassMetadataRegistry(),
         new DocumentMapper(),
         new TestEventDispatcher(),
@@ -86,7 +86,7 @@ it('uses default options', function () {
         service: DateTimeImmutableTransformer::class,
     ));
     $objectManager = new ObjectManager(
-        new TestTransport(),
+        new InMemoryTransport(),
         new ClassMetadataRegistry(),
         new DocumentMapper(),
         new TestEventDispatcher(),

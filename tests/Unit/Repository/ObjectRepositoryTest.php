@@ -10,7 +10,7 @@ use Honey\ODM\Core\Criteria\UnsupportedExpressionException;
 use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestBook;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestPlace;
-use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
+use Honey\ODM\Core\Transport\InMemoryTransport;
 
 use function array_map;
 use function expect;
@@ -18,7 +18,7 @@ use function Honey\ODM\Core\Criteria\field;
 use function Honey\ODM\Core\Criteria\not;
 
 describe('ObjectRepository', function () {
-    $transport = new TestTransport();
+    $transport = new InMemoryTransport();
     $transport->storage['books'] = [
         'A' => ['id' => 'A', 'title' => 'The Tommyknockers', 'author_id' => 1],
         'B' => ['id' => 'B', 'title' => '1984', 'author_id' => 2],
@@ -107,7 +107,7 @@ describe('ObjectRepository', function () {
 });
 
 describe('ObjectRepository operators', function () {
-    $transport = new TestTransport();
+    $transport = new InMemoryTransport();
     $transport->storage['places'] = [
         'eiffel' => [
             'id' => 'eiffel',
@@ -195,6 +195,27 @@ describe('ObjectRepository operators', function () {
             ->toBe(['colosseum']);
     });
 
+    it('filters on a field missing at least one of the given values', function () use ($repository, $ids) {
+        $criteria = Criteria::create()->where(field('tags')->notHasAll(['monument', 'paris']));
+
+        expect($ids($repository->findBy($criteria)))->toBe(['louvre', 'colosseum', 'atoll']);
+    });
+
+    it('filters on non-emptiness', function () use ($repository, $ids) {
+        expect($ids($repository->findBy(Criteria::create()->where(field('summary')->isNotEmpty()))))
+            ->toBe(['eiffel']);
+    });
+
+    it('filters on a left-bounded range', function () use ($repository, $ids) {
+        expect($ids($repository->findBy(Criteria::create()->where(field('rating')->between(5, null)))))
+            ->toBe(['eiffel', 'louvre']);
+    });
+
+    it('keeps the storage order when documents compare equal on every sort', function () use ($repository, $ids) {
+        expect($ids($repository->findBy(Criteria::create()->orderBy('rating', 'desc'))))
+            ->toBe(['eiffel', 'louvre', 'colosseum', 'atoll']);
+    });
+
     it('filters on a geo radius', function () use ($repository, $ids) {
         $within = static fn (float $meters) => $ids($repository->findBy(
             Criteria::create()->where(field('coordinates')->withinGeoRadius(48.8566, 2.3522, $meters)),
@@ -219,5 +240,25 @@ describe('ObjectRepository operators', function () {
 
         expect($ids($repository->findBy($crossing)))->toBe(['atoll'])
             ->and($ids($repository->findBy($notCrossing)))->toBe([]);
+    });
+
+    it('filters outside a geo radius', function () use ($repository, $ids) {
+        $criteria = Criteria::create()
+            ->where(field('coordinates')->outsideGeoRadius(48.8566, 2.3522, 5000));
+
+        expect($ids($repository->findBy($criteria)))->toBe(['colosseum', 'atoll']);
+    });
+
+    it('never locates a document without coordinates, and always considers it outside', function () use ($ids) {
+        $transport = new InMemoryTransport();
+        $transport->storage['places'] = ['ghost' => ['id' => 'ghost', 'label' => 'Nowhere']];
+        $repository = new ObjectManager($transport)->getRepository(TestPlace::class);
+        $matching = static fn (ExpressionInterface $expression) => $ids(
+            $repository->findBy(Criteria::create()->where($expression)),
+        );
+
+        expect($matching(field('coordinates')->withinGeoRadius(48.8566, 2.3522, 5000)))->toBe([])
+            ->and($matching(field('coordinates')->withinGeoBoundingBox(-90.0, -180.0, 90.0, 180.0)))->toBe([])
+            ->and($matching(field('coordinates')->outsideGeoRadius(48.8566, 2.3522, 5000)))->toBe(['ghost']);
     });
 });

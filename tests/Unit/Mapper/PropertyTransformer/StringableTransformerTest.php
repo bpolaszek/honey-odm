@@ -14,7 +14,7 @@ use Honey\ODM\Core\Config\ClassMetadataRegistry;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
 use Honey\ODM\Core\Mapper\DocumentMapper;
-use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
+use Honey\ODM\Core\Transport\InMemoryTransport;
 use stdClass;
 use Symfony\Component\Uid\Ulid;
 
@@ -25,7 +25,7 @@ describe('StringableTransformer', function () {
     it('converts an object to its string representation', function () {
         $transformer = new StringableTransformer();
         $objectManager = new ObjectManager(
-            new TestTransport(),
+            new InMemoryTransport(),
             new ClassMetadataRegistry(),
             new DocumentMapper(),
             new TestEventDispatcher(),
@@ -52,7 +52,7 @@ describe('StringableTransformer', function () {
         };
 
         $objectManager = new ObjectManager(
-            new TestTransport(),
+            new InMemoryTransport(),
             new ClassMetadataRegistry(configurations: [
                 $foo::class => new AsDocument('foos'),
             ]),
@@ -76,7 +76,7 @@ describe('StringableTransformer', function () {
             public Ulid|stdClass|null $id = null;
         };
         $objectManager = new ObjectManager(
-            new TestTransport(),
+            new InMemoryTransport(),
             new ClassMetadataRegistry(configurations: [
                 $foo::class => new AsDocument('foos'),
             ]),
@@ -97,7 +97,7 @@ describe('StringableTransformer', function () {
             public ?stdClass $id = null;
         };
         $objectManager = new ObjectManager(
-            new TestTransport(),
+            new InMemoryTransport(),
             new ClassMetadataRegistry(configurations: [
                 $foo::class => new AsDocument('foos'),
             ]),
@@ -118,7 +118,7 @@ describe('StringableTransformer', function () {
             public ?stdClass $id = null;
         };
         $objectManager = new ObjectManager(
-            new TestTransport(),
+            new InMemoryTransport(),
             new ClassMetadataRegistry(configurations: [
                 $foo::class => new AsDocument('foos'),
             ]),

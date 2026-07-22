@@ -16,12 +16,12 @@ use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestAuthor;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
 use Honey\ODM\Core\Mapper\DocumentMapper;
-use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
+use Honey\ODM\Core\Transport\InMemoryTransport;
 use Psr\Container\ContainerInterface;
 
 it('maps a document to an object', function () {
     $objectManager = new ObjectManager(
-        new TestTransport(),
+        new InMemoryTransport(),
         new ClassMetadataRegistry(),
         new DocumentMapper(),
         new TestEventDispatcher(),
@@ -51,7 +51,7 @@ it('maps a document to an object', function () {
 
 it('maps an object to a document', function () {
     $objectManager = new ObjectManager(
-        new TestTransport(),
+        new InMemoryTransport(),
         new ClassMetadataRegistry(),
         new DocumentMapper(),
         new TestEventDispatcher(),

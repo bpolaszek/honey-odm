@@ -8,13 +8,13 @@ use BenTools\ReflectionPlus\Reflection;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestAuthor;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestBook;
 use Honey\ODM\Core\Manager\ObjectManager;
-use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
+use Honey\ODM\Core\Transport\InMemoryTransport;
 
 use function expect;
 use function it;
 
 describe('Relation Transformer', function () {
-    $transport = new TestTransport();
+    $transport = new InMemoryTransport();
 
     it('normalizes relations', function () use ($transport) {
         $objectManager = new ObjectManager(transport: $transport);

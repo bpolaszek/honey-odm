@@ -8,10 +8,10 @@ use Honey\ODM\Core\Event\PrePersistEvent;
 use Honey\ODM\Core\Tests\Implementation\EventDispatcher\TestEventDispatcher;
 use Honey\ODM\Core\Tests\Implementation\Examples\TestDocument;
 use Honey\ODM\Core\Manager\ObjectManager;
-use Honey\ODM\Core\Tests\Implementation\Transport\TestTransport;
+use Honey\ODM\Core\Transport\InMemoryTransport;
 
 describe('PrePersistEvent', function () {
-    $transport = new TestTransport();
+    $transport = new InMemoryTransport();
     $eventDispatcher = new TestEventDispatcher();
     $objectManager = new ObjectManager(
         eventDispatcher: $eventDispatcher,
@@ -47,7 +47,7 @@ describe('PrePersistEvent', function () {
     it(
         'recomputes changesets during a PrePersistEvent and prevents firing a second PrePersistEvent during the same flush session',
         function () {
-            $transport = new TestTransport();
+            $transport = new InMemoryTransport();
             $eventDispatcher = new TestEventDispatcher();
             $objectManager = new ObjectManager(
                 eventDispatcher: $eventDispatcher,
