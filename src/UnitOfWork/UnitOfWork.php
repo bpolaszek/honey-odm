@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Honey\ODM\Core\UnitOfWork;
 
+use BenTools\ReflectionPlus\Reflection;
 use Honey\ODM\Core\Manager\ObjectManager;
 use Honey\ODM\Core\Misc\UniqueList;
 use SplObjectStorage;
@@ -74,6 +75,10 @@ final class UnitOfWork
         $this->hash = '';
         foreach ($this->objectManager->identities as $object) {
             if (self::DELETE === $this->getPendingOperation($object)) {
+                continue;
+            }
+            // An object which has never been accessed cannot have been modified
+            if (Reflection::class($object)->isUninitializedLazyObject($object)) {
                 continue;
             }
             $changeset = $this->objectManager->identities->computeChangeset($object);

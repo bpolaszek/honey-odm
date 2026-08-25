@@ -76,7 +76,7 @@ final class InMemoryTransport implements TransportInterface
 
         foreach ($unitOfWork->getPendingUpserts() as $object) {
             $classMetadata = $classMetadataRegistry->getClassMetadata($object::class);
-            $id = id_to_array_key($classMetadataRegistry->getIdFromObject($object));
+            $id = id_to_array_key($objectManager->getIdentifier($object));
             $collection = (string) $classMetadata->collection;
             $context = new MappingContext($classMetadata, $objectManager, $object, []);
             $document = $mapper->objectToDocument($object, [], $context);
@@ -84,7 +84,7 @@ final class InMemoryTransport implements TransportInterface
         }
         foreach ($unitOfWork->getPendingDeletes() as $object) {
             $classMetadata = $classMetadataRegistry->getClassMetadata($object::class);
-            $id = id_to_array_key($classMetadataRegistry->getIdFromObject($object));
+            $id = id_to_array_key($objectManager->getIdentifier($object));
             unset($this->storage[(string) $classMetadata->collection][$id]);
         }
     }

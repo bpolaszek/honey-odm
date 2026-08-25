@@ -53,11 +53,6 @@ final class RelationTransformer implements PropertyTransformerInterface
             throw new LogicException(sprintf('Invalid type for %s::%s', $propertyMetadata->classMetadata->className, $propertyMetadata->reflection->name)); // @codeCoverageIgnore
         }
 
-        $classMetadataRegistry = $context->objectManager->classMetadataRegistry;
-        $propertyAccessor = $classMetadataRegistry->propertyAccessor;
-        $classMetadata = $classMetadataRegistry->getClassMetadata($value::class);
-        $idPropMetadata = $classMetadata->getIdPropertyMetadata();
-
-        return $propertyAccessor->getValue($value, $idPropMetadata->reflection->name);
+        return $context->objectManager->getIdentifier($value);
     }
 }

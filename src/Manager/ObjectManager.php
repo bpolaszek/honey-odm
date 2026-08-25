@@ -112,6 +112,19 @@ final class ObjectManager
             );
     }
 
+    /**
+     * Returns the object's identifier - without forcing the initialization of an uninitialized lazy object,
+     * for which the identity map already knows the id.
+     */
+    final public function getIdentifier(object $object): mixed
+    {
+        if (Reflection::class($object)->isUninitializedLazyObject($object)) {
+            return $this->identities->getId($object) ?? $this->classMetadataRegistry->getIdFromObject($object);
+        }
+
+        return $this->classMetadataRegistry->getIdFromObject($object);
+    }
+
     final public function persist(object $object, object ...$objects): void
     {
         $this->unitOfWork->scheduleUpsert($object, ...$objects);
@@ -164,6 +177,7 @@ final class ObjectManager
             $this->transport->flushPendingOperations($this->unitOfWork, $flushOptions);
             foreach ($this->unitOfWork->getPendingUpserts() as $object) {
                 $this->identities->attach($object, $this->classMetadataRegistry->getIdFromObject($object));
+                $this->identities->rememberCurrentState($object);
             }
             $this->identities->detach(...$this->unitOfWork->getPendingDeletes());
             $this->firePostFlushEvents();
@@ -221,6 +235,7 @@ final class ObjectManager
             if ($refresh) {
                 $context = new MappingContext($classMetadata, $this, $object, $document); // @phpstan-ignore argument.type
                 $this->documentMapper->documentToObject($document, $object, $context); // @phpstan-ignore argument.type
+                $this->identities->rememberCurrentState($object); // @phpstan-ignore argument.type
             }
 
             return $object; // @phpstan-ignore return.type
@@ -237,10 +252,10 @@ final class ObjectManager
                     }
                 }
             }
+            $this->identities->rememberCurrentState($object);
             $this->eventDispatcher->dispatch(new PostLoadEvent($object, $this, $document));
         });
         $this->identities->attach($object, $id);
-        $this->identities->rememberState($object, $document);
 
         return $object; // @phpstan-ignore return.type
     }
