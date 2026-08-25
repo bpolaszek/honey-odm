@@ -27,6 +27,7 @@ use Honey\ODM\Core\UnitOfWork\UnitOfWork;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use ReflectionException;
 use ReflectionProperty;
+use Stringable;
 
 use function array_column;
 use function array_combine;
@@ -115,14 +116,22 @@ final class ObjectManager
     /**
      * Returns the object's identifier - without forcing the initialization of an uninitialized lazy object,
      * for which the identity map already knows the id.
+     *
+     * Stringable ids are normalized the way the identity map and the stores expect them (see id_to_array_key()),
+     * so that the returned value doesn't depend on whether the object was initialized.
      */
     final public function getIdentifier(object $object): mixed
     {
         if (Reflection::class($object)->isUninitializedLazyObject($object)) {
-            return $this->identities->getId($object) ?? $this->classMetadataRegistry->getIdFromObject($object);
+            $id = $this->identities->getId($object);
+            if (null !== $id) {
+                return $id;
+            }
         }
 
-        return $this->classMetadataRegistry->getIdFromObject($object);
+        $id = $this->classMetadataRegistry->getIdFromObject($object);
+
+        return $id instanceof Stringable ? (string) $id : $id;
     }
 
     final public function persist(object $object, object ...$objects): void

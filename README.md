@@ -425,6 +425,10 @@ last flushed). Both sides therefore go through the same mapping pipeline: **read
 write**, even when the stored document holds attributes your class doesn't map, or when a transformer can't
 round-trip its value (a relation pointing to a missing document, for instance).
 
+Values are compared strictly: `null`, `''`, `[]`, `0` and `false` are distinct from one another, so a `null` -> `''`
+change is written instead of being silently dropped. Objects are the exception — they are compared by value, so two
+equivalent value objects don't count as a change.
+
 An id has exactly one managed instance: persisting a fresh object carrying the id of an already managed one
 detaches the latter, so the last persisted instance wins. Without it, both would be handed over to the transport
 within the same batch, and the surviving document would be picked by iteration order.
