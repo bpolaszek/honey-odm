@@ -425,6 +425,10 @@ last flushed). Both sides therefore go through the same mapping pipeline: **read
 write**, even when the stored document holds attributes your class doesn't map, or when a transformer can't
 round-trip its value (a relation pointing to a missing document, for instance).
 
+An id has exactly one managed instance: persisting a fresh object carrying the id of an already managed one
+detaches the latter, so the last persisted instance wins. Without it, both would be handed over to the transport
+within the same batch, and the surviving document would be picked by iteration order.
+
 Objects which were loaded but never accessed stay lazy — they can't be dirty, so they're skipped when changesets are
 computed. `ObjectManager::getIdentifier()` returns an object's id without initializing it, which is what the
 transformers and transports use to resolve relations and deletions.
