@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Honey\ODM\Core\Tests\Unit\UnitOfWork;
 
 use Honey\ODM\Core\UnitOfWork\Changeset;
+use Stringable;
 
 it('tracks no changes when documents are identical', function () {
     $document = ['name' => 'John', 'age' => 30];
@@ -90,8 +91,11 @@ it('handles different data types', function () {
     $newDocument = ['value' => 30, 'flag' => true];
     $changeset = new Changeset($newDocument, $oldDocument);
 
-    // '30' <=> 30 returns 0 (equal), 1 <=> true returns 0 (equal)
-    expect($changeset->changedProperties)->toBe([]);
+    // A string field turning into a number is a change - the storage layer tells them apart
+    expect($changeset->changedProperties)->toBe([
+        'value' => [30, '30'],
+        'flag' => [true, 1],
+    ]);
 });
 
 it('handles arrays as values', function () {
@@ -122,19 +126,26 @@ it('handles zero values correctly', function () {
     $newDocument = ['count' => false, 'balance' => ''];
     $changeset = new Changeset($newDocument, $oldDocument);
 
-    // 0 <=> false returns 0 (equal), but 0.0 <=> '' returns 1 (different)
     expect($changeset->changedProperties)->toBe([
+        'count' => [false, 0],
         'balance' => ['', 0.0],
     ]);
 });
 
-it('handles identical values that compare equal with spaceship operator', function () {
-    $oldDocument = ['value' => 0];
-    $newDocument = ['value' => false];
+it('does not consider a stringable object equal to its string form', function () {
+    $id = new class () implements Stringable {
+        public function __toString(): string
+        {
+            return 'some-id';
+        }
+    };
+    $oldDocument = ['id' => 'some-id'];
+    $newDocument = ['id' => $id];
     $changeset = new Changeset($newDocument, $oldDocument);
 
-    // Since 0 <=> false returns 0, this should be considered unchanged
-    expect($changeset->changedProperties)->toBe([]);
+    expect($changeset->changedProperties)->toBe([
+        'id' => [$id, 'some-id'],
+    ]);
 });
 
 it('handles float precision differences', function () {
@@ -176,4 +187,30 @@ it('stores changed properties in correct format', function () {
         ->and($changeset->changedProperties['name'])->toHaveCount(2)
         ->and($changeset->changedProperties['name'][0])->toBe('Jane')
         ->and($changeset->changedProperties['name'][1])->toBe('John');
+});
+
+it('distinguishes null from empty values', function () {
+    $oldDocument = ['name' => null, 'tags' => null, 'count' => null, 'done' => null];
+    $newDocument = ['name' => '', 'tags' => [], 'count' => 0, 'done' => false];
+    $changeset = new Changeset($newDocument, $oldDocument);
+
+    expect($changeset->changedProperties)->toBe([
+        'name' => ['', null],
+        'tags' => [[], null],
+        'count' => [0, null],
+        'done' => [false, null],
+    ]);
+});
+
+it('distinguishes empty values from null', function () {
+    $oldDocument = ['name' => '', 'tags' => [], 'count' => 0, 'done' => false];
+    $newDocument = ['name' => null, 'tags' => null, 'count' => null, 'done' => null];
+    $changeset = new Changeset($newDocument, $oldDocument);
+
+    expect($changeset->changedProperties)->toBe([
+        'name' => [null, ''],
+        'tags' => [null, []],
+        'count' => [null, 0],
+        'done' => [null, false],
+    ]);
 });
