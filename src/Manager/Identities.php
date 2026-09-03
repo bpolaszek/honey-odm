@@ -65,6 +65,17 @@ final class Identities implements IteratorAggregate
         $this->rememberedStates[$object] = $document;
     }
 
+    /**
+     * Remembers the object's current state, as it would be written to the persistence layer.
+     *
+     * The remembered state has to live in the same space as the changeset computation, otherwise anything
+     * which doesn't round-trip (unmapped attributes, lossy transformers, ...) would be seen as a change.
+     */
+    public function rememberCurrentState(object $object): void
+    {
+        $this->rememberedStates[$object] = $this->objectToDocument($object);
+    }
+
     public function forgetState(object $object): void
     {
         unset($this->rememberedStates[$object]);
@@ -96,6 +107,11 @@ final class Identities implements IteratorAggregate
         return isset($this->idsToObjects[$className][$id]);
     }
 
+    public function getId(object $object): int|string|null
+    {
+        return $this->objectsToIds[$object] ?? null;
+    }
+
     public function getObject(string $className, mixed $id): ?object
     {
         $id = $this->resolveId($id);
@@ -108,9 +124,7 @@ final class Identities implements IteratorAggregate
      */
     public function computeChangeset(object $object, ?array $document = null): Changeset
     {
-        $classMetadata = $this->objectManager->classMetadataRegistry->getClassMetadata($object::class);
-        $context = new MappingContext($classMetadata, $this->objectManager, $object, $document ?? []);
-        $document ??= $this->objectManager->documentMapper->objectToDocument($object, [], $context);
+        $document ??= $this->objectToDocument($object);
         $rememberedState = $this->rememberedStates[$object] ?? [];
 
         return new Changeset($document, $rememberedState);
@@ -119,6 +133,17 @@ final class Identities implements IteratorAggregate
     public function getIterator(): Traversable
     {
         return $this->storage;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function objectToDocument(object $object): array
+    {
+        $classMetadata = $this->objectManager->classMetadataRegistry->getClassMetadata($object::class);
+        $context = new MappingContext($classMetadata, $this->objectManager, $object, []);
+
+        return $this->objectManager->documentMapper->objectToDocument($object, [], $context);
     }
 
     private function resolveId(mixed $id): int|string

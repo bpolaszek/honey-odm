@@ -420,6 +420,15 @@ var_dump($book1 === $book2); // true - same instance returned
 Changes made on managed objects are detected at flush time by the Unit of Work — you don't need to `persist()` an
 object that is already managed.
 
+Change detection compares the object's current serialization with the one taken when it was hydrated (or when it was
+last flushed). Both sides therefore go through the same mapping pipeline: **reading documents never schedules a
+write**, even when the stored document holds attributes your class doesn't map, or when a transformer can't
+round-trip its value (a relation pointing to a missing document, for instance).
+
+Objects which were loaded but never accessed stay lazy — they can't be dirty, so they're skipped when changesets are
+computed. `ObjectManager::getIdentifier()` returns an object's id without initializing it, which is what the
+transformers and transports use to resolve relations and deletions.
+
 ### Events
 
 ```php
@@ -593,7 +602,7 @@ final class RestTransport implements TransportInterface
             $classMetadata = $registry->getClassMetadata($object::class);
             $context = new MappingContext($classMetadata, $objectManager, $object, []);
             $document = $mapper->objectToDocument($object, [], $context);
-            $id = $registry->getIdFromObject($object);
+            $id = $objectManager->getIdentifier($object);
             $endpoint = $this->baseUrl . '/' . $classMetadata->collection;
 
             $this->httpClient->put("{$endpoint}/{$id}", ['json' => $document]);
@@ -601,7 +610,7 @@ final class RestTransport implements TransportInterface
 
         foreach ($unitOfWork->getPendingDeletes() as $object) {
             $classMetadata = $registry->getClassMetadata($object::class);
-            $id = $registry->getIdFromObject($object);
+            $id = $objectManager->getIdentifier($object); // Doesn't initialize lazy objects
 
             $this->httpClient->delete("{$this->baseUrl}/{$classMetadata->collection}/{$id}");
         }

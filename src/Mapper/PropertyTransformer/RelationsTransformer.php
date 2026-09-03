@@ -8,6 +8,7 @@ use Honey\ODM\Core\Config\AsField;
 use Honey\ODM\Core\Mapper\MappingContextInterface;
 use LogicException;
 
+use function array_map;
 use function class_exists;
 use function get_debug_type;
 use function is_array;
@@ -59,15 +60,9 @@ final class RelationsTransformer implements PropertyTransformerInterface
             throw new LogicException(sprintf('Expected array, got %s', get_debug_type($value))); // @codeCoverageIgnore
         }
 
-        $output = [];
-        foreach ($value as $object) {
-            $classMetadataRegistry = $context->objectManager->classMetadataRegistry;
-            $propertyAccessor = $classMetadataRegistry->propertyAccessor;
-            $classMetadata = $classMetadataRegistry->getClassMetadata($object::class);
-            $idPropMetadata = $classMetadata->getIdPropertyMetadata();
-            $output[] = $propertyAccessor->getValue($object, $idPropMetadata->reflection->name);
-        }
-
-        return $output;
+        return array_map(
+            static fn (object $object) => $context->objectManager->getIdentifier($object),
+            $value,
+        );
     }
 }
