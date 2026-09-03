@@ -116,7 +116,7 @@ final class Identities implements IteratorAggregate
     {
         $id = $this->resolveId($id);
 
-        return $this->idsToObjects[$className][$id]?->get();
+        return ($this->idsToObjects[$className][$id] ?? null)?->get();
     }
 
     /**
